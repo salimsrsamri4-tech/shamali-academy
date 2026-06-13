@@ -325,14 +325,15 @@ function apiGet(range) {
 
 function apiAppend(sheetName, dataObj) {
   return new Promise(function(resolve, reject) {
+    var url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', CONFIG.SHEETDB_URL, true);
+    xhr.open('POST', url, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.timeout = 20000;
     xhr.onload = function() { resolve({status:'ok'}); };
     xhr.onerror = function() { reject(new Error('فشل الاتصال بالخادم')); };
     xhr.ontimeout = function() { reject(new Error('انتهت مهلة الاتصال')); };
-    xhr.send(JSON.stringify({data: Array.isArray(dataObj) ? dataObj : [dataObj], sheet: sheetName}));
+    xhr.send(JSON.stringify({data: Array.isArray(dataObj) ? dataObj : [dataObj]}));
   });
 }
 
