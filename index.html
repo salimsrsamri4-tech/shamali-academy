@@ -1216,6 +1216,7 @@ function initApp(){
   var sc = document.getElementById('sbClose');
   var ov = document.getElementById('overlay');
   var lb = document.getElementById('logoutBtn');
+  if(mb) mb.onclick = function(e){ e.stopPropagation(); toggleSb(); };
   if(sc) sc.onclick = closeSb;
   if(ov) ov.onclick = closeSb;
   if(lb) lb.onclick = logout;
