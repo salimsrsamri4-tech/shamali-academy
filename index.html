@@ -309,7 +309,7 @@ var CONFIG = {
   API_KEY: 'AIzaSyBOiSr2yaHT8eWbUuQnn6hNY6w6zHzhqUo',
   SHEET_URL: 'https://sheets.googleapis.com/v4/spreadsheets/',
   UPLOAD_URL: 'https://script.google.com/macros/s/AKfycbx7tusYxtQP-eeP2Gp6vK5u0hxeJiE_e4zoaCLuS-62Tq--fPZSz0NalTrsJLbLX_xA/exec',
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwESz4sFj6bnXY2b3vloIqH148N2PtirOrLWxV1vaYA4cKIBDTb_GWGDraI09NKBH3C/exec',
+  SHEETDB_URL: 'https://sheetdb.io/api/v1/19dnaxf04au5l',
   ADMIN_PASS: ['CoachAdmin', 'Admin2025', 'Shamali@Admin'],
   COACH_PASS: ['Coach15', 'Coach13', 'Coach11'],
   WA_NUM: '96892126558'
@@ -323,20 +323,16 @@ function apiGet(range) {
     .then(function(r){ return r.json(); });
 }
 
-function apiAppend(range, values) {
-  var sheetName = range.split('!')[0];
-  var url = CONFIG.SCRIPT_URL +
-    '?action=append' +
-    '&sheet=' + encodeURIComponent(sheetName) +
-    '&row=' + encodeURIComponent(JSON.stringify(values[0]));
+function apiAppend(sheetName, dataObj) {
   return new Promise(function(resolve, reject) {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
+    xhr.open('POST', CONFIG.SHEETDB_URL, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.timeout = 20000;
     xhr.onload = function() { resolve({status:'ok'}); };
     xhr.onerror = function() { reject(new Error('فشل الاتصال بالخادم')); };
     xhr.ontimeout = function() { reject(new Error('انتهت مهلة الاتصال')); };
-    xhr.send();
+    xhr.send(JSON.stringify({data: Array.isArray(dataObj) ? dataObj : [dataObj], sheet: sheetName}));
   });
 }
 
@@ -394,21 +390,29 @@ function saveRegistration(data) {
   var parentIdUrl = data.parentIdFileId ? 'https://drive.google.com/file/d/'+data.parentIdFileId+'/view' : '';
   var playerPhotoUrl = data.playerPhotoId ? 'https://drive.google.com/file/d/'+data.playerPhotoId+'/view' : '';
   var playerDocUrl = data.playerDocId ? 'https://drive.google.com/file/d/'+data.playerDocId+'/view' : '';
-  
-  var row = [
-    now, id, data.parentName, data.parentCivilId, data.parentEmail,
-    data.parentPhone, data.emergencyPhone, parentIdUrl, data.playerName,
-    data.playerBirthYear, playerDocUrl, playerPhotoUrl, data.paymentMethod, '', 'موافق',
-    data.playerNationality, data.playerHealth, '', '', data.healthNotes || ''
-  ];
-  return apiAppend('Sheet1!A:T', [row]).then(function(){ return id; });
+  var row = {
+    'التاريخ': now, 'رقم الملف': id,
+    'اسم ولي الأمر': data.parentName, 'الرقم المدني': data.parentCivilId,
+    'البريد': data.parentEmail, 'الهاتف': data.parentPhone,
+    'الطوارئ': data.emergencyPhone, 'بطاقة ولي الأمر': parentIdUrl,
+    'اسم اللاعب': data.playerName, 'سنة الميلاد': data.playerBirthYear,
+    'وثيقة اللاعب': playerDocUrl, 'صورة اللاعب': playerPhotoUrl,
+    'الدفع': data.paymentMethod, 'ملاحظات': '',
+    'الحالة': 'موافق', 'الجنسية': data.playerNationality,
+    'الصحة': data.playerHealth, 'خانة18': '', 'خانة19': '',
+    'ملاحظات صحية': data.healthNotes || ''
+  };
+  return apiAppend('Sheet1', row).then(function(){ return id; });
 }
 
 // Save renewal
 function saveRenewal(data) {
-  var now = new Date().toISOString();
-  var row = [now, data.playerId, data.playerName, '', data.month, data.paymentMethod, ''];
-  return apiAppend('تجديدات الاشتراكات!A:G', [row]);
+  var row = {
+    'التاريخ': new Date().toISOString(), 'رقم الملف': data.playerId,
+    'اسم اللاعب': data.playerName, 'ملاحظات': '',
+    'الشهر': data.month, 'الدفع': data.paymentMethod, 'الحالة': ''
+  };
+  return apiAppend('تجديدات الاشتراكات', row);
 }
 
 // Save attendance
@@ -416,16 +420,19 @@ function saveAttendance(records) {
   var now = new Date().toISOString();
   var date = new Date().toLocaleDateString('ar-SA');
   var rows = records.map(function(r){
-    return [now, date, r.id, r.name, r.status];
+    return {'التاريخ': now, 'اليوم': date, 'رقم الملف': r.id, 'اسم اللاعب': r.name, 'الحضور': r.status};
   });
-  return apiAppend('سجل الحضور اليومي!A:E', rows);
+  return apiAppend('سجل الحضور اليومي', rows);
 }
 
 // Save award
 function saveAward(data) {
-  var now = new Date().toISOString();
-  var row = [now, data.playerId, data.playerName, data.birthYear, data.sponsor, data.month];
-  return apiAppend('تكريم المجيدين!A:F', [row]);
+  var row = {
+    'التاريخ': new Date().toISOString(), 'رقم الملف': data.playerId,
+    'اسم اللاعب': data.playerName, 'سنة الميلاد': data.birthYear,
+    'الراعي': data.sponsor, 'الشهر': data.month
+  };
+  return apiAppend('تكريم المجيدين', row);
 }
 
 // Check player ID
