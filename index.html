@@ -315,12 +315,10 @@ var CONFIG = {
   WA_NUM: '96892126558'
 };
 
-// ===== Google Sheets API =====
-var SHEETS = CONFIG.SHEET_URL + CONFIG.SHEET_ID;
-
-function apiGet(range) {
-  return fetch(SHEETS + '/values/' + encodeURIComponent(range) + '?key=' + CONFIG.API_KEY)
-    .then(function(r){ return r.json(); });
+// ===== SheetDB API =====
+function apiGet(sheetName) {
+  var url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName) + '&limit=500';
+  return fetch(url).then(function(r){ return r.json(); });
 }
 
 function apiAppend(sheetName, dataObj) {
@@ -339,17 +337,18 @@ function apiAppend(sheetName, dataObj) {
 
 // Get all players
 function getPlayers() {
-  return apiGet('الورقة1!A:T').then(function(d){
-    if(!d.values || d.values.length < 2) return [];
-    var headers = d.values[0];
-    return d.values.slice(1).map(function(row){
+  return apiGet('الورقة1').then(function(rows){
+    if(!Array.isArray(rows)) return [];
+    return rows.map(function(r){
       return {
-        id: row[1] || '',
-        parentName: row[2] || '',
-        playerName: row[8] || '',
-        birthYear: row[9] || '',
-        nationality: row[15] || '',
-        health: row[16] || 'لا يوجد'
+        id: r['رقم الملف'] || '',
+        parentName: r['اسم ولي الأمر'] || '',
+        playerName: r['اسم اللاعب'] || '',
+        birthYear: r['سنة الميلاد'] || '',
+        nationality: r['الجنسية'] || '',
+        health: r['الصحة'] || 'لا يوجد',
+        phone: r['الهاتف'] || '',
+        email: r['البريد'] || ''
       };
     }).filter(function(p){ return p.id && p.playerName; });
   });
@@ -357,16 +356,16 @@ function getPlayers() {
 
 // Get coaches
 function getCoaches() {
-  return apiGet('بيانات المدربين!A:G').then(function(d){
-    if(!d.values || d.values.length < 2) return [];
-    return d.values.slice(1).map(function(row){
+  return apiGet('بيانات المدربين').then(function(rows){
+    if(!Array.isArray(rows)) return [];
+    return rows.map(function(r){
       return {
-        name: row[1] || '',
-        category: row[2] || '',
-        certificates: row[3] || '',
-        experience: row[4] || '',
-        bio: row[5] || '',
-        photo: row[6] || ''
+        name: r['الاسم'] || r['name'] || '',
+        category: r['الفئة'] || r['category'] || '',
+        certificates: r['الشهادات'] || r['certificates'] || '',
+        experience: r['الخبرة'] || r['experience'] || '',
+        bio: r['النبذة'] || r['bio'] || '',
+        photo: r['الصورة'] || r['photo'] || ''
       };
     }).filter(function(c){ return c.name; });
   });
@@ -937,26 +936,26 @@ function renderCoaches(){
 function renderReports(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
   Promise.all([
-    apiGet('الورقة1!A:T'),
-    apiGet('تجديدات الاشتراكات!A:G')
+    apiGet('الورقة1'),
+    apiGet('تجديدات الاشتراكات')
   ]).then(function(results){
-    var main = results[0].values || [];
-    var ren = results[1].values || [];
+    var main = Array.isArray(results[0]) ? results[0] : [];
+    var ren = Array.isArray(results[1]) ? results[1] : [];
     var cash=0, bank=0;
     var nats={}, health={};
-    for(var i=1;i<main.length;i++){
-      var pay = main[i][12]||'';
+    main.forEach(function(r){
+      var pay = r['الدفع']||'';
       if(pay.indexOf('نقداً')>=0||pay.indexOf('كاش')>=0) cash++;
       else if(pay.indexOf('بنكي')>=0||pay.indexOf('تحويل')>=0) bank++;
-      var nat = main[i][15]||'غير محدد';
+      var nat = r['الجنسية']||'غير محدد';
       nats[nat]=(nats[nat]||0)+1;
-      var h = main[i][16]||'لا يوجد';
+      var h = r['الصحة']||'لا يوجد';
       health[h]=(health[h]||0)+1;
-    }
+    });
     var html = '<div class="rcard"><div class="rtitle"><i class="fas fa-chart-line"></i> تقرير مالي</div>'+
       '<div class="rrow"><span>تسجيلات نقدية</span><span class="rval">'+cash+'</span></div>'+
       '<div class="rrow"><span>تحويلات بنكية</span><span class="rval">'+bank+'</span></div>'+
-      '<div class="rrow"><span>إجمالي التجديدات</span><span class="rval">'+(ren.length-1)+'</span></div></div>'+
+      '<div class="rrow"><span>إجمالي التجديدات</span><span class="rval">'+ren.length+'</span></div></div>'+
       '<div class="rcard"><div class="rtitle"><i class="fas fa-globe"></i> الجنسيات</div>'+
       Object.keys(nats).map(function(k){return '<div class="rrow"><span>'+k+'</span><span class="rval">'+nats[k]+' لاعب</span></div>';}).join('')+
       '</div>'+
