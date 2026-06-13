@@ -177,6 +177,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   <button class="sb-btn coach" data-page="coachlogin" data-pg="coachlogin"><i class="fas fa-futbol"></i> بوابة المدرب</button>
   <div id="coachMenu" style="display:none;">
     <button class="sb-btn coach" data-pg="att"><i class="fas fa-clipboard-user"></i> الحضور</button>
+    <button class="sb-btn coach" data-pg="matchlist"><i class="fas fa-list-ol"></i> قائمة المباراة</button>
     <button class="sb-btn coach" data-pg="awd"><i class="fas fa-trophy"></i> لاعب الشهر</button>
     <button class="sb-btn coach" data-pg="coachreport"><i class="fas fa-file-alt"></i> التقرير الشهري</button>
   </div>
@@ -1065,6 +1066,7 @@ function renderPage(page) {
     case 'coaches': renderCoaches(); break;
     case 'reports': renderReports(); break;
     case 'coachreport': renderCoachReport(); break;
+    case 'matchlist': renderMatchList(); break;
     default: renderReg();
   }
   } catch(err) {
@@ -1101,6 +1103,112 @@ function logout() {
   document.getElementById('admMenu').style.display = 'none';
   document.getElementById('coachMenu').style.display = 'none';
   go('reg');
+}
+
+// ===== MATCH LIST =====
+function renderMatchList(){
+  document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
+  getPlayers().then(function(players){
+    window._matchPlayers = players;
+    var yrs = [];
+    players.forEach(function(p){ if(p.birthYear && yrs.indexOf(p.birthYear)<0) yrs.push(p.birthYear); });
+    yrs.sort();
+    var yrChecks = yrs.map(function(y){
+      return '<label style="display:flex;align-items:center;gap:5px;background:#f1f5f9;border-radius:7px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700;">'+
+        '<input type="checkbox" class="myr-chk" value="'+y+'" onchange="filterMatchPlayers()"> مواليد '+y+'</label>';
+    }).join('');
+
+    var html =
+      '<div class="card">'+
+      '<div class="sec-title"><i class="fas fa-list-ol"></i> قائمة المباراة</div>'+
+      '<div class="mb"><label class="lbl">الفريق المنافس</label>'+
+      '<input type="text" class="inp" id="matchOpponent" placeholder="اسم الفريق..."></div>'+
+      '<div class="r2 mb">'+
+      '<div><label class="lbl">التاريخ</label><input type="date" class="inp" id="matchDate"></div>'+
+      '<div><label class="lbl">الوقت</label><input type="time" class="inp" id="matchTime"></div>'+
+      '</div>'+
+      '<div class="mb"><label class="lbl">الملعب</label>'+
+      '<input type="text" class="inp" id="matchVenue" placeholder="اسم الملعب..."></div>'+
+      '<div class="mb"><label class="lbl">الفئة العمرية (اختر أكثر من سنة)</label>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">'+yrChecks+'</div></div>'+
+      '<div class="mb" id="matchPlayersList" style="display:none;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'+
+      '<label class="lbl" style="margin:0;">اختر اللاعبين</label>'+
+      '<div style="display:flex;gap:6px;">'+
+      '<button class="btn-dk" style="font-size:11px;padding:5px 10px;" onclick="selectAllMatch(true)">تحديد الكل</button>'+
+      '<button class="btn-dk" style="font-size:11px;padding:5px 10px;background:#475569;" onclick="selectAllMatch(false)">إلغاء الكل</button>'+
+      '</div></div>'+
+      '<div id="matchPlayerItems"></div>'+
+      '</div>'+
+      '<div id="matchSelectedCount" style="font-size:12px;color:#b81d22;font-weight:800;margin-bottom:10px;display:none;"></div>'+
+      '<button class="btn-sub" onclick="sendMatchList()">📲 إرسال القائمة عبر واتساب</button>'+
+      '</div>';
+
+    document.getElementById('content').innerHTML = html;
+  });
+}
+
+function filterMatchPlayers(){
+  var checked = [];
+  document.querySelectorAll('.myr-chk:checked').forEach(function(c){ checked.push(c.value); });
+  var players = (window._matchPlayers||[]).filter(function(p){
+    return checked.indexOf(p.birthYear) >= 0;
+  });
+  var container = document.getElementById('matchPlayerItems');
+  var listDiv = document.getElementById('matchPlayersList');
+  if(!checked.length){ listDiv.style.display='none'; container.innerHTML=''; updateMatchCount(); return; }
+  listDiv.style.display = 'block';
+  container.innerHTML = players.map(function(p,i){
+    return '<label style="display:flex;align-items:center;gap:10px;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;margin-bottom:6px;cursor:pointer;background:#fff;">'+
+      '<input type="checkbox" class="match-chk" value="'+p.playerName+'|'+p.birthYear+'" onchange="updateMatchCount()" style="width:18px;height:18px;cursor:pointer;">'+
+      '<div><div style="font-weight:700;font-size:13px;">'+p.playerName+'</div>'+
+      '<div style="font-size:10px;color:#64748b;">'+p.id+' · مواليد '+p.birthYear+'</div></div>'+
+      '</label>';
+  }).join('');
+  updateMatchCount();
+}
+
+function selectAllMatch(val){
+  document.querySelectorAll('.match-chk').forEach(function(c){ c.checked = val; });
+  updateMatchCount();
+}
+
+function updateMatchCount(){
+  var n = document.querySelectorAll('.match-chk:checked').length;
+  var el = document.getElementById('matchSelectedCount');
+  el.style.display = n ? 'block' : 'none';
+  el.textContent = '✅ تم اختيار '+n+' لاعب';
+}
+
+function sendMatchList(){
+  var opponent = document.getElementById('matchOpponent').value.trim();
+  var date = document.getElementById('matchDate').value;
+  var time = document.getElementById('matchTime').value;
+  var venue = document.getElementById('matchVenue').value.trim();
+  var selected = [];
+  document.querySelectorAll('.match-chk:checked').forEach(function(c){
+    selected.push(c.value.split('|')[0]);
+  });
+  if(!opponent){ alert('أدخل اسم الفريق المنافس'); return; }
+  if(!selected.length){ alert('اختر لاعباً واحداً على الأقل'); return; }
+
+  var dateStr = date ? new Date(date).toLocaleDateString('ar-SA') : '';
+  var msg = '🦅 *أكاديمية الشمالي*\n';
+  msg += '⚽ *قائمة المباراة*\n';
+  msg += '━━━━━━━━━━━━━━\n';
+  if(opponent) msg += '🆚 المنافس: *'+opponent+'*\n';
+  if(dateStr)  msg += '📅 التاريخ: '+dateStr+'\n';
+  if(time)     msg += '⏰ الوقت: '+time+'\n';
+  if(venue)    msg += '📍 الملعب: '+venue+'\n';
+  msg += '━━━━━━━━━━━━━━\n';
+  msg += '👕 *اللاعبون ('+selected.length+')*\n';
+  selected.forEach(function(name, i){
+    msg += (i+1)+'. '+name+'\n';
+  });
+  msg += '━━━━━━━━━━━━━━\n';
+  msg += '🇴🇲 بالتوفيق للجميع!';
+
+  window.open('https://api.whatsapp.com/send?phone='+CONFIG.WA_NUM+'&text='+encodeURIComponent(msg),'_blank');
 }
 
 // ===== COACH REPORT =====
