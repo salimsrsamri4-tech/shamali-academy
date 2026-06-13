@@ -325,12 +325,17 @@ function apiGet(range) {
 
 function apiAppend(range, values) {
   var sheetName = range.split('!')[0];
-  return fetch(CONFIG.SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {'Content-Type': 'text/plain'},
-    body: JSON.stringify({action: 'append', sheet: sheetName, row: values[0]})
-  }).then(function(){ return {status:'ok'}; });
+  var body = JSON.stringify({action: 'append', sheet: sheetName, row: values[0]});
+  return new Promise(function(resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', CONFIG.SCRIPT_URL, true);
+    xhr.setRequestHeader('Content-Type', 'text/plain');
+    xhr.timeout = 20000;
+    xhr.onload = function() { resolve({status:'ok'}); };
+    xhr.onerror = function() { reject(new Error('فشل الاتصال بالخادم')); };
+    xhr.ontimeout = function() { reject(new Error('انتهت مهلة الاتصال')); };
+    xhr.send(body);
+  });
 }
 
 // Get all players
@@ -431,7 +436,10 @@ function checkPlayer(id) {
 
 // ===== رفع الملفات عبر Apps Script =====
 function uploadFiles(files) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
+    var hasFiles = files.some(function(f){ return f.file; });
+    if(!hasFiles) { resolve({}); return; }
+
     var promises = files.map(function(f) {
       if(!f.file) return Promise.resolve('');
       return compressImage(f.file).then(function(compressed) {
@@ -440,26 +448,25 @@ function uploadFiles(files) {
         return {key: f.key, base64: base64, name: f.name};
       });
     });
-    
+
     Promise.all(promises).then(function(fileData) {
       var body = {name: files[0] ? files[0].name : ''};
       fileData.forEach(function(f) {
         if(f && f.base64) body[f.key] = f.base64;
       });
-      
-      return fetch(CONFIG.UPLOAD_URL, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(body)
-      });
-    }).then(function(r){ return r.json(); })
-    .then(function(data){
-      if(data.status === 'success') resolve(data.files || {});
-      else resolve({});
-    }).catch(function(e){ 
-      console.warn('Upload failed:', e);
-      resolve({}); 
-    });
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', CONFIG.UPLOAD_URL, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.timeout = 15000;
+      xhr.onload = function() {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          resolve(data.status === 'success' ? (data.files || {}) : {});
+        } catch(e) { resolve({}); }
+      };
+      xhr.onerror = xhr.ontimeout = function() { resolve({}); };
+      xhr.send(JSON.stringify(body));
+    }).catch(function() { resolve({}); });
   });
 }
 
