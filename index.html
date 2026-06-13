@@ -339,7 +339,7 @@ function apiAppend(sheetName, dataObj) {
 
 // Get all players
 function getPlayers() {
-  return apiGet('Sheet1!A:T').then(function(d){
+  return apiGet('الورقة1!A:T').then(function(d){
     if(!d.values || d.values.length < 2) return [];
     var headers = d.values[0];
     return d.values.slice(1).map(function(row){
@@ -403,7 +403,7 @@ function saveRegistration(data) {
     'الصحة': data.playerHealth, 'خانة18': '', 'خانة19': '',
     'ملاحظات صحية': data.healthNotes || ''
   };
-  return apiAppend('Sheet1', row).then(function(){ return id; });
+  return apiAppend('الورقة1', row).then(function(){ return id; });
 }
 
 // Save renewal
@@ -937,7 +937,7 @@ function renderCoaches(){
 function renderReports(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
   Promise.all([
-    apiGet('Sheet1!A:T'),
+    apiGet('الورقة1!A:T'),
     apiGet('تجديدات الاشتراكات!A:G')
   ]).then(function(results){
     var main = results[0].values || [];
