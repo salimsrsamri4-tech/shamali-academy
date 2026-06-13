@@ -179,6 +179,10 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
     <button class="sb-btn coach" data-pg="att"><i class="fas fa-clipboard-user"></i> الحضور</button>
     <button class="sb-btn coach" data-pg="matchlist"><i class="fas fa-list-ol"></i> قائمة المباراة</button>
     <button class="sb-btn coach" data-pg="matchresult"><i class="fas fa-futbol"></i> نتائج المباريات</button>
+    <button class="sb-btn coach" data-pg="playerstats"><i class="fas fa-chart-bar"></i> إحصائيات اللاعبين</button>
+    <button class="sb-btn coach" data-pg="playereval"><i class="fas fa-star"></i> تقييم اللاعبين</button>
+    <button class="sb-btn coach" data-pg="groupmsg"><i class="fas fa-paper-plane"></i> إشعار جماعي</button>
+    <button class="sb-btn coach" data-pg="substrack"><i class="fas fa-bell"></i> متابعة الاشتراكات</button>
     <button class="sb-btn coach" data-pg="awd"><i class="fas fa-trophy"></i> لاعب الشهر</button>
     <button class="sb-btn coach" data-pg="coachreport"><i class="fas fa-file-alt"></i> التقرير الشهري</button>
   </div>
@@ -1069,6 +1073,10 @@ function renderPage(page) {
     case 'coachreport': renderCoachReport(); break;
     case 'matchlist': renderMatchList(); break;
     case 'matchresult': renderMatchResult(); break;
+    case 'playerstats': renderPlayerStats(); break;
+    case 'playereval': renderPlayerEval(); break;
+    case 'groupmsg': renderGroupMsg(); break;
+    case 'substrack': renderSubsTrack(); break;
     default: renderReg();
   }
   } catch(err) {
@@ -1105,6 +1113,261 @@ function logout() {
   document.getElementById('admMenu').style.display = 'none';
   document.getElementById('coachMenu').style.display = 'none';
   go('reg');
+}
+
+// ===== PLAYER STATS =====
+function renderPlayerStats(){
+  document.getElementById('content').innerHTML='<div class="ldg"><span class="sp"></span></div>';
+  Promise.all([getPlayers(), apiGet('سجل الحضور اليومي')]).then(function(res){
+    var players = res[0];
+    var attRows = Array.isArray(res[1]) ? res[1] : [];
+    var attMap = {};
+    attRows.forEach(function(r){
+      var id = r['رقم الملف']||r['ID']||'';
+      if(!id) return;
+      if(!attMap[id]) attMap[id]={pres:0,abs:0};
+      if((r['الحضور']||'').indexOf('حاضر')>=0||(r['الحضور']||'').indexOf('pres')>=0) attMap[id].pres++;
+      else attMap[id].abs++;
+    });
+    var yrs=[]; players.forEach(function(p){if(p.birthYear&&yrs.indexOf(p.birthYear)<0)yrs.push(p.birthYear);}); yrs.sort();
+    var yrOpts='<option value="">كل الفئات</option>'+yrs.map(function(y){return '<option value="'+y+'">مواليد '+y+'</option>';}).join('');
+    var html='<div class="card"><div class="sec-title"><i class="fas fa-chart-bar"></i> إحصائيات اللاعبين</div>'+
+      '<div style="margin-bottom:12px;"><select class="inp" id="statsYrFilter" onchange="filterStats()">'+yrOpts+'</select></div>'+
+      '<div id="statsList">';
+    players.forEach(function(p){
+      var a=attMap[p.id]||{pres:0,abs:0};
+      var total=a.pres+a.abs;
+      var pct=total?Math.round(a.pres/total*100):0;
+      var bar=pct>75?'#16a34a':pct>50?'#d4af37':'#dc2626';
+      html+='<div class="stats-row" data-year="'+p.birthYear+'" style="padding:10px 0;border-bottom:1px solid #f1f5f9;">'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:5px;">'+
+        '<div><div style="font-weight:800;font-size:13px;">'+p.playerName+'</div>'+
+        '<div style="font-size:10px;color:#64748b;">'+p.id+' · مواليد '+p.birthYear+'</div></div>'+
+        '<div style="text-align:left;"><div style="font-size:18px;font-weight:900;color:'+bar+';">'+pct+'%</div>'+
+        '<div style="font-size:10px;color:#64748b;">'+a.pres+' حضور / '+a.abs+' غياب</div></div></div>'+
+        '<div style="background:#f1f5f9;border-radius:20px;height:6px;overflow:hidden;">'+
+        '<div style="background:'+bar+';width:'+pct+'%;height:100%;border-radius:20px;transition:.3s;"></div></div></div>';
+    });
+    html+='</div></div>';
+    document.getElementById('content').innerHTML=html;
+  });
+}
+function filterStats(){
+  var yr=document.getElementById('statsYrFilter').value;
+  document.querySelectorAll('.stats-row').forEach(function(r){
+    r.style.display=(!yr||r.getAttribute('data-year')===yr)?'':'none';
+  });
+}
+
+// ===== PLAYER EVAL =====
+function renderPlayerEval(){
+  document.getElementById('content').innerHTML='<div class="ldg"><span class="sp"></span></div>';
+  getPlayers().then(function(players){
+    var yrs=[]; players.forEach(function(p){if(p.birthYear&&yrs.indexOf(p.birthYear)<0)yrs.push(p.birthYear);}); yrs.sort();
+    var yrOpts='<option value="">اختر الفئة...</option>'+yrs.map(function(y){return '<option value="'+y+'">مواليد '+y+'</option>';}).join('');
+    var html='<div class="card"><div class="sec-title"><i class="fas fa-star"></i> تقييم اللاعبين</div>'+
+      '<div class="mb"><label class="lbl">الشهر</label><select class="inp" id="evalMonth"><option value="">اختر...</option>'+monthOpts()+'</select></div>'+
+      '<div class="mb"><label class="lbl">الفئة</label><select class="inp" id="evalYr" onchange="loadEvalPlayers()">'+yrOpts+'</select></div>'+
+      '<div id="evalList"></div>'+
+      '<button class="btn-sub" style="margin-top:12px;display:none;" id="evalSaveBtn" onclick="submitEval()">💾 حفظ التقييمات</button></div>';
+    document.getElementById('content').innerHTML=html;
+    window._evalPlayers=players;
+  });
+}
+function loadEvalPlayers(){
+  var yr=document.getElementById('evalYr').value;
+  var players=(window._evalPlayers||[]).filter(function(p){return p.birthYear===yr;});
+  var html='';
+  players.forEach(function(p){
+    html+='<div style="border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:10px;">'+
+      '<div style="font-weight:800;font-size:13px;margin-bottom:10px;">'+p.playerName+
+      ' <span style="font-size:10px;color:#64748b;">'+p.id+'</span></div>'+
+      '<input type="hidden" class="eval-id" value="'+p.id+'">'+
+      '<input type="hidden" class="eval-name" value="'+p.playerName+'">'+
+      evalCriteria('المهارة الفنية','skill',p.id)+
+      evalCriteria('الانضباط','disc',p.id)+
+      evalCriteria('روح الفريق','team',p.id)+
+      evalCriteria('اللياقة','fit',p.id)+
+      '<div><label class="lbl" style="font-size:10px;">ملاحظة</label>'+
+      '<input type="text" class="inp eval-note" placeholder="اختياري..." style="font-size:12px;padding:7px;"></div>'+
+      '</div>';
+  });
+  document.getElementById('evalList').innerHTML=html||'<div class="al al-warn">لا يوجد لاعبون في هذه الفئة</div>';
+  document.getElementById('evalSaveBtn').style.display=players.length?'block':'none';
+}
+function evalCriteria(label,key,id){
+  return '<div style="margin-bottom:8px;"><div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">'+label+'</div>'+
+    '<div style="display:flex;gap:6px;">'+
+    [1,2,3,4,5].map(function(n){
+      return '<label style="cursor:pointer;text-align:center;">'+
+        '<input type="radio" name="'+key+'_'+id+'" value="'+n+'" style="display:none;">'+
+        '<div class="star-btn" style="width:34px;height:34px;border-radius:50%;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#94a3b8;background:#f8fafc;" '+
+        'onclick="ratePlayer(this,\''+key+'_'+id+'\')">'+n+'</div></label>';
+    }).join('')+'</div></div>';
+}
+function ratePlayer(el,name){
+  var val=el.textContent;
+  document.querySelectorAll('[name="'+name+'"]').forEach(function(r){r.checked=false;});
+  var radio=document.querySelector('[name="'+name+'"][value="'+val+'"]');
+  if(radio) radio.checked=true;
+  var parent=el.closest('div').querySelectorAll('.star-btn');
+  parent.forEach(function(b,i){
+    b.style.background=i<parseInt(val)?'#d4af37':'#f8fafc';
+    b.style.color=i<parseInt(val)?'#fff':'#94a3b8';
+    b.style.borderColor=i<parseInt(val)?'#d4af37':'#e2e8f0';
+  });
+}
+function submitEval(){
+  var month=document.getElementById('evalMonth').value;
+  var yr=document.getElementById('evalYr').value;
+  if(!month){alert('اختر الشهر');return;}
+  var cards=document.querySelectorAll('#evalList > div');
+  var saves=[];
+  cards.forEach(function(card){
+    var id=card.querySelector('.eval-id').value;
+    var name=card.querySelector('.eval-name').value;
+    var note=card.querySelector('.eval-note').value;
+    var get=function(k){var r=card.querySelector('[name="'+k+'_'+id+'"]:checked');return r?r.value:'0';};
+    saves.push(apiAppend('تقييمات اللاعبين',{
+      'التاريخ':new Date().toISOString(),'الشهر':month,'الفئة':yr,
+      'رقم الملف':id,'اسم اللاعب':name,
+      'المهارة':get('skill'),'الانضباط':get('disc'),
+      'روح الفريق':get('team'),'اللياقة':get('fit'),'ملاحظة':note
+    }));
+  });
+  showL(true);
+  Promise.all(saves).then(function(){showL(false);alert('✅ تم حفظ التقييمات!');go('att');})
+    .catch(function(){showL(false);alert('خطأ في الحفظ');});
+}
+
+// ===== GROUP MESSAGE =====
+function renderGroupMsg(){
+  document.getElementById('content').innerHTML='<div class="ldg"><span class="sp"></span></div>';
+  getPlayers().then(function(players){
+    var yrs=[]; players.forEach(function(p){if(p.birthYear&&yrs.indexOf(p.birthYear)<0)yrs.push(p.birthYear);}); yrs.sort();
+    var yrChecks=yrs.map(function(y){
+      return '<label style="display:flex;align-items:center;gap:5px;background:#f1f5f9;border-radius:7px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700;">'+
+        '<input type="checkbox" class="gyr-chk" value="'+y+'"> مواليد '+y+'</label>';
+    }).join('');
+    var html='<div class="card"><div class="sec-title"><i class="fas fa-paper-plane"></i> إشعار جماعي لأولياء الأمور</div>'+
+      '<div class="mb"><label class="lbl">نوع الرسالة</label>'+
+      '<select class="inp" id="msgType" onchange="loadMsgTemplate()">'+
+      '<option value="">اختر قالب...</option>'+
+      '<option value="training">📅 تذكير بموعد تدريب</option>'+
+      '<option value="match">⚽ دعوة لمباراة</option>'+
+      '<option value="fee">💰 تذكير بالرسوم الشهرية</option>'+
+      '<option value="event">🎉 إعلان فعالية</option>'+
+      '<option value="custom">✏️ رسالة مخصصة</option>'+
+      '</select></div>'+
+      '<div class="mb"><label class="lbl">الفئة المستهدفة</label>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;">'+yrChecks+'</div></div>'+
+      '<div class="mb"><label class="lbl">نص الرسالة</label>'+
+      '<textarea class="inp" id="msgText" rows="5" placeholder="اكتب الرسالة..."></textarea></div>'+
+      '<button class="btn-sub" onclick="sendGroupMsg()">📲 إرسال عبر واتساب</button></div>';
+    document.getElementById('content').innerHTML=html;
+    window._gmPlayers=players;
+  });
+}
+function loadMsgTemplate(){
+  var t=document.getElementById('msgType').value;
+  var templates={
+    training:'🦅 أكاديمية الشمالي\n\nنذكّركم بموعد التدريب\n📅 اليوم: \n⏰ الوقت: \n📍 الملعب: \n\nنرجو الالتزام بالحضور في الوقت المحدد 🙏',
+    match:'🦅 أكاديمية الشمالي\n\n⚽ دعوة لمشاهدة مباراة أبنائنا\n🆚 المنافس: \n📅 التاريخ: \n⏰ الوقت: \n📍 الملعب: \n\nتفضّلوا بالحضور ودعم الفريق 💚',
+    fee:'🦅 أكاديمية الشمالي\n\n💰 تذكير بالرسوم الشهرية\nنرجو سداد رسوم شهر: \nالمبلغ: 20 ريال عماني\n\nللتحويل البنكي: سالم راشد العامري\nرقم التواصل: 92126558',
+    event:'🦅 أكاديمية الشمالي\n\n🎉 نسعد بدعوتكم لحضور\nاسم الفعالية: \n📅 التاريخ: \n📍 المكان: \n\nنتشرّف بحضوركم 🌟',
+    custom:''
+  };
+  if(t&&templates[t]!==undefined) document.getElementById('msgText').value=templates[t];
+}
+function sendGroupMsg(){
+  var msg=document.getElementById('msgText').value.trim();
+  if(!msg){alert('اكتب نص الرسالة');return;}
+  var checked=[];
+  document.querySelectorAll('.gyr-chk:checked').forEach(function(c){checked.push(c.value);});
+  var players=(window._gmPlayers||[]).filter(function(p){
+    return !checked.length||checked.indexOf(p.birthYear)>=0;
+  });
+  if(!players.length){alert('اختر فئة أو تأكد من وجود لاعبين');return;}
+  var phones=[];
+  players.forEach(function(p){if(p.phone&&phones.indexOf(p.phone)<0)phones.push(p.phone);});
+  if(!phones.length){
+    window.open('https://api.whatsapp.com/send?phone='+CONFIG.WA_NUM+'&text='+encodeURIComponent(msg),'_blank');
+    alert('لا تتوفر أرقام هواتف محفوظة. تم إرسال الرسالة لرقم الأكاديمية فقط.');
+    return;
+  }
+  var i=0;
+  function sendNext(){
+    if(i>=phones.length){alert('✅ تم فتح واتساب لـ '+phones.length+' رقم. تأكد من إرسال الرسائل.');return;}
+    var num='968'+phones[i].replace(/\s/g,'');
+    window.open('https://api.whatsapp.com/send?phone='+num+'&text='+encodeURIComponent(msg),'_blank');
+    i++;
+    setTimeout(sendNext,1500);
+  }
+  if(confirm('سيتم فتح واتساب لـ '+phones.length+' رقم. هل تريد المتابعة؟')) sendNext();
+}
+
+// ===== SUBSCRIPTIONS TRACK =====
+function renderSubsTrack(){
+  document.getElementById('content').innerHTML='<div class="ldg"><span class="sp"></span></div>';
+  Promise.all([getPlayers(), apiGet('تجديدات الاشتراكات')]).then(function(res){
+    var players=res[0];
+    var renewals=Array.isArray(res[1])?res[1]:[];
+    var curMonth=MONTHS[new Date().getMonth()]+' '+new Date().getFullYear();
+    var renewed={};
+    renewals.forEach(function(r){
+      var id=r['رقم الملف']||'';
+      var month=r['الشهر']||'';
+      if(id&&month===curMonth) renewed[id]=true;
+    });
+    var notRenewed=players.filter(function(p){return !renewed[p.id];});
+    var didRenew=players.filter(function(p){return renewed[p.id];});
+    var html='<div class="card">'+
+      '<div class="sec-title"><i class="fas fa-bell"></i> متابعة الاشتراكات · '+curMonth+'</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">'+
+      '<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:14px;text-align:center;">'+
+      '<div style="font-size:28px;font-weight:900;color:#dc2626;">'+notRenewed.length+'</div>'+
+      '<div style="font-size:11px;color:#dc2626;font-weight:700;">لم يجدّدوا</div></div>'+
+      '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:14px;text-align:center;">'+
+      '<div style="font-size:28px;font-weight:900;color:#16a34a;">'+didRenew.length+'</div>'+
+      '<div style="font-size:11px;color:#16a34a;font-weight:700;">جدّدوا</div></div></div>';
+
+    if(notRenewed.length){
+      html+='<div style="margin-bottom:12px;"><div style="font-weight:800;font-size:13px;color:#dc2626;margin-bottom:8px;">⚠️ لم يجدّدوا هذا الشهر</div>';
+      notRenewed.forEach(function(p){
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f1f5f9;">'+
+          '<div><div style="font-weight:700;font-size:13px;">'+p.playerName+'</div>'+
+          '<div style="font-size:10px;color:#64748b;">'+p.id+(p.phone?' · '+p.phone:'')+'</div></div>'+
+          '<button onclick="remindParent(\''+p.phone+'\',\''+p.playerName+'\')" style="background:#25d366;color:#fff;border:none;border-radius:7px;padding:6px 10px;cursor:pointer;font-size:11px;font-weight:700;font-family:Cairo,sans-serif;">📲 تذكير</button>'+
+          '</div>';
+      });
+      html+='</div>';
+      html+='<button class="btn-sub" style="background:#25d366;" onclick="remindAll()">📲 تذكير الجميع دفعة واحدة</button>';
+    } else {
+      html+='<div class="al al-ok" style="text-align:center;font-size:14px;font-weight:800;">✅ جميع اللاعبين جدّدوا اشتراكاتهم هذا الشهر!</div>';
+    }
+    html+='</div>';
+    document.getElementById('content').innerHTML=html;
+    window._notRenewed=notRenewed;
+  });
+}
+function remindParent(phone,name){
+  if(!phone){alert('لا يوجد رقم هاتف محفوظ لهذا اللاعب');return;}
+  var msg='🦅 أكاديمية الشمالي\n\nنذكّركم بسداد رسوم اشتراك '+name+' لشهر '+MONTHS[new Date().getMonth()]+'\nالمبلغ: 20 ريال عماني\n\nشكراً لتعاونكم 🙏';
+  window.open('https://api.whatsapp.com/send?phone=968'+phone.replace(/\s/g,'')+'&text='+encodeURIComponent(msg),'_blank');
+}
+function remindAll(){
+  var players=window._notRenewed||[];
+  if(!players.length) return;
+  var phones=players.filter(function(p){return p.phone;});
+  if(!phones.length){alert('لا تتوفر أرقام هواتف محفوظة');return;}
+  if(!confirm('سيتم إرسال تذكير لـ '+phones.length+' ولي أمر. المتابعة؟')) return;
+  var i=0;
+  function next(){
+    if(i>=phones.length) return;
+    remindParent(phones[i].phone, phones[i].playerName);
+    i++; setTimeout(next,1500);
+  }
+  next();
 }
 
 // ===== MATCH RESULT =====
