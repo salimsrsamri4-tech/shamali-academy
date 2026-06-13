@@ -309,7 +309,7 @@ var CONFIG = {
   API_KEY: 'AIzaSyBOiSr2yaHT8eWbUuQnn6hNY6w6zHzhqUo',
   SHEET_URL: 'https://sheets.googleapis.com/v4/spreadsheets/',
   UPLOAD_URL: 'https://script.google.com/macros/s/AKfycbx7tusYxtQP-eeP2Gp6vK5u0hxeJiE_e4zoaCLuS-62Tq--fPZSz0NalTrsJLbLX_xA/exec',
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbw2ls1s9dThHWoepRRnbht-TMhd9WaOiwawXEbtaw_qX9kISzB8J4bkZrSPVRoYrec/exec',
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwESz4sFj6bnXY2b3vloIqH148N2PtirOrLWxV1vaYA4cKIBDTb_GWGDraI09NKBH3C/exec',
   ADMIN_PASS: ['CoachAdmin', 'Admin2025', 'Shamali@Admin'],
   COACH_PASS: ['Coach15', 'Coach13', 'Coach11'],
   WA_NUM: '96892126558'
@@ -325,16 +325,18 @@ function apiGet(range) {
 
 function apiAppend(range, values) {
   var sheetName = range.split('!')[0];
-  var body = JSON.stringify({action: 'append', sheet: sheetName, row: values[0]});
+  var url = CONFIG.SCRIPT_URL +
+    '?action=append' +
+    '&sheet=' + encodeURIComponent(sheetName) +
+    '&row=' + encodeURIComponent(JSON.stringify(values[0]));
   return new Promise(function(resolve, reject) {
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', CONFIG.SCRIPT_URL, true);
-    xhr.setRequestHeader('Content-Type', 'text/plain');
+    xhr.open('GET', url, true);
     xhr.timeout = 20000;
     xhr.onload = function() { resolve({status:'ok'}); };
     xhr.onerror = function() { reject(new Error('فشل الاتصال بالخادم')); };
     xhr.ontimeout = function() { reject(new Error('انتهت مهلة الاتصال')); };
-    xhr.send(body);
+    xhr.send();
   });
 }
 
