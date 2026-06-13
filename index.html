@@ -178,6 +178,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   <div id="coachMenu" style="display:none;">
     <button class="sb-btn coach" data-pg="att"><i class="fas fa-clipboard-user"></i> الحضور</button>
     <button class="sb-btn coach" data-pg="matchlist"><i class="fas fa-list-ol"></i> قائمة المباراة</button>
+    <button class="sb-btn coach" data-pg="matchresult"><i class="fas fa-futbol"></i> نتائج المباريات</button>
     <button class="sb-btn coach" data-pg="awd"><i class="fas fa-trophy"></i> لاعب الشهر</button>
     <button class="sb-btn coach" data-pg="coachreport"><i class="fas fa-file-alt"></i> التقرير الشهري</button>
   </div>
@@ -1067,6 +1068,7 @@ function renderPage(page) {
     case 'reports': renderReports(); break;
     case 'coachreport': renderCoachReport(); break;
     case 'matchlist': renderMatchList(); break;
+    case 'matchresult': renderMatchResult(); break;
     default: renderReg();
   }
   } catch(err) {
@@ -1103,6 +1105,115 @@ function logout() {
   document.getElementById('admMenu').style.display = 'none';
   document.getElementById('coachMenu').style.display = 'none';
   go('reg');
+}
+
+// ===== MATCH RESULT =====
+function renderMatchResult(){
+  document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
+  apiGet('نتائج المباريات').then(function(rows){
+    var results = Array.isArray(rows) ? rows : [];
+    var html =
+      '<div class="card">'+
+      '<div class="sec-title"><i class="fas fa-futbol"></i> تسجيل نتيجة مباراة</div>'+
+      '<div class="r2 mb">'+
+      '<div><label class="lbl">الفئة العمرية</label>'+
+      '<select class="inp" id="mrCat">'+
+      '<option value="">اختر...</option>'+
+      '<option>2015 - 2016</option><option>2013 - 2014</option>'+
+      '<option>2011 - 2012</option><option>2009 - 2010</option>'+
+      '</select></div>'+
+      '<div><label class="lbl">التاريخ</label><input type="date" class="inp" id="mrDate"></div>'+
+      '</div>'+
+      '<div class="mb"><label class="lbl">الفريق المنافس</label>'+
+      '<input type="text" class="inp" id="mrOpponent" placeholder="اسم الفريق..."></div>'+
+      '<div class="mb"><label class="lbl">الملعب</label>'+
+      '<input type="text" class="inp" id="mrVenue" placeholder="اسم الملعب..."></div>'+
+
+      '<div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:12px;padding:16px;margin-bottom:14px;">'+
+      '<div style="text-align:center;color:#d4af37;font-size:11px;font-weight:800;margin-bottom:12px;">النتيجة</div>'+
+      '<div style="display:flex;align-items:center;justify-content:center;gap:12px;">'+
+      '<div style="text-align:center;">'+
+      '<div style="color:#fff;font-size:11px;font-weight:700;margin-bottom:6px;">🦅 الشمالي</div>'+
+      '<input type="number" class="inp" id="mrGoalsFor" min="0" value="0" style="width:70px;text-align:center;font-size:28px;font-weight:900;padding:8px;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff;">'+
+      '</div>'+
+      '<div style="color:#d4af37;font-size:24px;font-weight:900;">—</div>'+
+      '<div style="text-align:center;">'+
+      '<div style="color:#fff;font-size:11px;font-weight:700;margin-bottom:6px;">🆚 المنافس</div>'+
+      '<input type="number" class="inp" id="mrGoalsAgainst" min="0" value="0" style="width:70px;text-align:center;font-size:28px;font-weight:900;padding:8px;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff;">'+
+      '</div></div></div>'+
+
+      '<div class="mb"><label class="lbl">🥅 الهدافون</label>'+
+      '<input type="text" class="inp" id="mrScorers" placeholder="أسماء الهدافين مفصولة بفاصلة..."></div>'+
+      '<div class="mb"><label class="lbl">⭐ رأي المدرب</label>'+
+      '<textarea class="inp" id="mrComment" rows="3" placeholder="تعليق على أداء الفريق..."></textarea></div>'+
+      '<button class="btn-sub" onclick="submitMatchResult()">💾 حفظ النتيجة وإرسالها</button>'+
+      '</div>';
+
+    if(results.length){
+      html += '<div class="card"><div class="sec-title"><i class="fas fa-history"></i> آخر النتائج</div>';
+      results.slice().reverse().slice(0,10).forEach(function(r){
+        var gf = parseInt(r['أهداف الشمالي'])||0;
+        var ga = parseInt(r['أهداف المنافس'])||0;
+        var res = gf>ga ? '✅ فوز' : gf<ga ? '❌ خسارة' : '🤝 تعادل';
+        var color = gf>ga ? '#16a34a' : gf<ga ? '#dc2626' : '#b8860b';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9;">'+
+          '<div>'+
+          '<div style="font-weight:800;font-size:13px;">🆚 '+r['المنافس']+'</div>'+
+          '<div style="font-size:10px;color:#64748b;">'+r['الفئة']+' · '+(r['التاريخ']||'')+'</div>'+
+          (r['الهدافون']?'<div style="font-size:10px;color:#b81d22;">⚽ '+r['الهدافون']+'</div>':'')+
+          '</div>'+
+          '<div style="text-align:center;">'+
+          '<div style="font-size:22px;font-weight:900;color:'+color+';">'+gf+' - '+ga+'</div>'+
+          '<div style="font-size:10px;font-weight:800;color:'+color+';">'+res+'</div>'+
+          '</div></div>';
+      });
+      html += '</div>';
+    }
+
+    document.getElementById('content').innerHTML = html;
+  }).catch(function(){ document.getElementById('content').innerHTML = renderMatchResultForm(); });
+}
+
+function submitMatchResult(){
+  var opponent = document.getElementById('mrOpponent').value.trim();
+  var cat      = document.getElementById('mrCat').value;
+  var date     = document.getElementById('mrDate').value;
+  var venue    = document.getElementById('mrVenue').value.trim();
+  var gf       = document.getElementById('mrGoalsFor').value || '0';
+  var ga       = document.getElementById('mrGoalsAgainst').value || '0';
+  var scorers  = document.getElementById('mrScorers').value.trim();
+  var comment  = document.getElementById('mrComment').value.trim();
+  if(!opponent){ alert('أدخل اسم الفريق المنافس'); return; }
+  if(!cat){ alert('اختر الفئة العمرية'); return; }
+
+  var res = parseInt(gf)>parseInt(ga) ? 'فوز' : parseInt(gf)<parseInt(ga) ? 'خسارة' : 'تعادل';
+  var data = {
+    'التاريخ': date || new Date().toISOString(),
+    'الفئة': cat, 'المنافس': opponent, 'الملعب': venue,
+    'أهداف الشمالي': gf, 'أهداف المنافس': ga,
+    'النتيجة': res, 'الهدافون': scorers, 'تعليق المدرب': comment
+  };
+  showL(true);
+  apiAppend('نتائج المباريات', data).then(function(){
+    showL(false);
+    var emoji = res==='فوز'?'🏆':res==='خسارة'?'😤':'🤝';
+    var msg = '⚽ *نتيجة مباراة أكاديمية الشمالي*\n'+
+      '━━━━━━━━━━━━━━\n'+
+      '🆚 المنافس: *'+opponent+'*\n'+
+      '📋 الفئة: '+cat+'\n'+
+      (venue?'📍 الملعب: '+venue+'\n':'')+
+      (date?'📅 التاريخ: '+new Date(date).toLocaleDateString('ar-SA')+'\n':'')+
+      '━━━━━━━━━━━━━━\n'+
+      '🦅 الشمالي  *'+gf+'*  —  *'+ga+'*  المنافس\n'+
+      emoji+' النتيجة: *'+res+'*\n'+
+      (scorers?'⚽ الهدافون: '+scorers+'\n':'')+
+      (comment?'📝 '+comment+'\n':'')+
+      '━━━━━━━━━━━━━━\n'+
+      '🇴🇲 أكاديمية الشمالي للقدم';
+    window.open('https://api.whatsapp.com/send?phone='+CONFIG.WA_NUM+'&text='+encodeURIComponent(msg),'_blank');
+    alert('✅ تم حفظ النتيجة!');
+    go('matchresult');
+  }).catch(function(){ showL(false); alert('خطأ في الحفظ'); });
 }
 
 // ===== MATCH LIST =====
