@@ -175,6 +175,11 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   <hr class="sb-hr">
   <div class="sb-sec">الإدارة</div>
   <button class="sb-btn coach" data-page="coachlogin" data-pg="coachlogin"><i class="fas fa-futbol"></i> بوابة المدرب</button>
+  <div id="coachMenu" style="display:none;">
+    <button class="sb-btn coach" data-pg="att"><i class="fas fa-clipboard-user"></i> الحضور</button>
+    <button class="sb-btn coach" data-pg="awd"><i class="fas fa-trophy"></i> لاعب الشهر</button>
+    <button class="sb-btn coach" data-pg="coachreport"><i class="fas fa-file-alt"></i> التقرير الشهري</button>
+  </div>
   <button class="sb-btn gold" data-page="adminlogin" data-pg="adminlogin"><i class="fas fa-user-shield"></i> دخول الإدارة</button>
   <div id="admMenu" style="display:none;">
     <hr class="sb-hr">
@@ -833,17 +838,56 @@ function renderAtt(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
   getPlayers().then(function(players){
     if(!players.length){ document.getElementById('content').innerHTML='<div class="card"><div class="ldg">لا يوجد لاعبون.</div></div>'; return; }
-    var html = '<div class="card"><div class="sec-title"><i class="fas fa-clipboard-user"></i> سجل الحضور</div>';
+    var yrs = [...new Set(players.map(function(p){return p.birthYear;}))].filter(Boolean).sort();
+    var yrOpts = '<option value="">كل الفئات</option>'+yrs.map(function(y){return '<option value="'+y+'">مواليد '+y+'</option>';}).join('');
+    var html = '<div class="card">'+
+      '<div class="sec-title"><i class="fas fa-clipboard-user"></i> سجل الحضور</div>'+
+      '<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">'+
+      '<select class="inp" id="attYearFilter" onchange="filterAtt()" style="flex:1;">'+yrOpts+'</select>'+
+      '<button class="btn-dk" onclick="setAllAtt(\'pres\')">✅ الكل</button>'+
+      '<button class="btn-dk" style="background:#dc2626;" onclick="setAllAtt(\'abs\')">❌ الكل</button>'+
+      '</div>'+
+      '<div id="attList">';
     players.forEach(function(p){
-      html += '<div class="att-row" data-id="'+p.id+'" data-name="'+p.playerName+'">'+
+      html += '<div class="att-row" data-id="'+p.id+'" data-name="'+p.playerName+'" data-year="'+p.birthYear+'">'+
+        '<div style="display:flex;align-items:center;gap:8px;">'+
+        '<input type="checkbox" class="att-chk" data-id="'+p.id+'" style="width:16px;height:16px;cursor:pointer;">'+
         '<div><div class="att-n">'+p.playerName+'</div><div class="att-s">'+p.id+' · مواليد '+p.birthYear+'</div></div>'+
+        '</div>'+
         '<div class="att-btns">'+
-        '<button class="att-opt pres" data-att="pres">✅</button>'+
-        '<button class="att-opt" data-att="abs">❌</button>'+
+        '<button class="att-opt" data-att="pres">✅ حاضر</button>'+
+        '<button class="att-opt" data-att="abs">❌ غائب</button>'+
         '</div></div>';
     });
-    html += '<button class="btn-sub" style="margin-top:12px;" onclick="submitAtt()">💾 حفظ الحضور</button></div>';
+    html += '</div>'+
+      '<div style="margin-top:10px;font-size:12px;color:#64748b;" id="attCount">اللاعبون: '+players.length+'</div>'+
+      '<button class="btn-sub" style="margin-top:12px;" onclick="submitAtt()">💾 حفظ الحضور</button></div>';
     document.getElementById('content').innerHTML = html;
+    window._attPlayers = players;
+  });
+}
+
+function filterAtt(){
+  var yr = document.getElementById('attYearFilter').value;
+  var rows = document.querySelectorAll('#attList .att-row');
+  var count = 0;
+  rows.forEach(function(r){
+    var show = !yr || r.getAttribute('data-year') === yr;
+    r.style.display = show ? '' : 'none';
+    if(show) count++;
+  });
+  document.getElementById('attCount').textContent = 'اللاعبون: ' + count;
+}
+
+function setAllAtt(status){
+  var yr = document.getElementById('attYearFilter') ? document.getElementById('attYearFilter').value : '';
+  var rows = document.querySelectorAll('#attList .att-row');
+  rows.forEach(function(r){
+    if(yr && r.getAttribute('data-year') !== yr) return;
+    var btns = r.querySelectorAll('.att-opt');
+    btns.forEach(function(b){ b.classList.remove('pres','abs'); });
+    var target = r.querySelector('[data-att="'+status+'"]');
+    if(target) target.classList.add(status);
   });
 }
 
@@ -1011,6 +1055,7 @@ function renderPage(page) {
     case 'awd': renderAwd(); break;
     case 'coaches': renderCoaches(); break;
     case 'reports': renderReports(); break;
+    case 'coachreport': renderCoachReport(); break;
     default: renderReg();
   }
   } catch(err) {
@@ -1035,6 +1080,7 @@ function checkCoach() {
   var all = CONFIG.ADMIN_PASS.concat(CONFIG.COACH_PASS);
   if(all.indexOf(p) >= 0) {
     isCoach = true;
+    document.getElementById('coachMenu').style.display = 'block';
     go('att');
   } else {
     document.getElementById('coachErr').style.display = 'block';
@@ -1042,9 +1088,68 @@ function checkCoach() {
 }
 
 function logout() {
-  isAdm = false;
+  isAdm = false; isCoach = false;
   document.getElementById('admMenu').style.display = 'none';
+  document.getElementById('coachMenu').style.display = 'none';
   go('reg');
+}
+
+// ===== COACH REPORT =====
+function renderCoachReport(){
+  var html =
+    '<div class="card">'+
+    '<div class="sec-title"><i class="fas fa-file-alt"></i> التقرير الشهري</div>'+
+    '<div class="mb"><label class="lbl">الشهر</label>'+
+    '<select class="inp" id="crMonth"><option value="">اختر...</option>'+monthOpts()+'</select></div>'+
+    '<div class="mb"><label class="lbl">الفئة العمرية</label>'+
+    '<select class="inp" id="crCategory">'+
+    '<option value="">الكل</option>'+
+    '<option>2015 - 2016</option><option>2013 - 2014</option>'+
+    '<option>2011 - 2012</option><option>2009 - 2010</option>'+
+    '</select></div>'+
+    '<div class="mb"><label class="lbl">📊 ملخص الأداء العام</label>'+
+    '<textarea class="inp" id="crSummary" rows="3" placeholder="مستوى الأداء العام للاعبين هذا الشهر..."></textarea></div>'+
+    '<div class="mb"><label class="lbl">⚠️ أبرز التحديات</label>'+
+    '<textarea class="inp" id="crChallenges" rows="4" placeholder="التحديات التي واجهها الفريق..."></textarea></div>'+
+    '<div class="mb"><label class="lbl">✅ الحلول المقترحة</label>'+
+    '<textarea class="inp" id="crSolutions" rows="4" placeholder="الحلول والإجراءات المتخذة..."></textarea></div>'+
+    '<div class="mb"><label class="lbl">🎯 أهداف الشهر القادم</label>'+
+    '<textarea class="inp" id="crGoals" rows="3" placeholder="الأهداف والخطة للشهر القادم..."></textarea></div>'+
+    '<div class="mb"><label class="lbl">⭐ أبرز اللاعبين هذا الشهر</label>'+
+    '<input type="text" class="inp" id="crStars" placeholder="أسماء اللاعبين المتميزين..."></div>'+
+    '<div class="mb"><label class="lbl">📎 ملاحظات إضافية</label>'+
+    '<textarea class="inp" id="crNotes" rows="2" placeholder="أي ملاحظات أخرى..."></textarea></div>'+
+    '<button class="btn-sub" onclick="submitCoachReport()">📤 إرسال التقرير</button>'+
+    '</div>';
+  document.getElementById('content').innerHTML = html;
+}
+
+function submitCoachReport(){
+  var month = document.getElementById('crMonth').value;
+  if(!month){ alert('اختر الشهر'); return; }
+  var data = {
+    'الشهر': month,
+    'الفئة': document.getElementById('crCategory').value || 'الكل',
+    'ملخص الأداء': document.getElementById('crSummary').value,
+    'التحديات': document.getElementById('crChallenges').value,
+    'الحلول': document.getElementById('crSolutions').value,
+    'أهداف الشهر القادم': document.getElementById('crGoals').value,
+    'أبرز اللاعبين': document.getElementById('crStars').value,
+    'ملاحظات': document.getElementById('crNotes').value,
+    'التاريخ': new Date().toISOString()
+  };
+  showL(true);
+  apiAppend('تقارير المدربين', data).then(function(){
+    showL(false);
+    var msg = '📋 تقرير شهري\n🗓️ '+month+
+      '\n📊 الأداء: '+data['ملخص الأداء']+
+      '\n⚠️ التحديات: '+data['التحديات']+
+      '\n✅ الحلول: '+data['الحلول']+
+      '\n🦅 أكاديمية الشمالي';
+    window.open('https://api.whatsapp.com/send?phone='+CONFIG.WA_NUM+'&text='+encodeURIComponent(msg),'_blank');
+    alert('✅ تم إرسال التقرير بنجاح!');
+    go('att');
+  }).catch(function(){ showL(false); alert('خطأ في الإرسال'); });
 }
 
 function submitReg() {
