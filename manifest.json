@@ -1,0 +1,42 @@
+{
+  "name": "أكاديمية الشمالي لكرة القدم",
+  "short_name": "الشمالي FC",
+  "description": "البوابة الإلكترونية لأكاديمية الشمالي لكرة القدم",
+  "start_url": "/shamali-academy/",
+  "scope": "/shamali-academy/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "https://drive.google.com/thumbnail?id=1PFe6HtV4EvTwHreO45oIKYlnc20uX3dS&sz=w192",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://drive.google.com/thumbnail?id=1PFe6HtV4EvTwHreO45oIKYlnc20uX3dS&sz=w512",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["sports", "education"],
+  "shortcuts": [
+    {
+      "name": "تسجيل لاعب",
+      "short_name": "تسجيل",
+      "url": "/shamali-academy/#reg",
+      "description": "تسجيل لاعب جديد في الأكاديمية"
+    },
+    {
+      "name": "الطاقم التدريبي",
+      "short_name": "المدربون",
+      "url": "/shamali-academy/#cch",
+      "description": "عرض الطاقم التدريبي"
+    }
+  ]
+}

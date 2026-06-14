@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#16a34a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="الشمالي FC">
+<link rel="manifest" href="manifest.json">
 <style>:root{color-scheme:light only;}html,body{background-color:#fff!important;color:#1e293b!important;}</style>
 <title>بوابة أكاديمية الشمالي</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -214,6 +220,9 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   <h1>🦅 البوابة الإلكترونية لأكاديمية الشمالي</h1>
   <p>التسجيل · الحضور · التكريم · المدربون · التقارير</p>
   <div class="gl"></div>
+  <button id="pwaInstallBtn" onclick="installPWA()" style="display:none;margin:12px auto 0;align-items:center;gap:8px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.4);color:#fff;border-radius:30px;padding:10px 20px;font-family:Cairo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">
+    <i class="fas fa-download"></i> تنزيل التطبيق
+  </button>
 </div>
 
 <div id="content" style="padding:12px;max-width:700px;margin:0 auto;">
@@ -2291,6 +2300,33 @@ function initApp(){
   var prb=document.getElementById('payRBank'); if(prb) prb.onclick=function(){setPay(this,'reg');};
 }
 window.onload = initApp;
+
+// ── PWA Service Worker ──
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+
+// ── PWA Install Prompt ──
+var _pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  _pwaPrompt = e;
+  // أظهر زر التنزيل
+  var btn = document.getElementById('pwaInstallBtn');
+  if(btn) btn.style.display = 'flex';
+});
+window.addEventListener('appinstalled', function() {
+  var btn = document.getElementById('pwaInstallBtn');
+  if(btn) btn.style.display = 'none';
+  _pwaPrompt = null;
+});
+function installPWA() {
+  if(!_pwaPrompt) return;
+  _pwaPrompt.prompt();
+  _pwaPrompt.userChoice.then(function(){ _pwaPrompt = null; });
+}
 
 
 document.addEventListener('click', function(e){
