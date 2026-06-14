@@ -766,78 +766,61 @@ function renderPartners(){
 
   // ── HERO ──────────────────────────────────────────────────
   var html =
-    '<div style="position:relative;overflow:hidden;background:#0b1120;padding:0;">'+
-    // خطوط زخرفية
-    '<div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(212,175,55,.04) 0,rgba(212,175,55,.04) 1px,transparent 1px,transparent 40px);pointer-events:none;"></div>'+
-    '<div style="position:relative;padding:36px 20px 28px;text-align:center;">'+
-    '<div style="display:inline-block;background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.3);border-radius:30px;padding:4px 16px;font-size:9px;color:#d4af37;font-weight:800;letter-spacing:3px;margin-bottom:14px;">OFFICIAL PARTNERS</div>'+
-    '<div style="font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;">شركاء النجاح</div>'+
-    '<div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:20px;">يداً بيد نحو المستقبل · أكاديمية الشمالي 🦅</div>'+
-    // عداد الشركاء
+    '<div style="position:relative;overflow:hidden;background:#fff;padding:0;border-bottom:3px solid #e2e8f0;">'+
+    '<div style="position:relative;padding:32px 20px 24px;text-align:center;">'+
+    '<div style="display:inline-block;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:30px;padding:4px 16px;font-size:9px;color:#64748b;font-weight:800;letter-spacing:3px;margin-bottom:14px;">OFFICIAL PARTNERS</div>'+
+    '<div style="font-size:24px;font-weight:900;color:#0f172a;margin-bottom:6px;">شركاء النجاح</div>'+
+    '<div style="font-size:12px;color:#94a3b8;margin-bottom:20px;">يداً بيد نحو المستقبل · أكاديمية الشمالي 🦅</div>'+
     '<div style="display:flex;justify-content:center;gap:0;">'+
-    statBadge(total,'شريك','#d4af37')+
-    statBadge(tiers.gold.length,'ذهبي','#f59e0b')+
-    statBadge(tiers.silver.length,'فضي','#94a3b8')+
-    statBadge(tiers.bronze.length,'برونزي','#cd7c2f')+
+    statBadge(total,'شريك','#0f172a')+
+    statBadge(tiers.gold.length,'ذهبي','#b45309')+
+    statBadge(tiers.silver.length,'فضي','#475569')+
+    statBadge(tiers.bronze.length,'برونزي','#92400e')+
     '</div>'+
     '</div>'+
-    // شريط ذهبي فاصل
-    '<div style="height:3px;background:linear-gradient(90deg,transparent,#d4af37 30%,#fff8dc 50%,#d4af37 70%,transparent);"></div>'+
+    '<div style="height:3px;background:linear-gradient(90deg,transparent,#d4af37 30%,#fef3c7 50%,#d4af37 70%,transparent);"></div>'+
     '</div>';
 
   // ── GOLD ──────────────────────────────────────────────────
   if(tiers.gold.length){
-    html += tierHeader('الراعي الذهبي الرسمي','OFFICIAL GOLD SPONSOR','#d4af37','#7c2d12',
-      'linear-gradient(135deg,#1a0f00,#2d1a00)');
-    html += '<div style="padding:0 14px 20px;background:#111827;">';
-    tiers.gold.forEach(function(s){
-      html += goldCard(s);
-    });
+    html += tierHeader('الراعي الذهبي الرسمي','OFFICIAL GOLD SPONSOR','#b45309','#fef3c7','#fffbeb');
+    html += '<div style="padding:0 14px 20px;background:#fffbeb;">';
+    tiers.gold.forEach(function(s){ html += goldCard(s); });
     html += '</div>';
   }
 
   // ── SILVER ────────────────────────────────────────────────
   if(tiers.silver.length){
-    html += tierHeader('الراعي الفضي','SILVER SPONSOR','#94a3b8','#1e293b',
-      'linear-gradient(135deg,#0f172a,#1e293b)');
-    html += '<div style="padding:0 14px 20px;background:#0f172a;display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
-    tiers.silver.forEach(function(s){
-      html += silverCard(s);
-    });
+    html += tierHeader('الراعي الفضي','SILVER SPONSOR','#475569','#f1f5f9','#f8fafc');
+    html += '<div style="padding:0 14px 20px;background:#f8fafc;display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+    tiers.silver.forEach(function(s){ html += silverCard(s); });
     html += '</div>';
   }
 
   // ── BRONZE ────────────────────────────────────────────────
   if(tiers.bronze.length){
-    html += tierHeader('الراعي البرونزي','BRONZE SPONSOR','#cd7c2f','#431407',
-      'linear-gradient(135deg,#1c0a00,#2d1500)');
-    html += '<div style="padding:0 14px 20px;background:#1c0a00;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
-    tiers.bronze.forEach(function(s){
-      html += bronzeCard(s);
-    });
+    html += tierHeader('الراعي البرونزي','BRONZE SPONSOR','#92400e','#fff7ed','#fff7ed');
+    html += '<div style="padding:0 14px 20px;background:#fff7ed;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
+    tiers.bronze.forEach(function(s){ html += bronzeCard(s); });
     html += '</div>';
   }
 
   // ── SPECIAL ───────────────────────────────────────────────
   if(tiers.legal.length || tiers.media.length){
-    html += '<div style="background:#080d17;padding:14px 14px 20px;">'+
-      '<div style="font-size:9px;color:rgba(255,255,255,.3);text-align:center;font-weight:800;letter-spacing:2px;margin-bottom:12px;">SPECIAL PARTNERS</div>'+
+    html += '<div style="background:#f0f4ff;padding:14px 14px 20px;border-top:1px solid #e2e8f0;">'+
+      '<div style="font-size:9px;color:#94a3b8;text-align:center;font-weight:800;letter-spacing:2px;margin-bottom:12px;">SPECIAL PARTNERS</div>'+
       '<div style="display:grid;grid-template-columns:'+(tiers.legal.length&&tiers.media.length?'1fr 1fr':'1fr')+';gap:10px;">';
-    if(tiers.legal.length){
-      html += specialCard(tiers.legal[0],'⚖️','الشريك القانوني','#1d4ed8','#1e3a8a');
-    }
-    if(tiers.media.length){
-      html += specialCard(tiers.media[0],'📡','الشريك الإعلامي','#7e22ce','#4a1d96');
-    }
+    if(tiers.legal.length) html += specialCard(tiers.legal[0],'⚖️','الشريك القانوني','#1d4ed8','#eff6ff');
+    if(tiers.media.length) html += specialCard(tiers.media[0],'📡','الشريك الإعلامي','#7e22ce','#faf5ff');
     html += '</div></div>';
   }
 
   // ── FOOTER ────────────────────────────────────────────────
   html +=
-    '<div style="background:#030712;padding:20px;text-align:center;">'+
+    '<div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px;text-align:center;">'+
     '<div style="width:40px;height:2px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:0 auto 10px;"></div>'+
-    '<div style="font-size:9px;color:rgba(255,255,255,.25);font-weight:700;letter-spacing:2px;">SHAMALI FOOTBALL ACADEMY · 🇴🇲 SULTANATE OF OMAN</div>'+
-    '<div style="font-size:10px;color:rgba(212,175,55,.5);margin-top:6px;font-weight:800;">شكراً لدعم شركائنا في رحلة الأبطال</div>'+
+    '<div style="font-size:9px;color:#94a3b8;font-weight:700;letter-spacing:2px;">SHAMALI FOOTBALL ACADEMY · 🇴🇲 SULTANATE OF OMAN</div>'+
+    '<div style="font-size:10px;color:#b45309;margin-top:6px;font-weight:800;">شكراً لدعم شركائنا في رحلة الأبطال</div>'+
     '</div>';
 
   document.getElementById('content').innerHTML = html;
@@ -847,54 +830,52 @@ function renderPartners(){
 function statBadge(n, label, color){
   return '<div style="padding:10px 16px;text-align:center;">'+
     '<div style="font-size:20px;font-weight:900;color:'+color+';">'+n+'</div>'+
-    '<div style="font-size:9px;color:rgba(255,255,255,.4);font-weight:700;">'+label+'</div>'+
+    '<div style="font-size:9px;color:#94a3b8;font-weight:700;">'+label+'</div>'+
     '</div>';
 }
 
-function tierHeader(ar, en, color, bg, grad){
-  return '<div style="background:'+grad+';padding:14px 18px;display:flex;align-items:center;gap:12px;border-top:1px solid '+color+'33;border-bottom:1px solid '+color+'22;">'+
-    '<div style="width:3px;height:30px;background:'+color+';border-radius:3px;flex-shrink:0;"></div>'+
+function tierHeader(ar, en, color, borderColor, bg){
+  return '<div style="background:'+bg+';padding:12px 18px;display:flex;align-items:center;gap:12px;border-top:2px solid '+borderColor+';border-bottom:1px solid '+borderColor+';">'+
+    '<div style="width:4px;height:30px;background:'+color+';border-radius:3px;flex-shrink:0;"></div>'+
     '<div>'+
     '<div style="font-size:9px;color:'+color+';font-weight:800;letter-spacing:2px;">'+en+'</div>'+
-    '<div style="font-size:15px;font-weight:900;color:#fff;">'+ar+'</div>'+
+    '<div style="font-size:15px;font-weight:900;color:#0f172a;">'+ar+'</div>'+
     '</div></div>';
 }
 
 function goldCard(s){
-  return '<div style="background:linear-gradient(135deg,#1a1200,#2d2000);border:1.5px solid #d4af3755;border-radius:14px;padding:20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;">'+
-    '<div style="flex-shrink:0;width:90px;height:70px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:8px;box-sizing:border-box;">'+
+  return '<div style="background:#fff;border:2px solid #fde68a;border-radius:14px;padding:18px;margin-bottom:10px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 12px rgba(212,175,55,.12);">'+
+    '<div style="flex-shrink:0;width:90px;height:70px;background:#fafafa;border-radius:10px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;padding:8px;box-sizing:border-box;">'+
     '<img src="'+thumb(s.id)+'" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.style.display=\'none\'"></div>'+
     '<div style="flex:1;">'+
-    '<div style="font-size:13px;font-weight:900;color:#fff;margin-bottom:4px;">'+s.name+'</div>'+
-    '<div style="display:inline-block;background:#d4af37;color:#000;font-size:8px;font-weight:900;border-radius:20px;padding:2px 10px;letter-spacing:1px;">GOLD PARTNER</div>'+
-    '</div>'+
-    '<div style="color:#d4af37;font-size:22px;opacity:.4;">🌟</div>'+
-    '</div>';
+    '<div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:6px;">'+s.name+'</div>'+
+    '<div style="display:inline-block;background:#d4af37;color:#fff;font-size:8px;font-weight:900;border-radius:20px;padding:2px 10px;letter-spacing:1px;">GOLD PARTNER ⭐</div>'+
+    '</div></div>';
 }
 
 function silverCard(s){
-  return '<div style="background:linear-gradient(135deg,#0d1a2e,#152540);border:1px solid #94a3b833;border-radius:12px;padding:14px;text-align:center;">'+
-    '<div style="width:100%;height:52px;background:rgba(255,255,255,.06);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;padding:6px;box-sizing:border-box;">'+
+  return '<div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,.05);">'+
+    '<div style="width:100%;height:52px;background:#f8fafc;border-radius:8px;border:1px solid #f1f5f9;display:flex;align-items:center;justify-content:center;margin-bottom:8px;padding:6px;box-sizing:border-box;">'+
     '<img src="'+thumb(s.id)+'" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.style.display=\'none\'"></div>'+
-    '<div style="font-size:10px;font-weight:800;color:#94a3b8;">'+s.name+'</div>'+
+    '<div style="font-size:10px;font-weight:800;color:#334155;">'+s.name+'</div>'+
     '</div>';
 }
 
 function bronzeCard(s){
-  return '<div style="background:rgba(255,255,255,.04);border:1px solid #cd7c2f33;border-radius:10px;padding:10px;text-align:center;">'+
+  return '<div style="background:#fff;border:1.5px solid #fed7aa;border-radius:10px;padding:10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.04);">'+
     '<div style="width:100%;height:40px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;">'+
-    '<img src="'+thumb(s.id)+'" style="max-width:100%;max-height:100%;object-fit:contain;filter:brightness(0) invert(1);opacity:.8;" onerror="this.style.display=\'none\'"></div>'+
-    '<div style="font-size:8px;font-weight:800;color:#cd7c2f;">'+s.name+'</div>'+
+    '<img src="'+thumb(s.id)+'" style="max-width:100%;max-height:40px;object-fit:contain;" onerror="this.style.display=\'none\'"></div>'+
+    '<div style="font-size:8px;font-weight:800;color:#92400e;">'+s.name+'</div>'+
     '</div>';
 }
 
 function specialCard(s, icon, label, color, bg){
-  return '<div style="background:linear-gradient(135deg,'+bg+','+bg+'99);border:1px solid '+color+'44;border-radius:12px;padding:14px;text-align:center;">'+
+  return '<div style="background:'+bg+';border:1.5px solid '+color+'33;border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,.05);">'+
     '<div style="font-size:20px;margin-bottom:6px;">'+icon+'</div>'+
     '<div style="font-size:9px;color:'+color+';font-weight:800;letter-spacing:1px;margin-bottom:8px;">'+label+'</div>'+
-    '<div style="background:rgba(255,255,255,.07);border-radius:8px;padding:10px;margin-bottom:8px;height:44px;display:flex;align-items:center;justify-content:center;">'+
+    '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px;margin-bottom:8px;height:44px;display:flex;align-items:center;justify-content:center;">'+
     '<img src="'+thumb(s.id)+'" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.style.display=\'none\'"></div>'+
-    '<div style="font-size:10px;font-weight:800;color:rgba(255,255,255,.8);">'+s.name+'</div>'+
+    '<div style="font-size:10px;font-weight:800;color:#1e293b;">'+s.name+'</div>'+
     '</div>';
 }
 
