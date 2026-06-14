@@ -172,6 +172,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   <button class="sb-btn" data-page="sched" data-pg="sched"><i class="fas fa-calendar-alt"></i> جدول التدريب</button>
   <button class="sb-btn" data-page="cch" data-pg="cch"><i class="fas fa-user-tie"></i> الطاقم التدريبي</button>
   <button class="sb-btn" data-page="partners" data-pg="partners"><i class="fas fa-handshake"></i> شركاء النجاح</button>
+  <button class="sb-btn" data-page="suggest" data-pg="suggest"><i class="fas fa-comment-dots"></i> ملاحظات ومقترحات</button>
   <hr class="sb-hr">
   <div class="sb-sec">الإدارة</div>
   <button class="sb-btn coach" data-page="coachlogin" data-pg="coachlogin"><i class="fas fa-futbol"></i> بوابة المدرب</button>
@@ -196,6 +197,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
     <button class="sb-btn gold" data-page="awd" data-pg="awd"><i class="fas fa-trophy"></i> التكريم</button>
     <button class="sb-btn gold" data-page="coaches" data-pg="coaches"><i class="fas fa-id-card"></i> المدربون</button>
     <button class="sb-btn gold" data-page="reports" data-pg="reports"><i class="fas fa-file-alt"></i> التقارير</button>
+    <button class="sb-btn gold" data-page="suggestions" data-pg="suggestions"><i class="fas fa-inbox"></i> صندوق المقترحات</button>
     <button class="sb-btn danger" id="logoutBtn" data-act="logout"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
   <div class="sb-foot">
@@ -1038,6 +1040,153 @@ function renderCoaches(){
   });
 }
 
+// ===== SUGGEST (parent form) =====
+function renderSuggest(){
+  var el = document.getElementById('content');
+  el.innerHTML =
+    '<div style="background:linear-gradient(135deg,#0d3320,#16a34a);padding:28px 16px 20px;text-align:center;color:#fff;">'+
+    '<div style="font-size:36px;margin-bottom:6px;">💬</div>'+
+    '<div style="font-size:20px;font-weight:900;">ملاحظات ومقترحات</div>'+
+    '<div style="font-size:11px;opacity:.7;margin-top:4px;">رأيك يهمنا · تواصل مباشر مع الإدارة</div></div>'+
+    '<div style="padding:16px;">'+
+    '<div style="background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1.5px solid #e2e8f0;">'+
+    // نوع المقترح
+    '<div style="margin-bottom:14px;">'+
+    '<div style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:8px;"><i class="fas fa-tag"></i> نوع الرسالة</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="sugTypeGrid">'+
+    sugTypeBtn('اقتراح','💡','sug')+
+    sugTypeBtn('ملاحظة','📝','note')+
+    sugTypeBtn('شكوى','⚠️','complaint')+
+    sugTypeBtn('شكر وتقدير','🏅','thanks')+
+    '</div></div>'+
+    // اسم ولي الأمر
+    '<div style="margin-bottom:12px;">'+
+    '<label style="font-size:11px;color:#64748b;font-weight:700;display:block;margin-bottom:5px;"><i class="fas fa-user"></i> اسم ولي الأمر</label>'+
+    '<input id="sugName" type="text" placeholder="الاسم الكامل (اختياري)" style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-family:Cairo,sans-serif;font-size:13px;box-sizing:border-box;"></div>'+
+    // اسم اللاعب
+    '<div style="margin-bottom:12px;">'+
+    '<label style="font-size:11px;color:#64748b;font-weight:700;display:block;margin-bottom:5px;"><i class="fas fa-running"></i> اسم اللاعب (إن وجد)</label>'+
+    '<input id="sugPlayer" type="text" placeholder="اسم اللاعب المعني (اختياري)" style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-family:Cairo,sans-serif;font-size:13px;box-sizing:border-box;"></div>'+
+    // نص المقترح
+    '<div style="margin-bottom:16px;">'+
+    '<label style="font-size:11px;color:#64748b;font-weight:700;display:block;margin-bottom:5px;"><i class="fas fa-pen"></i> نص الرسالة *</label>'+
+    '<textarea id="sugText" rows="5" placeholder="اكتب ملاحظتك أو مقترحك هنا..." style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-family:Cairo,sans-serif;font-size:13px;box-sizing:border-box;resize:none;"></textarea></div>'+
+    '<button onclick="submitSuggest()" style="width:100%;background:linear-gradient(135deg,#0d3320,#16a34a);color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-paper-plane"></i> إرسال إلى الإدارة</button>'+
+    '<div id="sugMsg" style="display:none;margin-top:12px;text-align:center;"></div>'+
+    '</div></div>';
+
+  // تفعيل أزرار النوع
+  document.getElementById('sugTypeGrid').querySelectorAll('.sug-type-btn').forEach(function(btn){
+    btn.onclick = function(){
+      document.querySelectorAll('.sug-type-btn').forEach(function(b){ b.style.background='#f8fafc'; b.style.borderColor='#e2e8f0'; b.style.color='#475569'; });
+      this.style.background='#ecfdf5'; this.style.borderColor='#16a34a'; this.style.color='#16a34a';
+      window._sugType = this.getAttribute('data-type');
+    };
+  });
+  window._sugType = 'اقتراح';
+}
+
+function sugTypeBtn(label, icon, type){
+  var active = type==='sug';
+  return '<button class="sug-type-btn" data-type="'+label+'" style="'+
+    'background:'+(active?'#ecfdf5':'#f8fafc')+';border:1.5px solid '+(active?'#16a34a':'#e2e8f0')+';'+
+    'border-radius:10px;padding:10px 8px;font-family:Cairo,sans-serif;font-size:12px;font-weight:800;'+
+    'color:'+(active?'#16a34a':'#475569')+';cursor:pointer;text-align:center;">'+
+    '<div style="font-size:20px;margin-bottom:3px;">'+icon+'</div>'+label+'</button>';
+}
+
+function submitSuggest(){
+  var text = document.getElementById('sugText').value.trim();
+  if(!text){ alert('يرجى كتابة نص الرسالة'); return; }
+  var type = window._sugType || 'اقتراح';
+  var name = document.getElementById('sugName').value.trim() || 'مجهول';
+  var player = document.getElementById('sugPlayer').value.trim() || '-';
+  var row = {
+    'التاريخ': new Date().toLocaleString('ar-SA'),
+    'النوع': type,
+    'اسم ولي الأمر': name,
+    'اسم اللاعب': player,
+    'الرسالة': text,
+    'الحالة': 'جديد'
+  };
+  var btn = document.querySelector('#content button[onclick="submitSuggest()"]');
+  if(btn){ btn.disabled=true; btn.textContent='جارٍ الإرسال...'; }
+  apiAppend('المقترحات والملاحظات', row).then(function(){
+    var msg = document.getElementById('sugMsg');
+    msg.style.display='block';
+    msg.innerHTML='<div style="background:#ecfdf5;border:1.5px solid #16a34a;border-radius:10px;padding:14px;color:#15803d;font-weight:800;font-size:13px;">'+
+      '✅ تم إرسال رسالتك بنجاح!<br><span style="font-size:11px;font-weight:600;color:#64748b;">شكراً لتواصلك مع إدارة أكاديمية الشمالي 🦅</span></div>';
+    if(btn){ btn.style.display='none'; }
+  }).catch(function(){
+    if(btn){ btn.disabled=false; btn.textContent='إرسال إلى الإدارة'; }
+    alert('تعذّر الإرسال، تحقق من الاتصال');
+  });
+}
+
+// ===== SUGGESTIONS ADMIN =====
+function renderSuggestions(){
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ تحميل المقترحات...</div>';
+  apiGet('المقترحات والملاحظات').then(function(rows){
+    if(!Array.isArray(rows)||!rows.length){
+      el.innerHTML='<div style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8);padding:20px;text-align:center;color:#fff;border-radius:0;">'+
+        '<div style="font-size:28px;">📭</div><div style="font-weight:900;margin-top:6px;">لا توجد رسائل بعد</div></div>';
+      return;
+    }
+    // ترتيب تنازلي (الأحدث أولاً)
+    var sorted = rows.slice().reverse();
+    var counts = {جديد:0, مقروء:0};
+    sorted.forEach(function(r){ var s=r['الحالة']||'جديد'; if(counts[s]!==undefined) counts[s]++; else counts['مقروء']++; });
+
+    var typeColor = {'اقتراح':'#16a34a','ملاحظة':'#1d4ed8','شكوى':'#b81d22','شكر وتقدير':'#d4af37'};
+    var typeIcon  = {'اقتراح':'💡','ملاحظة':'📝','شكوى':'⚠️','شكر وتقدير':'🏅'};
+
+    var html =
+      '<div style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8);padding:20px 16px;text-align:center;color:#fff;">'+
+      '<div style="font-size:28px;margin-bottom:4px;">📬</div>'+
+      '<div style="font-size:18px;font-weight:900;">صندوق المقترحات والملاحظات</div>'+
+      '<div style="display:flex;justify-content:center;gap:16px;margin-top:12px;">'+
+      '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 18px;text-align:center;">'+
+      '<div style="font-size:18px;font-weight:900;">'+sorted.length+'</div><div style="font-size:10px;opacity:.8;">إجمالي</div></div>'+
+      '<div style="background:rgba(239,68,68,.3);border-radius:10px;padding:8px 18px;text-align:center;">'+
+      '<div style="font-size:18px;font-weight:900;">'+counts['جديد']+'</div><div style="font-size:10px;opacity:.8;">جديد</div></div>'+
+      '</div></div>'+
+      '<div style="padding:12px;">';
+
+    sorted.forEach(function(r){
+      var type = r['النوع']||'اقتراح';
+      var color = typeColor[type]||'#475569';
+      var icon  = typeIcon[type]||'💬';
+      var isNew = (r['الحالة']||'جديد')==='جديد';
+      html +=
+        '<div style="background:#fff;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border-right:4px solid '+color+';">'+
+        '<div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">'+
+        '<div style="display:flex;align-items:center;gap:8px;">'+
+        '<span style="font-size:18px;">'+icon+'</span>'+
+        '<div>'+
+        '<div style="font-size:12px;font-weight:900;color:'+color+';">'+type+'</div>'+
+        '<div style="font-size:10px;color:#94a3b8;">'+r['التاريخ']+'</div>'+
+        '</div></div>'+
+        (isNew?'<span style="background:#fef2f2;color:#b81d22;font-size:9px;font-weight:800;border-radius:20px;padding:2px 8px;border:1px solid #fecaca;">جديد</span>':
+               '<span style="background:#f0fdf4;color:#16a34a;font-size:9px;font-weight:800;border-radius:20px;padding:2px 8px;border:1px solid #bbf7d0;">مقروء</span>')+
+        '</div>'+
+        '<div style="padding:12px 14px;">'+
+        '<div style="display:flex;gap:16px;margin-bottom:8px;">'+
+        '<div><div style="font-size:9px;color:#94a3b8;font-weight:700;">ولي الأمر</div><div style="font-size:12px;font-weight:800;color:#1e293b;">'+(r['اسم ولي الأمر']||'-')+'</div></div>'+
+        '<div><div style="font-size:9px;color:#94a3b8;font-weight:700;">اللاعب</div><div style="font-size:12px;font-weight:800;color:#1e293b;">'+(r['اسم اللاعب']||'-')+'</div></div>'+
+        '</div>'+
+        '<div style="background:#f8fafc;border-radius:8px;padding:10px;font-size:13px;color:#334155;line-height:1.7;border-right:3px solid '+color+';">'+
+        (r['الرسالة']||'')+'</div>'+
+        '</div></div>';
+    });
+
+    html += '</div>';
+    el.innerHTML = html;
+  }).catch(function(){
+    el.innerHTML='<div class="card"><div class="al al-warn">تعذّر تحميل المقترحات</div></div>';
+  });
+}
+
 // ===== REPORTS =====
 function renderReports(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
@@ -1117,6 +1266,8 @@ function renderPage(page) {
     case 'awd': renderAwd(); break;
     case 'coaches': renderCoaches(); break;
     case 'reports': renderReports(); break;
+    case 'suggest': renderSuggest(); break;
+    case 'suggestions': renderSuggestions(); break;
     case 'coachreport': renderCoachReport(); break;
     case 'matchlist': renderMatchList(); break;
     case 'matchresult': renderMatchResult(); break;
