@@ -162,6 +162,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   <div class="hdr-brand">🛡️ <span>أكاديمية الشمالي</span></div>
   <div style="display:flex;align-items:center;gap:8px;">
     <span class="badge">🇴🇲 عُمان</span>
+    <button onclick="shareApp()" style="background:#16a34a;border:none;color:#fff;cursor:pointer;padding:7px 11px;border-radius:8px;font-size:15px;"><i class="fas fa-share-alt"></i></button>
     <button class="menu-btn" id="menuBtn" data-act="toggleSb"><i class="fas fa-bars"></i></button>
   </div>
 </div>
@@ -225,18 +226,10 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
 
 <!-- شريط الرعاة الدوّار -->
 <div style="background:#0f172a;border-bottom:2px solid #d4af37;overflow:hidden;position:relative;height:54px;display:flex;align-items:center;">
-  <div style="position:absolute;right:0;top:0;bottom:0;width:50px;background:linear-gradient(to left,#0f172a,transparent);z-index:2;pointer-events:none;"></div>
-  <div style="position:absolute;left:0;top:0;bottom:0;width:50px;background:linear-gradient(to right,#0f172a,transparent);z-index:2;pointer-events:none;"></div>
-  <div id="sponsorTrack" style="display:flex;align-items:center;gap:32px;animation:scrollSponsors 28s linear infinite;white-space:nowrap;will-change:transform;padding:0 20px;">
-  </div>
+  <div style="position:absolute;right:0;top:0;bottom:0;width:40px;background:linear-gradient(to left,#0f172a,transparent);z-index:2;pointer-events:none;"></div>
+  <div style="position:absolute;left:0;top:0;bottom:0;width:40px;background:linear-gradient(to right,#0f172a,transparent);z-index:2;pointer-events:none;"></div>
+  <div id="sponsorTrack" style="display:flex;align-items:center;gap:28px;white-space:nowrap;position:absolute;left:0;"></div>
 </div>
-<style>
-@keyframes scrollSponsors{
-  0%{transform:translateX(0);}
-  100%{transform:translateX(-50%);}
-}
-#sponsorTrack:hover{animation-play-state:paused;}
-</style>
 
 <div id="content" style="padding:12px;max-width:700px;margin:0 auto;">
 <div class="card" id="regPage">
@@ -2318,18 +2311,24 @@ window.onload = function(){ initApp(); initSponsorTrack(); };
 function initSponsorTrack(){
   var track = document.getElementById('sponsorTrack');
   if(!track) return;
-  // نبني العناصر مرتين لضمان الحلقة المستمرة
-  var items = '';
-  var all = SPONSORS.concat(SPONSORS); // نكررها مرتين
-  all.forEach(function(s){
-    items +=
-      '<div style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 14px;flex-shrink:0;">'+
-      '<img src="'+thumb(s.id)+'" style="height:28px;max-width:70px;object-fit:contain;mix-blend-mode:screen;opacity:.95;" onerror="this.style.display=\'none\'">'+
-      '<span style="font-size:10px;color:rgba(255,255,255,.7);font-weight:700;font-family:Cairo,sans-serif;white-space:nowrap;">'+s.name+'</span>'+
-      '</div>'+
-      '<div style="color:#d4af37;font-size:10px;flex-shrink:0;">⭐</div>';
-  });
-  track.innerHTML = items;
+  var all = SPONSORS.concat(SPONSORS);
+  track.innerHTML = all.map(function(s){
+    return '<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 14px;flex-shrink:0;margin-left:8px;">'+
+      '<img src="'+thumb(s.id)+'" style="height:26px;max-width:65px;object-fit:contain;mix-blend-mode:screen;" onerror="this.style.display=\'none\'">'+
+      '<span style="font-size:10px;color:rgba(255,255,255,.8);font-weight:700;font-family:Cairo,sans-serif;">'+s.name+'</span>'+
+      '</div><span style="color:#d4af37;font-size:9px;flex-shrink:0;">★</span>';
+  }).join('');
+
+  var pos = 0;
+  var speed = 0.6;
+  var totalW = track.scrollWidth / 2;
+  function tick(){
+    pos += speed;
+    if(pos >= totalW) pos = 0;
+    track.style.transform = 'translateX(-' + pos + 'px)';
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }
 
 // ── Share ──
@@ -2360,25 +2359,6 @@ if('serviceWorker' in navigator) {
   });
 }
 
-// ── PWA Install Prompt ──
-var _pwaPrompt = null;
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault();
-  _pwaPrompt = e;
-  // أظهر زر التنزيل
-  var btn = document.getElementById('pwaInstallBtn');
-  if(btn) btn.style.display = 'flex';
-});
-window.addEventListener('appinstalled', function() {
-  var btn = document.getElementById('pwaInstallBtn');
-  if(btn) btn.style.display = 'none';
-  _pwaPrompt = null;
-});
-function installPWA() {
-  if(!_pwaPrompt) return;
-  _pwaPrompt.prompt();
-  _pwaPrompt.userChoice.then(function(){ _pwaPrompt = null; });
-}
 
 
 document.addEventListener('click', function(e){
