@@ -756,60 +756,146 @@ function renderCch(){
 // ===== PARTNERS =====
 function renderPartners(){
   var tiers = {
-    gold: SPONSORS.filter(function(s){return s.tier==='gold';}),
+    gold:   SPONSORS.filter(function(s){return s.tier==='gold';}),
     silver: SPONSORS.filter(function(s){return s.tier==='silver';}),
     bronze: SPONSORS.filter(function(s){return s.tier==='bronze';}),
-    legal: SPONSORS.filter(function(s){return s.tier==='legal';}),
-    media: SPONSORS.filter(function(s){return s.tier==='media';})
+    legal:  SPONSORS.filter(function(s){return s.tier==='legal';}),
+    media:  SPONSORS.filter(function(s){return s.tier==='media';})
   };
-  var html = '<div style="background:linear-gradient(160deg,#0f172a,#8c1215);padding:24px 16px;text-align:center;">'+
-    '<div style="font-size:9px;color:rgba(212,175,55,.8);font-weight:800;letter-spacing:2px;margin-bottom:6px;">OUR PARTNERS</div>'+
-    '<div style="font-size:18px;font-weight:900;color:#fff;">شركاء أكاديمية الشمالي</div></div>';
+  var total = SPONSORS.length;
 
-  html += '<div style="padding:16px;background:#fffdf5;">'+
-    '<div style="font-size:9px;font-weight:800;color:#92400e;text-align:center;margin-bottom:10px;">🥇 الراعي الذهبي</div>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
-  tiers.gold.forEach(function(s){
-    html += '<div style="background:#fff;border:2px solid #d4af37;border-radius:12px;padding:14px;text-align:center;">'+
-      '<img src="'+thumb(s.id)+'" style="max-height:65px;max-width:100%;object-fit:contain;">'+
-      '<div style="font-size:10px;font-weight:800;color:#92400e;margin-top:8px;">'+s.name+'</div></div>';
-  });
-  html += '</div></div>';
+  // ── HERO ──────────────────────────────────────────────────
+  var html =
+    '<div style="position:relative;overflow:hidden;background:#0b1120;padding:0;">'+
+    // خطوط زخرفية
+    '<div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(212,175,55,.04) 0,rgba(212,175,55,.04) 1px,transparent 1px,transparent 40px);pointer-events:none;"></div>'+
+    '<div style="position:relative;padding:36px 20px 28px;text-align:center;">'+
+    '<div style="display:inline-block;background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.3);border-radius:30px;padding:4px 16px;font-size:9px;color:#d4af37;font-weight:800;letter-spacing:3px;margin-bottom:14px;">OFFICIAL PARTNERS</div>'+
+    '<div style="font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;">شركاء النجاح</div>'+
+    '<div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:20px;">يداً بيد نحو المستقبل · أكاديمية الشمالي 🦅</div>'+
+    // عداد الشركاء
+    '<div style="display:flex;justify-content:center;gap:0;">'+
+    statBadge(total,'شريك','#d4af37')+
+    statBadge(tiers.gold.length,'ذهبي','#f59e0b')+
+    statBadge(tiers.silver.length,'فضي','#94a3b8')+
+    statBadge(tiers.bronze.length,'برونزي','#cd7c2f')+
+    '</div>'+
+    '</div>'+
+    // شريط ذهبي فاصل
+    '<div style="height:3px;background:linear-gradient(90deg,transparent,#d4af37 30%,#fff8dc 50%,#d4af37 70%,transparent);"></div>'+
+    '</div>';
 
-  html += '<div style="padding:14px 16px;background:#fff;border-top:1px solid #e2e8f0;">'+
-    '<div style="font-size:9px;font-weight:800;color:#475569;text-align:center;margin-bottom:10px;">🥈 الراعي الفضي</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;">';
-  tiers.silver.forEach(function(s){
-    html += '<div style="background:#f8fafc;border:1.5px solid #94a3b8;border-radius:10px;padding:10px 6px;text-align:center;">'+
-      '<img src="'+thumb(s.id)+'" style="max-height:44px;max-width:100%;object-fit:contain;">'+
-      '<div style="font-size:8px;font-weight:700;color:#475569;margin-top:5px;">'+s.name+'</div></div>';
-  });
-  html += '</div>';
-
-  html += '<div style="font-size:9px;font-weight:800;color:#92400e;text-align:center;margin-bottom:10px;">🥉 الراعي البرونزي</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">';
-  tiers.bronze.forEach(function(s){
-    html += '<div style="background:#fff7ed;border:1.5px solid #cd7c2f;border-radius:10px;padding:10px 6px;text-align:center;">'+
-      '<img src="'+thumb(s.id)+'" style="max-height:40px;max-width:100%;object-fit:contain;">'+
-      '<div style="font-size:8px;font-weight:700;color:#92400e;margin-top:5px;">'+s.name+'</div></div>';
-  });
-  html += '</div>';
-
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
-  if(tiers.legal.length){
-    html += '<div><div style="font-size:9px;font-weight:800;color:#1d4ed8;text-align:center;margin-bottom:6px;">⚖️ الممثل القانوني</div>'+
-      '<div style="background:#f0f4ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px;text-align:center;">'+
-      '<img src="'+thumb(tiers.legal[0].id)+'" style="max-height:40px;max-width:100%;object-fit:contain;">'+
-      '<div style="font-size:8px;font-weight:700;color:#1d4ed8;margin-top:5px;">'+tiers.legal[0].name+'</div></div></div>';
+  // ── GOLD ──────────────────────────────────────────────────
+  if(tiers.gold.length){
+    html += tierHeader('الراعي الذهبي الرسمي','OFFICIAL GOLD SPONSOR','#d4af37','#7c2d12',
+      'linear-gradient(135deg,#1a0f00,#2d1a00)');
+    html += '<div style="padding:0 14px 20px;background:#111827;">';
+    tiers.gold.forEach(function(s){
+      html += goldCard(s);
+    });
+    html += '</div>';
   }
-  if(tiers.media.length){
-    html += '<div><div style="font-size:9px;font-weight:800;color:#7e22ce;text-align:center;margin-bottom:6px;">📡 الراعي الإعلامي</div>'+
-      '<div style="background:#fdf4ff;border:1px solid #e9d5ff;border-radius:8px;padding:10px;text-align:center;">'+
-      '<img src="'+thumb(tiers.media[0].id)+'" style="max-height:40px;max-width:100%;object-fit:contain;">'+
-      '<div style="font-size:8px;font-weight:700;color:#7e22ce;margin-top:5px;">'+tiers.media[0].name+'</div></div></div>';
+
+  // ── SILVER ────────────────────────────────────────────────
+  if(tiers.silver.length){
+    html += tierHeader('الراعي الفضي','SILVER SPONSOR','#94a3b8','#1e293b',
+      'linear-gradient(135deg,#0f172a,#1e293b)');
+    html += '<div style="padding:0 14px 20px;background:#0f172a;display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+    tiers.silver.forEach(function(s){
+      html += silverCard(s);
+    });
+    html += '</div>';
   }
-  html += '</div></div>';
+
+  // ── BRONZE ────────────────────────────────────────────────
+  if(tiers.bronze.length){
+    html += tierHeader('الراعي البرونزي','BRONZE SPONSOR','#cd7c2f','#431407',
+      'linear-gradient(135deg,#1c0a00,#2d1500)');
+    html += '<div style="padding:0 14px 20px;background:#1c0a00;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
+    tiers.bronze.forEach(function(s){
+      html += bronzeCard(s);
+    });
+    html += '</div>';
+  }
+
+  // ── SPECIAL ───────────────────────────────────────────────
+  if(tiers.legal.length || tiers.media.length){
+    html += '<div style="background:#080d17;padding:14px 14px 20px;">'+
+      '<div style="font-size:9px;color:rgba(255,255,255,.3);text-align:center;font-weight:800;letter-spacing:2px;margin-bottom:12px;">SPECIAL PARTNERS</div>'+
+      '<div style="display:grid;grid-template-columns:'+(tiers.legal.length&&tiers.media.length?'1fr 1fr':'1fr')+';gap:10px;">';
+    if(tiers.legal.length){
+      html += specialCard(tiers.legal[0],'⚖️','الشريك القانوني','#1d4ed8','#1e3a8a');
+    }
+    if(tiers.media.length){
+      html += specialCard(tiers.media[0],'📡','الشريك الإعلامي','#7e22ce','#4a1d96');
+    }
+    html += '</div></div>';
+  }
+
+  // ── FOOTER ────────────────────────────────────────────────
+  html +=
+    '<div style="background:#030712;padding:20px;text-align:center;">'+
+    '<div style="width:40px;height:2px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:0 auto 10px;"></div>'+
+    '<div style="font-size:9px;color:rgba(255,255,255,.25);font-weight:700;letter-spacing:2px;">SHAMALI FOOTBALL ACADEMY · 🇴🇲 SULTANATE OF OMAN</div>'+
+    '<div style="font-size:10px;color:rgba(212,175,55,.5);margin-top:6px;font-weight:800;">شكراً لدعم شركائنا في رحلة الأبطال</div>'+
+    '</div>';
+
   document.getElementById('content').innerHTML = html;
+}
+
+// ── helpers ───────────────────────────────────────────────
+function statBadge(n, label, color){
+  return '<div style="padding:10px 16px;text-align:center;">'+
+    '<div style="font-size:20px;font-weight:900;color:'+color+';">'+n+'</div>'+
+    '<div style="font-size:9px;color:rgba(255,255,255,.4);font-weight:700;">'+label+'</div>'+
+    '</div>';
+}
+
+function tierHeader(ar, en, color, bg, grad){
+  return '<div style="background:'+grad+';padding:14px 18px;display:flex;align-items:center;gap:12px;border-top:1px solid '+color+'33;border-bottom:1px solid '+color+'22;">'+
+    '<div style="width:3px;height:30px;background:'+color+';border-radius:3px;flex-shrink:0;"></div>'+
+    '<div>'+
+    '<div style="font-size:9px;color:'+color+';font-weight:800;letter-spacing:2px;">'+en+'</div>'+
+    '<div style="font-size:15px;font-weight:900;color:#fff;">'+ar+'</div>'+
+    '</div></div>';
+}
+
+function goldCard(s){
+  return '<div style="background:linear-gradient(135deg,#1a1200,#2d2000);border:1.5px solid #d4af3755;border-radius:14px;padding:20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;">'+
+    '<div style="flex-shrink:0;width:90px;height:70px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:8px;box-sizing:border-box;">'+
+    '<img src="'+thumb(s.id)+'" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.style.display=\'none\'"></div>'+
+    '<div style="flex:1;">'+
+    '<div style="font-size:13px;font-weight:900;color:#fff;margin-bottom:4px;">'+s.name+'</div>'+
+    '<div style="display:inline-block;background:#d4af37;color:#000;font-size:8px;font-weight:900;border-radius:20px;padding:2px 10px;letter-spacing:1px;">GOLD PARTNER</div>'+
+    '</div>'+
+    '<div style="color:#d4af37;font-size:22px;opacity:.4;">🌟</div>'+
+    '</div>';
+}
+
+function silverCard(s){
+  return '<div style="background:linear-gradient(135deg,#0d1a2e,#152540);border:1px solid #94a3b833;border-radius:12px;padding:14px;text-align:center;">'+
+    '<div style="width:100%;height:52px;background:rgba(255,255,255,.06);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;padding:6px;box-sizing:border-box;">'+
+    '<img src="'+thumb(s.id)+'" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.style.display=\'none\'"></div>'+
+    '<div style="font-size:10px;font-weight:800;color:#94a3b8;">'+s.name+'</div>'+
+    '</div>';
+}
+
+function bronzeCard(s){
+  return '<div style="background:rgba(255,255,255,.04);border:1px solid #cd7c2f33;border-radius:10px;padding:10px;text-align:center;">'+
+    '<div style="width:100%;height:40px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;">'+
+    '<img src="'+thumb(s.id)+'" style="max-width:100%;max-height:100%;object-fit:contain;filter:brightness(0) invert(1);opacity:.8;" onerror="this.style.display=\'none\'"></div>'+
+    '<div style="font-size:8px;font-weight:800;color:#cd7c2f;">'+s.name+'</div>'+
+    '</div>';
+}
+
+function specialCard(s, icon, label, color, bg){
+  return '<div style="background:linear-gradient(135deg,'+bg+','+bg+'99);border:1px solid '+color+'44;border-radius:12px;padding:14px;text-align:center;">'+
+    '<div style="font-size:20px;margin-bottom:6px;">'+icon+'</div>'+
+    '<div style="font-size:9px;color:'+color+';font-weight:800;letter-spacing:1px;margin-bottom:8px;">'+label+'</div>'+
+    '<div style="background:rgba(255,255,255,.07);border-radius:8px;padding:10px;margin-bottom:8px;height:44px;display:flex;align-items:center;justify-content:center;">'+
+    '<img src="'+thumb(s.id)+'" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.style.display=\'none\'"></div>'+
+    '<div style="font-size:10px;font-weight:800;color:rgba(255,255,255,.8);">'+s.name+'</div>'+
+    '</div>';
 }
 
 // ===== ADMIN LOGIN =====
