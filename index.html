@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only">
+<style>:root{color-scheme:light only;}html,body{background-color:#fff!important;color:#1e293b!important;}</style>
 <title>بوابة أكاديمية الشمالي</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800;900&display=swap" rel="stylesheet">
@@ -1180,13 +1182,21 @@ function submitSuggest(){
   if(btn){ btn.disabled=true; btn.textContent='جارٍ الإرسال...'; }
   apiAppend('المقترحات والملاحظات', row).then(function(){
     var msg = document.getElementById('sugMsg');
-    msg.style.display='block';
-    msg.innerHTML='<div style="background:#ecfdf5;border:1.5px solid #16a34a;border-radius:10px;padding:14px;color:#15803d;font-weight:800;font-size:13px;">'+
-      '✅ تم إرسال رسالتك بنجاح!<br><span style="font-size:11px;font-weight:600;color:#64748b;">شكراً لتواصلك مع إدارة أكاديمية الشمالي 🦅</span></div>';
+    if(msg){
+      msg.style.display='block';
+      msg.innerHTML='<div style="background:#ecfdf5;border:1.5px solid #16a34a;border-radius:10px;padding:14px;color:#15803d;font-weight:800;font-size:13px;">'+
+        '✅ تم إرسال رسالتك بنجاح!<br><span style="font-size:11px;font-weight:600;color:#64748b;">شكراً لتواصلك مع إدارة أكاديمية الشمالي 🦅</span></div>';
+    }
     if(btn){ btn.style.display='none'; }
-  }).catch(function(){
-    if(btn){ btn.disabled=false; btn.textContent='إرسال إلى الإدارة'; }
-    alert('تعذّر الإرسال، تحقق من الاتصال');
+  }).catch(function(e){
+    if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane"></i> إرسال إلى الإدارة'; }
+    var msg = document.getElementById('sugMsg');
+    if(msg){
+      msg.style.display='block';
+      msg.innerHTML='<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:12px;color:#b91c1c;font-size:12px;font-weight:700;">'+
+        '❌ تعذّر الإرسال: '+(e&&e.message?e.message:'تحقق من الاتصال بالإنترنت')+'<br>'+
+        '<span style="font-size:10px;color:#64748b;">تأكد من وجود ورقة "المقترحات والملاحظات" في Google Sheets</span></div>';
+    }
   });
 }
 
