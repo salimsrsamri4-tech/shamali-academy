@@ -220,8 +220,8 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   <h1>🦅 البوابة الإلكترونية لأكاديمية الشمالي</h1>
   <p>التسجيل · الحضور · التكريم · المدربون · التقارير</p>
   <div class="gl"></div>
-  <button id="pwaInstallBtn" onclick="installPWA()" style="display:none;margin:12px auto 0;align-items:center;gap:8px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.4);color:#fff;border-radius:30px;padding:10px 20px;font-family:Cairo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">
-    <i class="fas fa-download"></i> تنزيل التطبيق
+  <button onclick="shareApp()" style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.4);color:#fff;border-radius:30px;padding:10px 22px;font-family:Cairo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">
+    <i class="fas fa-share-alt"></i> مشاركة المنصة
   </button>
 </div>
 
@@ -2300,6 +2300,27 @@ function initApp(){
   var prb=document.getElementById('payRBank'); if(prb) prb.onclick=function(){setPay(this,'reg');};
 }
 window.onload = initApp;
+
+// ── Share ──
+function shareApp() {
+  var data = {
+    title: '🦅 أكاديمية الشمالي لكرة القدم',
+    text: 'البوابة الإلكترونية لأكاديمية الشمالي — التسجيل · الحضور · التكريم · المدربون',
+    url: 'https://salimsrsamri4-tech.github.io/shamali-academy'
+  };
+  if(navigator.share) {
+    navigator.share(data).catch(function(){});
+  } else {
+    // نسخ الرابط للحافظة إذا لم يدعم الجهاز المشاركة
+    var inp = document.createElement('input');
+    inp.value = data.url;
+    document.body.appendChild(inp);
+    inp.select();
+    document.execCommand('copy');
+    document.body.removeChild(inp);
+    alert('✅ تم نسخ رابط المنصة — يمكنك مشاركته الآن');
+  }
+}
 
 // ── PWA Service Worker ──
 if('serviceWorker' in navigator) {
