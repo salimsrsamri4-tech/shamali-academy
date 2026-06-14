@@ -642,7 +642,6 @@ function renderReg(){
   document.getElementById('h4').onclick = function(){ selHealth(this,'حساسية'); };
   document.getElementById('payRCash').onclick = function(){ setPay(this,'reg'); };
   document.getElementById('payRBank').onclick = function(){ setPay(this,'reg'); };
-  document.getElementById('submitRegBtn').onclick = function(){ submitReg(); };
 }
 
 function renderRen(){
@@ -1950,7 +1949,6 @@ function initApp(){
   var h4=document.getElementById('h4'); if(h4) h4.onclick=function(){selHealth(this,'حساسية');};
   var prc=document.getElementById('payRCash'); if(prc) prc.onclick=function(){setPay(this,'reg');};
   var prb=document.getElementById('payRBank'); if(prb) prb.onclick=function(){setPay(this,'reg');};
-  var srb=document.getElementById('submitRegBtn'); if(srb) srb.onclick=function(){submitReg();};
 }
 window.onload = initApp;
 
