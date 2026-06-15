@@ -1,4 +1,4 @@
-const CACHE = 'shamali-v1';
+const CACHE = 'shamali-v3';
 const ASSETS = [
   '/shamali-academy/',
   '/shamali-academy/index.html',
