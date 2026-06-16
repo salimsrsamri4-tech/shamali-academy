@@ -1024,8 +1024,8 @@ function renderCoachLogin(){
 // ===== DASHBOARD =====
 function renderDashboard(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
-  Promise.all([getStats(), getPlayers()]).then(function(res){
-    var s = res[0], players = res[1];
+  getPlayers().then(function(players){
+    var s = { players: players.length, renewals: 0, coaches: 0, awards: 0 };
 
     // حساب الفئات العمرية
     var now = new Date().getFullYear();
