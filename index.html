@@ -14,6 +14,7 @@
 <title>بوابة أكاديمية الشمالي</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -1023,18 +1024,108 @@ function renderCoachLogin(){
 // ===== DASHBOARD =====
 function renderDashboard(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
-  getStats().then(function(s){
+  Promise.all([getStats(), getPlayers()]).then(function(res){
+    var s = res[0], players = res[1];
+
+    // حساب الفئات العمرية
+    var now = new Date().getFullYear();
+    var cats = {'U8':0,'U10':0,'U12':0,'U14':0,'U16+':0};
+    players.forEach(function(p){
+      var age = now - parseInt(p.birthYear||0);
+      if(age<=8) cats['U8']++;
+      else if(age<=10) cats['U10']++;
+      else if(age<=12) cats['U12']++;
+      else if(age<=14) cats['U14']++;
+      else cats['U16+']++;
+    });
+
+    // حساب الجنسيات
+    var natMap = {};
+    players.forEach(function(p){
+      var n = p.nationality||'غير محدد';
+      natMap[n] = (natMap[n]||0)+1;
+    });
+    var natLabels = Object.keys(natMap);
+    var natData   = natLabels.map(function(k){return natMap[k];});
+
     document.getElementById('content').innerHTML =
+      // إحصائيات سريعة
       '<div class="astats">'+
       '<div class="astat"><div class="astat-n">'+s.players+'</div><div class="astat-l">🧒 اللاعبون</div></div>'+
       '<div class="astat gd"><div class="astat-n">'+s.renewals+'</div><div class="astat-l">💰 تجديدات الشهر</div></div>'+
       '<div class="astat gr"><div class="astat-n">'+s.coaches+'</div><div class="astat-l">👨‍💼 المدربون</div></div>'+
       '<div class="astat nv"><div class="astat-n">'+s.awards+'</div><div class="astat-l">🏆 تكريمات</div></div>'+
       '</div>'+
-      '<div class="card"><div class="sec-title"><i class="fas fa-search"></i> بحث سريع</div>'+
+
+      // لوحة الفئات العمرية
+      '<div class="card" style="margin:12px 0;">'+
+      '<div class="sec-title"><i class="fas fa-chart-bar"></i> توزيع اللاعبين حسب الفئة العمرية</div>'+
+      '<canvas id="ageChart" height="220"></canvas>'+
+      '</div>'+
+
+      // لوحة الجنسيات
+      '<div class="card" style="margin:12px 0;">'+
+      '<div class="sec-title"><i class="fas fa-globe"></i> توزيع اللاعبين حسب الجنسية</div>'+
+      '<div style="max-width:280px;margin:auto;"><canvas id="natChart" height="260"></canvas></div>'+
+      '</div>'+
+
+      // بحث سريع
+      '<div class="card">'+
+      '<div class="sec-title"><i class="fas fa-search"></i> بحث سريع</div>'+
       '<div class="sbar"><input type="text" id="srch" placeholder="ابحث بالاسم أو رقم الملف...">'+
       '<button onclick="doSearch()"><i class="fas fa-search"></i></button></div>'+
       '<div id="srchRes"></div></div>';
+
+    // رسم مخطط الفئات العمرية
+    setTimeout(function(){
+      var colors = ['#b81d22','#e85d04','#f48c06','#16a34a','#0369a1'];
+      var ageCtx = document.getElementById('ageChart');
+      if(ageCtx) new Chart(ageCtx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(cats),
+          datasets:[{
+            label: 'عدد اللاعبين',
+            data: Object.values(cats),
+            backgroundColor: colors,
+            borderRadius: 8,
+            borderSkipped: false
+          }]
+        },
+        options:{
+          responsive:true,
+          plugins:{legend:{display:false},
+            tooltip:{callbacks:{label:function(c){return ' '+c.raw+' لاعب';}}}},
+          scales:{
+            y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'rgba(0,0,0,.05)'}},
+            x:{grid:{display:false}}
+          }
+        }
+      });
+
+      // رسم مخطط الجنسيات
+      var natCtx = document.getElementById('natChart');
+      var natColors = ['#b81d22','#16a34a','#0369a1','#d97706','#7c3aed','#0891b2'];
+      if(natCtx) new Chart(natCtx, {
+        type: 'doughnut',
+        data:{
+          labels: natLabels,
+          datasets:[{
+            data: natData,
+            backgroundColor: natColors.slice(0,natLabels.length),
+            borderWidth:2,
+            borderColor:'#fff'
+          }]
+        },
+        options:{
+          responsive:true,
+          plugins:{
+            legend:{position:'bottom',labels:{font:{family:'Cairo',size:12},padding:10}},
+            tooltip:{callbacks:{label:function(c){return ' '+c.label+': '+c.raw+' لاعب';}}}
+          }
+        }
+      });
+    }, 100);
   });
 }
 
