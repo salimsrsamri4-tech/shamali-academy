@@ -184,6 +184,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   <button class="sb-btn" data-page="sched" data-pg="sched"><i class="fas fa-calendar-alt"></i> جدول التدريب</button>
   <button class="sb-btn" data-page="cch" data-pg="cch"><i class="fas fa-user-tie"></i> الطاقم التدريبي</button>
   <button class="sb-btn" data-page="partners" data-pg="partners"><i class="fas fa-handshake"></i> شركاء النجاح</button>
+  <button class="sb-btn" data-page="about" data-pg="about"><i class="fas fa-info-circle"></i> عن الأكاديمية</button>
   <button class="sb-btn" data-page="suggest" data-pg="suggest"><i class="fas fa-comment-dots"></i> ملاحظات ومقترحات</button>
   <button class="sb-btn" onclick="shareApp()"><i class="fas fa-share-alt"></i> مشاركة المنصة</button>
   <hr class="sb-hr">
@@ -772,6 +773,103 @@ function renderCch(){
 }
 
 // ===== PARTNERS =====
+function renderAbout(){
+  var html = '<div style="padding:0 0 24px;">';
+
+  // Header
+  html += '<div style="background:linear-gradient(135deg,#b81d22,#7a1015);padding:28px 20px 20px;text-align:center;position:relative;overflow:hidden;">';
+  html += '<div style="position:absolute;top:-30px;left:-30px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;"></div>';
+  html += '<div style="position:absolute;bottom:-20px;right:-20px;width:90px;height:90px;background:rgba(255,255,255,.05);border-radius:50%;"></div>';
+  html += '<img src="logo.png" style="width:90px;height:90px;object-fit:contain;border-radius:50%;border:3px solid rgba(255,255,255,.3);margin-bottom:10px;">';
+  html += '<div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;">أكاديمية الشمالي</div>';
+  html += '<div style="font-size:13px;color:rgba(255,255,255,.75);letter-spacing:1px;">AL-SHAMALI ACADEMY</div>';
+  html += '<div style="display:inline-block;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 14px;margin-top:8px;font-size:12px;color:#fff;">تأسست عام 2020</div>';
+  html += '</div>';
+
+  // Cards container
+  html += '<div style="padding:16px;">';
+
+  // Vision
+  html += '<div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);border-right:4px solid #b81d22;">';
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">';
+  html += '<div style="background:#fef2f2;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">💡</div>';
+  html += '<div style="font-size:15px;font-weight:800;color:#b81d22;">رؤية الأكاديمية</div></div>';
+  html += '<div style="font-size:13px;color:#475569;line-height:1.8;">المشاركة في تنفيذ توجيهات الاتحاد العماني لكرة القدم في إعداد جيل يهتم ويقدر قيمة الرياضة.</div>';
+  html += '</div>';
+
+  // Mission
+  html += '<div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);border-right:4px solid #16a34a;">';
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">';
+  html += '<div style="background:#f0fdf4;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">✉️</div>';
+  html += '<div style="font-size:15px;font-weight:800;color:#16a34a;">رسالة الأكاديمية</div></div>';
+  html += '<div style="font-size:13px;color:#475569;line-height:1.8;">إعداد جيل صحي بدنياً وسلوكياً وفق برامج تعليمية وتدريبية وتربوية ثقافية رياضية بإشراف مجموعة من المختصين.</div>';
+  html += '</div>';
+
+  // Goals
+  html += '<div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);border-right:4px solid #d97706;">';
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">';
+  html += '<div style="background:#fffbeb;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">🎯</div>';
+  html += '<div style="font-size:15px;font-weight:800;color:#d97706;">أهداف الأكاديمية</div></div>';
+  var goals = [
+    'تنمية شخصية اللاعب',
+    'خلق روح المنافسة بين اللاعبين',
+    'تعليم المهارات الأساسية للاعبين',
+    'الالتزام بالسلوك الرياضي',
+    'خلق روح الثقة والإصرار بين اللاعبين',
+    'تقوية العلاقات الاجتماعية وتحمل المسؤولية والتعاون',
+    'اختيار اللاعبين المتميزين لمد الأندية الرياضية بهم حسب الأعمار السنية'
+  ];
+  goals.forEach(function(g){
+    html += '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;">';
+    html += '<div style="width:22px;height:22px;min-width:22px;background:#d97706;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:1px;">⚡</div>';
+    html += '<div style="font-size:13px;color:#374151;line-height:1.7;">'+g+'</div></div>';
+  });
+  html += '</div>';
+
+  // Info cards row
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">';
+
+  // Target age
+  html += '<div style="background:#fff;border-radius:14px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.07);">';
+  html += '<div style="font-size:24px;margin-bottom:6px;">🎗️</div>';
+  html += '<div style="font-size:11px;color:#64748b;font-weight:600;margin-bottom:4px;">الفئة المستهدفة</div>';
+  html += '<div style="font-size:16px;font-weight:900;color:#b81d22;">5 - 15 سنة</div>';
+  html += '</div>';
+
+  // Training days
+  html += '<div style="background:#fff;border-radius:14px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.07);">';
+  html += '<div style="font-size:24px;margin-bottom:6px;">⚽</div>';
+  html += '<div style="font-size:11px;color:#64748b;font-weight:600;margin-bottom:4px;">أيام التدريب</div>';
+  html += '<div style="font-size:13px;font-weight:800;color:#16a34a;">الإثنين والأربعاء</div>';
+  html += '<div style="font-size:11px;color:#64748b;">عصراً</div>';
+  html += '</div>';
+
+  html += '</div>';
+
+  // Location
+  html += '<div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);">';
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">';
+  html += '<div style="background:#eff6ff;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">🥅</div>';
+  html += '<div style="font-size:15px;font-weight:800;color:#1d4ed8;">موقع الملعب</div></div>';
+  html += '<div style="font-size:13px;color:#475569;line-height:1.8;margin-bottom:10px;">ملعب الشمالي — المنطقة المعبيلة الجنوبية، بالقرب من زمزم هايبر ماركت</div>';
+  html += '<a href="https://maps.app.goo.gl/TdTHaW67E4uC1dkY6" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;background:#1d4ed8;color:#fff;border-radius:10px;padding:10px;text-decoration:none;font-size:13px;font-weight:700;">';
+  html += '<i class="fas fa-map-marker-alt"></i> فتح الخريطة</a>';
+  html += '</div>';
+
+  // Contact
+  html += '<div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.15);">';
+  html += '<div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:12px;text-align:center;">تواصل معنا</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+  html += '<a href="tel:+96892126558" style="display:flex;align-items:center;justify-content:center;gap:6px;background:#16a34a;color:#fff;border-radius:10px;padding:10px;text-decoration:none;font-size:12px;font-weight:700;">';
+  html += '<i class="fas fa-phone"></i> 92126558</a>';
+  html += '<a href="https://www.instagram.com/al_shamali_academy" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,#e1306c,#833ab4);color:#fff;border-radius:10px;padding:10px;text-decoration:none;font-size:12px;font-weight:700;">';
+  html += '<i class="fab fa-instagram"></i> al_shamali_academy</a>';
+  html += '</div></div>';
+
+  html += '</div></div>';
+  document.getElementById('main').innerHTML = html;
+}
+
 function renderPartners(){
   var tiers = {
     gold:   SPONSORS.filter(function(s){return s.tier==='gold';}),
@@ -1463,6 +1561,7 @@ function renderPage(page) {
     case 'sched': renderSched(); break;
     case 'cch': renderCch(); break;
     case 'partners': renderPartners(); break;
+    case 'about': renderAbout(); break;
     case 'coachlogin': renderCoachLogin(); break;
     case 'adminlogin': renderAdminLogin(); break;
     case 'dashboard': renderDashboard(); break;
