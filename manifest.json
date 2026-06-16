@@ -7,18 +7,18 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
-  "theme_color": "#16a34a",
+  "theme_color": "#b81d22",
   "lang": "ar",
   "dir": "rtl",
   "icons": [
     {
-      "src": "https://drive.google.com/thumbnail?id=1PFe6HtV4EvTwHreO45oIKYlnc20uX3dS&sz=w192",
+      "src": "https://drive.google.com/thumbnail?id=1It7aAER_bgL-RVWIwzcZhLSyN-Jc7WNO&sz=w192",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://drive.google.com/thumbnail?id=1PFe6HtV4EvTwHreO45oIKYlnc20uX3dS&sz=w512",
+      "src": "https://drive.google.com/thumbnail?id=1It7aAER_bgL-RVWIwzcZhLSyN-Jc7WNO&sz=w512",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
