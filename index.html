@@ -390,10 +390,10 @@ function apiAppend(sheetName, dataObj) {
   }
   return fetch(url, {
     method: 'POST',
+    mode: 'no-cors',
     headers: {'Content-Type':'text/plain'},
-    redirect: 'follow',
     body: body
-  }).then(function(r){
+  }).then(function(){
     apiClearCache(sheetName);
     return {status:'ok'};
   });
@@ -403,10 +403,10 @@ function apiDelete(sheetName, column, value) {
   if(CONFIG.GAS_URL) {
     return fetch(CONFIG.GAS_URL, {
       method: 'POST',
+      mode: 'no-cors',
       headers: {'Content-Type':'text/plain'},
-      redirect: 'follow',
       body: JSON.stringify({action:'delete', sheet:sheetName, column:column, value:value})
-    }).then(function(r){ return r.json(); }).then(function(){
+    }).then(function(){
       apiClearCache(sheetName);
     });
   } else {
