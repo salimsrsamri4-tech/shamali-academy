@@ -355,9 +355,25 @@ var CONFIG = {
 };
 
 // ===== SheetDB API =====
-function apiGet(sheetName) {
+var _apiCache = {};
+var _CACHE_TTL = 5 * 60 * 1000; // 5 دقائق
+
+function apiGet(sheetName, forceRefresh) {
+  var now = Date.now();
+  var cached = _apiCache[sheetName];
+  if(!forceRefresh && cached && (now - cached.ts) < _CACHE_TTL) {
+    return Promise.resolve(cached.data);
+  }
   var url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName) + '&limit=500';
-  return fetch(url).then(function(r){ return r.json(); });
+  return fetch(url).then(function(r){ return r.json(); }).then(function(data){
+    _apiCache[sheetName] = { data: data, ts: Date.now() };
+    return data;
+  });
+}
+
+function apiClearCache(sheetName) {
+  if(sheetName) delete _apiCache[sheetName];
+  else _apiCache = {};
 }
 
 function apiAppend(sheetName, dataObj) {
@@ -367,7 +383,10 @@ function apiAppend(sheetName, dataObj) {
     xhr.open('POST', url, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.timeout = 20000;
-    xhr.onload = function() { resolve({status:'ok'}); };
+    xhr.onload = function() {
+      apiClearCache(sheetName); // امسح الكاش بعد الكتابة
+      resolve({status:'ok'});
+    };
     xhr.onerror = function() { reject(new Error('فشل الاتصال بالخادم')); };
     xhr.ontimeout = function() { reject(new Error('انتهت مهلة الاتصال')); };
     xhr.send(JSON.stringify({data: Array.isArray(dataObj) ? dataObj : [dataObj]}));
