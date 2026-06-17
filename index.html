@@ -1786,6 +1786,7 @@ function loadEvalPlayers(){
       evalCriteria('اللياقة','fit',p.id)+
       '<div><label class="lbl" style="font-size:10px;">ملاحظة</label>'+
       '<input type="text" class="inp eval-note" placeholder="اختياري..." style="font-size:12px;padding:7px;"></div>'+
+      '<button type="button" onclick="exportEvalPDF(this)" style="margin-top:10px;width:100%;padding:9px;background:#b81d22;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">📄 تصدير تقرير PDF</button>'+
       '</div>';
   });
   document.getElementById('evalList').innerHTML=html||'<div class="al al-warn">لا يوجد لاعبون في هذه الفئة</div>';
@@ -1834,6 +1835,114 @@ function submitEval(){
   showL(true);
   Promise.all(saves).then(function(){showL(false);alert('✅ تم حفظ التقييمات!');go('att');})
     .catch(function(){showL(false);alert('خطأ في الحفظ');});
+}
+
+function exportEvalPDF(btn){
+  var card = btn.closest('div[style*="border"]');
+  var id = card.querySelector('.eval-id').value;
+  var name = card.querySelector('.eval-name').value;
+  var note = card.querySelector('.eval-note').value;
+  var month = (document.getElementById('evalMonth')||{}).value || '';
+  var yr = (document.getElementById('evalYr')||{}).value || '';
+  var get = function(k){
+    var r = card.querySelector('[name="'+k+'_'+id+'"]:checked');
+    return r ? parseInt(r.value) : 0;
+  };
+  var skill=get('skill'), disc=get('disc'), team=get('team'), fit=get('fit');
+  var total = skill+disc+team+fit;
+  var avg = total > 0 ? (total/4).toFixed(1) : '—';
+  var stars = function(n){ var s=''; for(var i=1;i<=5;i++) s+='<span style="color:'+(i<=n?'#d4af37':'#ddd')+';">★</span>'; return s; };
+  var bar = function(n){ return '<div style="display:inline-block;width:'+(n*18)+'px;height:10px;background:linear-gradient(90deg,#b81d22,#d4af37);border-radius:5px;vertical-align:middle;"></div>'; };
+  var grade = total>=18?'ممتاز':total>=14?'جيد جداً':total>=10?'جيد':total>=6?'مقبول':'يحتاج تطوير';
+  var gradeColor = total>=18?'#16a34a':total>=14?'#2563eb':total>=10?'#d97706':total>=6?'#f59e0b':'#b81d22';
+  var dateStr = new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+
+  var html = '<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">'+
+    '<title>تقرير تقييم - '+name+'</title>'+
+    '<style>'+
+    '@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap");'+
+    '*{margin:0;padding:0;box-sizing:border-box;}'+
+    'body{font-family:"Cairo",Arial,sans-serif;background:#f1f5f9;display:flex;justify-content:center;padding:30px;}'+
+    '.page{width:210mm;min-height:297mm;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.15);position:relative;overflow:hidden;}'+
+    '.header{background:linear-gradient(135deg,#b81d22 0%,#7a1015 100%);padding:32px 40px 24px;color:#fff;position:relative;}'+
+    '.header::after{content:"";position:absolute;bottom:-20px;left:0;right:0;height:40px;background:#fff;border-radius:50% 50% 0 0 / 40px 40px 0 0;}'+
+    '.logo-row{display:flex;align-items:center;gap:16px;margin-bottom:16px;}'+
+    '.logo-circle{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:28px;}'+
+    '.acad-name{font-size:22px;font-weight:900;letter-spacing:.5px;}'+
+    '.acad-sub{font-size:11px;opacity:.8;margin-top:2px;}'+
+    '.report-title{font-size:14px;font-weight:600;opacity:.9;border-top:1px solid rgba(255,255,255,.25);padding-top:12px;margin-top:4px;}'+
+    '.body{padding:48px 40px 32px;}'+
+    '.player-card{background:linear-gradient(135deg,#fef9ec,#fff8e1);border:2px solid #d4af37;border-radius:14px;padding:20px 24px;margin-bottom:28px;display:flex;align-items:center;gap:20px;}'+
+    '.player-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#b81d22,#7a1015);display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px;flex-shrink:0;}'+
+    '.player-name{font-size:20px;font-weight:900;color:#1e293b;}'+
+    '.player-meta{font-size:12px;color:#64748b;margin-top:4px;}'+
+    '.section-title{font-size:13px;font-weight:800;color:#475569;margin-bottom:14px;padding-bottom:6px;border-bottom:2px solid #f1f5f9;text-transform:uppercase;letter-spacing:.5px;}'+
+    '.criteria-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f8fafc;border-radius:10px;margin-bottom:8px;}'+
+    '.criteria-label{font-size:13px;font-weight:700;color:#334155;}'+
+    '.criteria-right{display:flex;align-items:center;gap:10px;}'+
+    '.score-num{font-size:22px;font-weight:900;color:#b81d22;min-width:28px;text-align:center;}'+
+    '.total-box{background:linear-gradient(135deg,#1e293b,#334155);border-radius:14px;padding:20px 24px;margin:24px 0;display:flex;align-items:center;justify-content:space-between;color:#fff;}'+
+    '.total-label{font-size:14px;opacity:.8;}'+
+    '.total-score{font-size:36px;font-weight:900;}'+
+    '.total-grade{font-size:16px;font-weight:800;padding:6px 16px;border-radius:20px;background:'+gradeColor+';}'+
+    '.note-box{background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:10px;padding:16px;margin-bottom:24px;}'+
+    '.note-label{font-size:11px;font-weight:800;color:#0369a1;margin-bottom:6px;}'+
+    '.note-text{font-size:13px;color:#1e293b;line-height:1.6;}'+
+    '.footer{background:#f8fafc;border-top:2px solid #f1f5f9;padding:16px 40px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#94a3b8;}'+
+    '.footer-logo{font-weight:800;color:#b81d22;font-size:13px;}'+
+    '@media print{body{background:#fff;padding:0;}'+
+    '.page{box-shadow:none;width:100%;min-height:auto;}'+
+    '.no-print{display:none!important;}}'+
+    '</style></head><body>'+
+    '<div class="page">'+
+    '<div class="header">'+
+      '<div class="logo-row">'+
+        '<div class="logo-circle">⚽</div>'+
+        '<div><div class="acad-name">أكاديمية الشمالي لكرة القدم</div>'+
+        '<div class="acad-sub">AL-SHAMALI FOOTBALL ACADEMY</div></div>'+
+      '</div>'+
+      '<div class="report-title">📊 تقرير التقييم الشهري للاعب</div>'+
+    '</div>'+
+    '<div class="body">'+
+      '<div class="player-card">'+
+        '<div class="player-avatar">👤</div>'+
+        '<div>'+
+          '<div class="player-name">'+name+'</div>'+
+          '<div class="player-meta">رقم الملف: '+id+
+          (month?' &nbsp;|&nbsp; الشهر: '+month:'')+
+          (yr?' &nbsp;|&nbsp; الفئة: مواليد '+yr:'')+
+          ' &nbsp;|&nbsp; التاريخ: '+dateStr+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="section-title">معايير التقييم</div>'+
+      '<div class="criteria-row"><span class="criteria-label">⚡ المهارة الفنية</span><div class="criteria-right">'+bar(skill)+' <span class="score-num">'+skill+'</span>'+stars(skill)+'</div></div>'+
+      '<div class="criteria-row"><span class="criteria-label">🎯 الانضباط</span><div class="criteria-right">'+bar(disc)+' <span class="score-num">'+disc+'</span>'+stars(disc)+'</div></div>'+
+      '<div class="criteria-row"><span class="criteria-label">🤝 روح الفريق</span><div class="criteria-right">'+bar(team)+' <span class="score-num">'+team+'</span>'+stars(team)+'</div></div>'+
+      '<div class="criteria-row"><span class="criteria-label">💪 اللياقة البدنية</span><div class="criteria-right">'+bar(fit)+' <span class="score-num">'+fit+'</span>'+stars(fit)+'</div></div>'+
+      '<div class="total-box">'+
+        '<div><div class="total-label">المجموع الكلي (من 20)</div>'+
+        '<div class="total-score">'+total+' <span style="font-size:16px;opacity:.6;">/ 20</span></div></div>'+
+        '<div><div class="total-label" style="text-align:center;margin-bottom:6px;">التقدير</div>'+
+        '<div class="total-grade">'+grade+'</div></div>'+
+        '<div><div class="total-label">المعدل</div>'+
+        '<div class="total-score">'+avg+'<span style="font-size:16px;opacity:.6;"> / 5</span></div></div>'+
+      '</div>'+
+      (note?'<div class="note-box"><div class="note-label">💬 ملاحظة المدرب</div><div class="note-text">'+note+'</div></div>':'')+
+    '</div>'+
+    '<div class="footer">'+
+      '<div class="footer-logo">أكاديمية الشمالي ⚽</div>'+
+      '<div>هذا التقرير صادر من المنصة الرسمية للأكاديمية</div>'+
+      '<div>'+dateStr+'</div>'+
+    '</div>'+
+    '<div class="no-print" style="text-align:center;padding:20px;background:#f8fafc;">'+
+      '<button onclick="window.print()" style="padding:12px 32px;background:#b81d22;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;margin-left:10px;">🖨️ طباعة / حفظ PDF</button>'+
+      '<button onclick="window.close()" style="padding:12px 24px;background:#64748b;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">✕ إغلاق</button>'+
+    '</div>'+
+    '</div></body></html>';
+
+  var w = window.open('','_blank','width=900,height=700');
+  w.document.write(html);
+  w.document.close();
 }
 
 // ===== GROUP MESSAGE =====
