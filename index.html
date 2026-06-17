@@ -214,6 +214,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
     <button class="sb-btn gold" data-page="birthdays" data-pg="birthdays"><i class="fas fa-birthday-cake"></i> أعياد الميلاد</button>
     <button class="sb-btn gold" data-page="groupmsg" data-pg="groupmsg"><i class="fas fa-paper-plane"></i> إشعار جماعي</button>
     <button class="sb-btn gold" data-page="substrack" data-pg="substrack"><i class="fas fa-bell"></i> متابعة الاشتراكات</button>
+    <button class="sb-btn gold" data-page="reportreqs" data-pg="reportreqs"><i class="fas fa-file-export"></i> طلبات التقارير <span id="reqBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
     <button class="sb-btn danger" id="logoutBtn" data-act="logout"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
   <div class="sb-foot">
@@ -228,6 +229,11 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   <h1>🦅 البوابة الإلكترونية لأكاديمية الشمالي</h1>
   <p>التسجيل · الحضور · التكريم · المدربون · التقارير</p>
   <div class="gl"></div>
+</div>
+<div style="text-align:center;padding:10px 12px 4px;">
+  <button onclick="go('reportreq')" style="background:linear-gradient(135deg,#1e293b,#334155);color:#d4af37;border:1.5px solid #d4af37;border-radius:10px;padding:10px 24px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+    <i class="fas fa-file-alt"></i> طلب تقرير تقييم للاعب
+  </button>
 </div>
 
 <!-- شريط الرعاة الدوّار -->
@@ -1671,6 +1677,8 @@ function renderPage(page) {
     case 'playerstats': renderPlayerStats(); break;
     case 'playereval': renderPlayerEval(); break;
     case 'birthdays': renderBirthdays(); break;
+    case 'reportreq': renderReportReq(); break;
+    case 'reportreqs': renderReportReqs(); break;
     case 'groupmsg': renderGroupMsg(); break;
     case 'substrack': renderSubsTrack(); break;
     default: renderReg();
@@ -1687,6 +1695,7 @@ function checkAdm() {
     isAdm = true;
     document.getElementById('admMenu').style.display = 'block';
     go('dashboard');
+    loadReqBadge();
   } else {
     document.getElementById('admErr').style.display = 'block';
   }
@@ -1974,6 +1983,199 @@ function exportEvalPDF(btn){
   var w = window.open('','_blank','width=900,height=750');
   w.document.write(html);
   w.document.close();
+}
+
+// ===== REPORT REQUEST (PUBLIC) =====
+function renderReportReq(){
+  document.getElementById('content').innerHTML =
+    '<div class="card">'+
+    '<div class="sec-title"><i class="fas fa-file-alt"></i> طلب تقرير تقييم</div>'+
+    '<p style="font-size:13px;color:#64748b;margin-bottom:18px;line-height:1.7;">أدخل رقم ملف اللاعب ورقم هاتفك، وسنتواصل معك عبر واتساب بمجرد جهوز التقرير.</p>'+
+    '<div class="mb"><label class="lbl">رقم ملف اللاعب *</label>'+
+    '<input type="text" class="inp" id="rreqId" placeholder="مثال: SH-001" required></div>'+
+    '<div class="mb"><label class="lbl">اسم اللاعب *</label>'+
+    '<input type="text" class="inp" id="rreqName" placeholder="الاسم الكامل للاعب" required></div>'+
+    '<div class="mb"><label class="lbl">رقم واتساب ولي الأمر *</label>'+
+    '<input type="tel" class="inp" id="rreqPhone" placeholder="مثال: 96891234567" required></div>'+
+    '<div class="mb"><label class="lbl">ملاحظة (اختياري)</label>'+
+    '<input type="text" class="inp" id="rreqNote" placeholder="أي طلب أو توضيح..."></div>'+
+    '<button class="btn-sub" onclick="submitReportReq()"><i class="fas fa-paper-plane"></i> إرسال الطلب</button>'+
+    '</div>';
+}
+
+function submitReportReq(){
+  var id = (document.getElementById('rreqId').value||'').trim();
+  var name = (document.getElementById('rreqName').value||'').trim();
+  var phone = (document.getElementById('rreqPhone').value||'').trim();
+  var note = (document.getElementById('rreqNote').value||'').trim();
+  if(!id||!name||!phone){alert('يرجى تعبئة الحقول المطلوبة');return;}
+  showL(true);
+  apiAppend('طلبات التقارير',{
+    'التاريخ': new Date().toLocaleString('ar-SA'),
+    'رقم الملف': id,
+    'اسم اللاعب': name,
+    'هاتف ولي الأمر': phone,
+    'ملاحظة': note,
+    'الحالة': 'معلّق'
+  }).then(function(){
+    showL(false);
+    document.getElementById('content').innerHTML =
+      '<div class="card" style="text-align:center;padding:32px;">'+
+      '<div style="font-size:48px;margin-bottom:12px;">✅</div>'+
+      '<div style="font-size:18px;font-weight:800;color:#16a34a;margin-bottom:8px;">تم استلام طلبك</div>'+
+      '<div style="font-size:13px;color:#64748b;line-height:1.7;">سيتواصل معك فريق الأكاديمية عبر واتساب على الرقم <b>'+phone+'</b> بمجرد جهوز التقرير.</div>'+
+      '<button onclick="go(\'home\')" style="margin-top:20px;padding:10px 28px;background:#b81d22;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">العودة للرئيسية</button>'+
+      '</div>';
+    loadReqBadge();
+  }).catch(function(){showL(false);alert('حدث خطأ، حاول مجدداً');});
+}
+
+// ===== REPORT REQUESTS (ADMIN) =====
+function renderReportReqs(){
+  document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
+  apiGet('طلبات التقارير').then(function(rows){
+    var reqs = Array.isArray(rows) ? rows : [];
+    var pending = reqs.filter(function(r){return r['الحالة']==='معلّق';});
+    var done = reqs.filter(function(r){return r['الحالة']==='مُرسَل';});
+    var html = '<div class="card">'+
+      '<div class="sec-title"><i class="fas fa-file-export"></i> طلبات التقارير '+
+      (pending.length?'<span style="background:#ef4444;color:#fff;border-radius:10px;padding:2px 10px;font-size:12px;margin-right:6px;">'+pending.length+' معلّق</span>':'')+
+      '</div>';
+    if(!pending.length && !done.length){
+      html += '<div class="al al-info">لا توجد طلبات حتى الآن</div>';
+    }
+    if(pending.length){
+      html += '<div style="font-size:12px;font-weight:800;color:#b81d22;margin-bottom:10px;">⏳ طلبات معلّقة</div>';
+      pending.forEach(function(r,i){
+        html += '<div style="border:1.5px solid #fca5a5;border-radius:12px;padding:14px 16px;margin-bottom:10px;background:#fff5f5;">'+
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'+
+          '<div>'+
+          '<div style="font-weight:800;font-size:14px;">'+r['اسم اللاعب']+'</div>'+
+          '<div style="font-size:11px;color:#64748b;margin-top:3px;">رقم الملف: <b>'+r['رقم الملف']+'</b> &nbsp;|&nbsp; '+r['التاريخ']+'</div>'+
+          '<div style="font-size:12px;color:#475569;margin-top:4px;"><i class="fab fa-whatsapp" style="color:#25d366;"></i> '+r['هاتف ولي الأمر']+'</div>'+
+          (r['ملاحظة']?'<div style="font-size:11px;color:#94a3b8;margin-top:4px;">📝 '+r['ملاحظة']+'</div>':'')+
+          '</div>'+
+          '<div style="display:flex;flex-direction:column;gap:6px;">'+
+          '<button onclick="sendReportFromReq(\''+r['رقم الملف']+'\',\''+r['اسم اللاعب']+'\',\''+r['هاتف ولي الأمر']+'\')" '+
+          'style="padding:8px 14px;background:#b81d22;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📄 إرسال التقرير</button>'+
+          '</div></div></div>';
+      });
+    }
+    if(done.length){
+      html += '<div style="font-size:12px;font-weight:800;color:#16a34a;margin:16px 0 10px;">✅ طلبات مُرسَلة ('+done.length+')</div>';
+      done.slice(-5).reverse().forEach(function(r){
+        html += '<div style="border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;margin-bottom:8px;background:#f0fdf4;font-size:12px;">'+
+          '<b>'+r['اسم اللاعب']+'</b> — '+r['رقم الملف']+' &nbsp;|&nbsp; <span style="color:#64748b;">'+r['التاريخ']+'</span></div>';
+      });
+    }
+    html += '</div>';
+    document.getElementById('content').innerHTML = html;
+  }).catch(function(){
+    document.getElementById('content').innerHTML = '<div class="card"><div class="al al-warn">تأكد من إنشاء ورقة "طلبات التقارير" في Google Sheets</div></div>';
+  });
+}
+
+function sendReportFromReq(playerId, playerName, phone){
+  getPlayers().then(function(players){
+    var p = players.filter(function(x){return x.id===playerId;})[0];
+    var ph = phone.replace(/\D/g,'');
+    apiGet('تقييمات اللاعبين').then(function(rows){
+      var evals = Array.isArray(rows)?rows:[];
+      var last = evals.filter(function(r){return r['رقم الملف']===playerId;}).pop();
+      if(!last){
+        alert('لا يوجد تقييم مسجّل لهذا اللاعب بعد.\nيرجى إدخال التقييم أولاً من صفحة تقييم اللاعبين.');
+        return;
+      }
+      var skill=parseInt(last['المهارة']||0), disc=parseInt(last['الانضباط']||0),
+          team=parseInt(last['روح الفريق']||0), fit=parseInt(last['اللياقة']||0);
+      var total=skill+disc+team+fit;
+      var avg=(total/4).toFixed(1);
+      var grade=total>=18?'ممتاز':total>=14?'جيد جداً':total>=10?'جيد':total>=6?'مقبول':'يحتاج تطوير';
+      var gradeColor=total>=18?'#16a34a':total>=14?'#2563eb':total>=10?'#d97706':total>=6?'#f59e0b':'#b81d22';
+      var note=last['ملاحظة']||'';
+      var month=last['الشهر']||''; var yr=last['الفئة']||'';
+      var dateStr=new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+      var stars=function(n){var s='';for(var i=1;i<=5;i++)s+='<span style="color:'+(i<=n?'#d4af37':'#ddd')+';">★</span>';return s;};
+      var bar=function(n){return '<div style="display:inline-block;width:'+(n*18)+'px;height:10px;background:linear-gradient(90deg,#b81d22,#d4af37);border-radius:5px;vertical-align:middle;"></div>';};
+      var html='<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>تقرير تقييم - '+playerName+'</title>'+
+        '<style>@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap");'+
+        '*{margin:0;padding:0;box-sizing:border-box;}body{font-family:"Cairo",Arial,sans-serif;background:#f1f5f9;display:flex;justify-content:center;padding:30px;}'+
+        '.page{width:210mm;min-height:297mm;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.15);position:relative;overflow:hidden;}'+
+        '.header{background:linear-gradient(135deg,#b81d22 0%,#7a1015 100%);padding:32px 40px 24px;color:#fff;position:relative;}'+
+        '.header::after{content:"";position:absolute;bottom:-20px;left:0;right:0;height:40px;background:#fff;border-radius:50% 50% 0 0 / 40px 40px 0 0;}'+
+        '.logo-row{display:flex;align-items:center;gap:16px;margin-bottom:16px;}'+
+        '.logo-circle{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:28px;}'+
+        '.acad-name{font-size:22px;font-weight:900;}.acad-sub{font-size:11px;opacity:.8;margin-top:2px;}'+
+        '.report-title{font-size:14px;font-weight:600;opacity:.9;border-top:1px solid rgba(255,255,255,.25);padding-top:12px;margin-top:4px;}'+
+        '.body{padding:48px 40px 32px;}.player-card{background:linear-gradient(135deg,#fef9ec,#fff8e1);border:2px solid #d4af37;border-radius:14px;padding:20px 24px;margin-bottom:28px;display:flex;align-items:center;gap:20px;}'+
+        '.player-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#b81d22,#7a1015);display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px;flex-shrink:0;}'+
+        '.player-name{font-size:20px;font-weight:900;color:#1e293b;}.player-meta{font-size:12px;color:#64748b;margin-top:4px;}'+
+        '.section-title{font-size:13px;font-weight:800;color:#475569;margin-bottom:14px;padding-bottom:6px;border-bottom:2px solid #f1f5f9;}'+
+        '.criteria-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f8fafc;border-radius:10px;margin-bottom:8px;}'+
+        '.criteria-label{font-size:13px;font-weight:700;color:#334155;}.criteria-right{display:flex;align-items:center;gap:10px;}'+
+        '.score-num{font-size:22px;font-weight:900;color:#b81d22;min-width:28px;text-align:center;}'+
+        '.total-box{background:linear-gradient(135deg,#1e293b,#334155);border-radius:14px;padding:20px 24px;margin:24px 0;display:flex;align-items:center;justify-content:space-between;color:#fff;}'+
+        '.total-label{font-size:14px;opacity:.8;}.total-score{font-size:36px;font-weight:900;}'+
+        '.total-grade{font-size:16px;font-weight:800;padding:6px 16px;border-radius:20px;background:'+gradeColor+';}'+
+        '.note-box{background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:10px;padding:16px;margin-bottom:24px;}'+
+        '.note-label{font-size:11px;font-weight:800;color:#0369a1;margin-bottom:6px;}.note-text{font-size:13px;color:#1e293b;line-height:1.6;}'+
+        '.footer{background:#f8fafc;border-top:2px solid #f1f5f9;padding:16px 40px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#94a3b8;}'+
+        '.footer-logo{font-weight:800;color:#b81d22;font-size:13px;}'+
+        '@media print{body{background:#fff;padding:0;}.page{box-shadow:none;width:100%;min-height:auto;}.no-print{display:none!important;}}</style></head><body>'+
+        '<div class="page">'+
+        '<div class="header"><div class="logo-row"><div class="logo-circle">⚽</div>'+
+        '<div><div class="acad-name">أكاديمية الشمالي لكرة القدم</div><div class="acad-sub">AL-SHAMALI FOOTBALL ACADEMY</div></div></div>'+
+        '<div class="report-title">📊 تقرير التقييم الشهري للاعب</div></div>'+
+        '<div class="body">'+
+        '<div class="player-card"><div class="player-avatar">👤</div><div>'+
+        '<div class="player-name">'+playerName+'</div>'+
+        '<div class="player-meta">رقم الملف: '+playerId+(month?' &nbsp;|&nbsp; الشهر: '+month:'')+(yr?' &nbsp;|&nbsp; الفئة: مواليد '+yr:'')+' &nbsp;|&nbsp; '+dateStr+'</div></div></div>'+
+        '<div class="section-title">معايير التقييم</div>'+
+        '<div class="criteria-row"><span class="criteria-label">⚡ المهارة الفنية</span><div class="criteria-right">'+bar(skill)+' <span class="score-num">'+skill+'</span>'+stars(skill)+'</div></div>'+
+        '<div class="criteria-row"><span class="criteria-label">🎯 الانضباط</span><div class="criteria-right">'+bar(disc)+' <span class="score-num">'+disc+'</span>'+stars(disc)+'</div></div>'+
+        '<div class="criteria-row"><span class="criteria-label">🤝 روح الفريق</span><div class="criteria-right">'+bar(team)+' <span class="score-num">'+team+'</span>'+stars(team)+'</div></div>'+
+        '<div class="criteria-row"><span class="criteria-label">💪 اللياقة البدنية</span><div class="criteria-right">'+bar(fit)+' <span class="score-num">'+fit+'</span>'+stars(fit)+'</div></div>'+
+        '<div class="total-box"><div><div class="total-label">المجموع الكلي (من 20)</div><div class="total-score">'+total+' <span style="font-size:16px;opacity:.6;">/ 20</span></div></div>'+
+        '<div><div class="total-label" style="text-align:center;margin-bottom:6px;">التقدير</div><div class="total-grade">'+grade+'</div></div>'+
+        '<div><div class="total-label">المعدل</div><div class="total-score">'+avg+'<span style="font-size:16px;opacity:.6;"> / 5</span></div></div></div>'+
+        (note?'<div class="note-box"><div class="note-label">💬 ملاحظة المدرب</div><div class="note-text">'+note+'</div></div>':'')+
+        '</div>'+
+        '<div class="footer"><div class="footer-logo">أكاديمية الشمالي ⚽</div><div>هذا التقرير صادر من المنصة الرسمية للأكاديمية</div><div>'+dateStr+'</div></div>'+
+        '<div class="no-print" style="text-align:center;padding:20px;background:#f8fafc;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">'+
+        '<button onclick="window.print()" style="padding:12px 28px;background:#b81d22;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">🖨️ طباعة / حفظ PDF</button>'+
+        '<button onclick="shareToWA()" style="padding:12px 28px;background:#25d366;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📲 إرسال واتساب</button>'+
+        '<button onclick="window.close()" style="padding:12px 20px;background:#64748b;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">✕ إغلاق</button>'+
+        '</div></div>'+
+        '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>'+
+        '<script>var PHONE="'+ph+'";'+
+        'function shareToWA(){var btn=document.querySelector("button[onclick=\'shareToWA()\']");btn.disabled=true;btn.textContent="⏳ جاري التحضير...";'+
+        'html2canvas(document.querySelector(".page"),{scale:2,useCORS:true,backgroundColor:"#ffffff"}).then(function(canvas){'+
+        'canvas.toBlob(function(blob){'+
+        'if(navigator.share&&navigator.canShare&&navigator.canShare({files:[new File([blob],"r.png",{type:"image/png"})]})){'+
+        'navigator.share({title:"تقرير تقييم '+playerName+'",text:"مرفق تقرير التقييم الشهري للاعب '+playerName+'",files:[new File([blob],"تقرير_'+playerName.replace(/\s/g,'_')+'.png",{type:"image/png"})]})'+
+        '.then(function(){btn.disabled=false;btn.textContent="📲 إرسال واتساب";})'+
+        '.catch(function(){fallback(blob);});'+
+        '}else{fallback(blob);}'+
+        '},"image/png");});}'+
+        'function fallback(blob){var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="تقرير_'+playerName.replace(/\s/g,'_')+'.png";a.click();'+
+        'if(PHONE)setTimeout(function(){window.open("https://wa.me/"+PHONE+"?text="+encodeURIComponent("مرحباً، مرفق تقرير التقييم الشهري للاعب '+playerName+' 📊\\nيرجى مراجعة التقرير المرفق."),"_blank");},800);'+
+        'var b=document.querySelector("button[onclick=\'shareToWA()\']");if(b){b.disabled=false;b.textContent="📲 إرسال واتساب";}}<\/script>'+
+        '</body></html>';
+      var w = window.open('','_blank','width=900,height=750');
+      w.document.write(html); w.document.close();
+      // تحديث حالة الطلب إلى "مُرسَل"
+      apiUpdate('طلبات التقارير','رقم الملف',playerId,{'الحالة':'مُرسَل'}).catch(function(){});
+      setTimeout(function(){ loadReqBadge(); renderReportReqs(); }, 1500);
+    });
+  });
+}
+
+function loadReqBadge(){
+  apiGet('طلبات التقارير').then(function(rows){
+    var n = Array.isArray(rows)?rows.filter(function(r){return r['الحالة']==='معلّق';}).length:0;
+    var b = document.getElementById('reqBadge');
+    if(b){ b.textContent=n; b.style.display=n?'inline':'none'; }
+  }).catch(function(){});
 }
 
 // ===== GROUP MESSAGE =====
