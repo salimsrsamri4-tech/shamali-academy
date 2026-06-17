@@ -1468,15 +1468,17 @@ function saveCoachPhone(){
   if(!phone){ err.style.display='block'; err.textContent='أدخل رقم الواتساب'; return; }
   var btn = document.getElementById('savePhoneBtn');
   btn.disabled=true; btn.textContent='جارٍ الحفظ...';
-  var url = CONFIG.SHEETDB_URL+'/الاسم/'+encodeURIComponent(name)+'?sheet='+encodeURIComponent('بيانات المدربين');
+  var url = CONFIG.SHEETDB_URL+'/'+encodeURIComponent('الاسم')+'/'+encodeURIComponent(name)+'?sheet='+encodeURIComponent('بيانات المدربين');
   fetch(url, {
     method: 'PATCH',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({data:{'الهاتف': phone}})
-  }).then(function(r){ return r.json(); }).then(function(){
+  }).then(function(r){ return r.json(); }).then(function(res){
+    console.log('PATCH coach phone:', res);
     modal.remove();
     renderCoaches();
-  }).catch(function(){
+  }, function(e){
+    console.error('PATCH error:', e);
     btn.disabled=false; btn.textContent='💾 حفظ';
     err.style.display='block'; err.textContent='تعذّر الحفظ، تحقق من الاتصال';
   });
@@ -2279,14 +2281,15 @@ function confirmForward(){
   var appUrl = 'https://salimsrsamri4-tech.github.io/shamali-academy/';
   var msg = 'السلام عليكم المدرب '+coach.name+'،\n\nلديك طلب تقرير تقييم من ولي أمر اللاعب:\n• اسم اللاعب: '+playerName+'\n• رقم الملف: '+playerId+'\n• واتساب ولي الأمر: '+parentPhone+'\n\nيرجى الدخول للمنصة وإرسال التقرير:\n'+appUrl;
   btn.disabled=true; btn.textContent='جارٍ التحويل...';
-  var url = CONFIG.SHEETDB_URL+'/رقم الملف/'+encodeURIComponent(playerId)+'?sheet='+encodeURIComponent('طلبات التقارير');
-  fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{'الحالة':'محوّل للمدرب','المدرب':coach.name}})})
-  .catch(function(){}).finally(function(){
-    document.getElementById('fwdModal').remove();
+  var url = CONFIG.SHEETDB_URL+'/'+encodeURIComponent('رقم الملف')+'/'+encodeURIComponent(playerId)+'?sheet='+encodeURIComponent('طلبات التقارير');
+  function afterForward(){
+    var m = document.getElementById('fwdModal'); if(m) m.remove();
     window.open('https://wa.me/'+coachPhone+'?text='+encodeURIComponent(msg),'_blank');
     loadReqBadge();
     renderReportReqs();
-  });
+  }
+  fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{'الحالة':'محوّل للمدرب','المدرب':coach.name}})})
+  .then(function(){ afterForward(); }, function(){ afterForward(); });
 }
 
 // ===== COACH REPORT REQUESTS =====
