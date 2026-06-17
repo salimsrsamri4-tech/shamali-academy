@@ -1333,6 +1333,7 @@ function renderCoaches(){
       '<div style="margin-top:10px;margin-bottom:10px;">'+
       '<label style="font-size:11px;color:#64748b;font-weight:700;display:block;margin-bottom:4px;">نبذة تعريفية</label>'+
       '<textarea id="cBio" rows="2" placeholder="نبذة مختصرة عن المدرب..." style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 11px;font-family:Cairo,sans-serif;font-size:12px;box-sizing:border-box;resize:none;"></textarea></div>'+
+      coachInp('cPhone','رقم واتساب المدرب *','tel','مثال: 96892126558')+
       coachInp('cPhoto','معرّف صورة Google Drive','text','الرقم من رابط الصورة (اختياري)')+
       '<div id="coachAddMsg" style="display:none;margin-top:8px;"></div>'+
       '<button onclick="submitAddCoach()" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#0d3320,#16a34a);color:#fff;border:none;border-radius:10px;padding:13px;font-size:13px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
@@ -1363,9 +1364,13 @@ function renderCoaches(){
           '<div style="font-size:11px;color:#16a34a;font-weight:700;">'+c.role+'</div>'+
           (c.category?'<div style="font-size:10px;color:#64748b;">'+c.category+'</div>':'')+
           '</div>'+
-          // زر حذف
-          '<button onclick="deleteCoach(\''+c.name+'\')" style="background:#fef2f2;border:1.5px solid #fecaca;color:#dc2626;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;flex-shrink:0;">'+
+          // أزرار
+          '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">'+
+          '<button onclick="editCoachPhone(\''+c.name+'\',\''+c.phone+'\')" style="background:#f0fdf4;border:1.5px solid #bbf7d0;color:#16a34a;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;white-space:nowrap;">'+
+          '<i class="fab fa-whatsapp"></i> '+(c.phone?'تعديل الرقم':'إضافة رقم')+'</button>'+
+          '<button onclick="deleteCoach(\''+c.name+'\')" style="background:#fef2f2;border:1.5px solid #fecaca;color:#dc2626;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">'+
           '<i class="fas fa-trash"></i> حذف</button>'+
+          '</div>'+
           '</div>'+
           // تفاصيل إضافية
           (c.experience||c.certificates||c.bio
@@ -1400,6 +1405,7 @@ function submitAddCoach(){
     'الخبرة': document.getElementById('cExp').value.trim(),
     'الشهادات': document.getElementById('cCerts').value.trim(),
     'النبذة': document.getElementById('cBio').value.trim(),
+    'الهاتف': document.getElementById('cPhone').value.trim(),
     'الصورة': document.getElementById('cPhoto').value.trim()
   };
   var btn = document.querySelector('button[onclick="submitAddCoach()"]');
@@ -1408,7 +1414,7 @@ function submitAddCoach(){
     var msg = document.getElementById('coachAddMsg');
     if(msg){ msg.style.display='block'; msg.innerHTML='<div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:8px;padding:10px;color:#15803d;font-size:12px;font-weight:800;">✅ تم إضافة المدرب بنجاح!</div>'; }
     if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> حفظ المدرب'; }
-    ['cName','cRole','cCat','cExp','cCerts','cBio','cPhoto'].forEach(function(id){
+    ['cName','cRole','cCat','cExp','cCerts','cBio','cPhone','cPhoto'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value='';
     });
     setTimeout(function(){ renderCoaches(); }, 1200);
@@ -1428,6 +1434,44 @@ function deleteCoach(name){
   }).catch(function(){
     showL(false);
     alert('تعذّر الحذف، تحقق من الاتصال');
+  });
+}
+
+function editCoachPhone(name, currentPhone){
+  var modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML =
+    '<div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px;font-family:inherit;">'+
+    '<div style="font-size:15px;font-weight:900;margin-bottom:4px;"><i class="fab fa-whatsapp" style="color:#25d366;"></i> رقم واتساب المدرب</div>'+
+    '<div style="font-size:12px;color:#64748b;margin-bottom:14px;">'+name+'</div>'+
+    '<input id="editPhoneInp" type="tel" value="'+(currentPhone||'')+'" placeholder="مثال: 96892126558" '+
+    'style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:11px;font-family:Cairo,sans-serif;font-size:14px;box-sizing:border-box;margin-bottom:14px;">'+
+    '<div style="display:flex;gap:8px;">'+
+    '<button onclick="saveCoachPhone(\''+name+'\')" '+
+    'style="flex:1;padding:11px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">💾 حفظ</button>'+
+    '<button onclick="this.closest(\'div[style*=fixed]\').remove()" '+
+    'style="padding:11px 16px;background:#f1f5f9;color:#64748b;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">إلغاء</button>'+
+    '</div></div>';
+  document.body.appendChild(modal);
+  setTimeout(function(){ document.getElementById('editPhoneInp').focus(); }, 100);
+}
+
+function saveCoachPhone(name){
+  var phone = (document.getElementById('editPhoneInp').value||'').trim();
+  if(!phone){ alert('أدخل رقم الواتساب'); return; }
+  showL(true);
+  var url = CONFIG.SHEETDB_URL+'/الاسم/'+encodeURIComponent(name)+'?sheet='+encodeURIComponent('بيانات المدربين');
+  fetch(url, {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({data:{'الهاتف': phone}})
+  }).then(function(r){ return r.json(); }).then(function(){
+    showL(false);
+    document.querySelector('div[style*="fixed"]').remove();
+    renderCoaches();
+  }).catch(function(){
+    showL(false);
+    alert('تعذّر الحفظ، تحقق من الاتصال');
   });
 }
 
