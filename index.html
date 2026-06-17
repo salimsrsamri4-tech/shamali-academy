@@ -2870,7 +2870,7 @@ function submitReg() {
       emergencyPhone: f.emergencyPhone.value,
       parentIdFileId: fileIds.parentIdUrl || '',
       playerName: f.playerName.value,
-      playerBirthYear: f.playerBirthYear.value,
+      playerBirthDate: f.playerBirthDate ? f.playerBirthDate.value : '',
       playerNationality: f.playerNationality.value,
       playerPhotoId: fileIds.playerPhotoUrl || '',
       playerDocId: fileIds.playerDocUrl || '',
@@ -2882,7 +2882,7 @@ function submitReg() {
     saveRegistration(data).then(function(id){
       showL(false);
       showSuccess(id, data);
-      var msg = encodeURIComponent('🦅 تسجيل جديد\n👤 '+data.playerName+'\n📋 '+id+'\n🗓️ '+data.playerBirthYear+'\n👨‍👦 '+data.parentName+'\n📞 '+data.parentPhone);
+      var msg = encodeURIComponent('🦅 تسجيل جديد\n👤 '+data.playerName+'\n📋 '+id+'\n🗓️ '+data.playerBirthDate+'\n👨‍👦 '+data.parentName+'\n📞 '+data.parentPhone);
       setTimeout(function(){ window.open('https://api.whatsapp.com/send?phone='+CONFIG.WA_NUM+'&text='+msg,'_blank'); }, 1000);
     }).catch(function(e){ showL(false); alert('خطأ في الحفظ: '+e.message); });
   }).catch(function(e){ showL(false); alert('خطأ: '+e.message); });
