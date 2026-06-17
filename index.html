@@ -254,7 +254,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
 <div class="sec-banner"><i class="fas fa-running"></i> بيانات اللاعب</div>
 <div class="mb"><label class="lbl">اسم اللاعب كاملاً *</label><input type="text" class="inp" name="playerName" required></div>
 <div class="r2 mb">
-<div><label class="lbl">سنة الميلاد *</label><input type="number" class="inp" name="playerBirthYear" min="2005" max="2022" required></div>
+<div><label class="lbl">تاريخ الميلاد *</label><input type="date" class="inp" name="playerBirthDate" min="2005-01-01" max="2022-12-31" required></div>
 <div><label class="lbl">الجنسية *</label>
 <select class="inp" name="playerNationality" required>
 <option value="">اختر...</option><option>عُماني</option><option>سعودي</option><option>إماراتي</option><option>كويتي</option><option>بحريني</option><option>قطري</option><option>يمني</option><option>مصري</option><option>أردني</option><option>باكستاني</option><option>هندي</option><option>أخرى</option>
@@ -378,7 +378,8 @@ function getPlayers() {
         id: r['رقم الملف'] || '',
         parentName: r['اسم ولي الأمر'] || '',
         playerName: r['اسم اللاعب'] || '',
-        birthYear: r['سنة الميلاد'] || '',
+        birthDate: r['تاريخ الميلاد'] || '',
+        birthYear: (r['تاريخ الميلاد'] || r['سنة الميلاد'] || '').toString().substring(0,4),
         nationality: r['الجنسية'] || '',
         health: r['الصحة'] || 'لا يوجد',
         phone: r['الهاتف'] || '',
@@ -431,7 +432,7 @@ function saveRegistration(data) {
     'اسم ولي الأمر': data.parentName, 'الرقم المدني': data.parentCivilId,
     'البريد': data.parentEmail, 'الهاتف': data.parentPhone,
     'الطوارئ': data.emergencyPhone, 'بطاقة ولي الأمر': parentIdUrl,
-    'اسم اللاعب': data.playerName, 'سنة الميلاد': data.playerBirthYear,
+    'اسم اللاعب': data.playerName, 'تاريخ الميلاد': data.playerBirthDate,
     'وثيقة اللاعب': playerDocUrl, 'صورة اللاعب': playerPhotoUrl,
     'الدفع': data.paymentMethod, 'ملاحظات': '',
     'الحالة': 'موافق', 'الجنسية': data.playerNationality,
@@ -465,7 +466,7 @@ function saveAttendance(records) {
 function saveAward(data) {
   var row = {
     'التاريخ': new Date().toISOString(), 'رقم الملف': data.playerId,
-    'اسم اللاعب': data.playerName, 'سنة الميلاد': data.birthYear,
+    'اسم اللاعب': data.playerName, 'تاريخ الميلاد': data.playerBirthDate || data.birthYear,
     'الراعي': data.sponsor, 'الشهر': data.month
   };
   return apiAppend('تكريم المجيدين', row);
@@ -603,7 +604,7 @@ function renderReg(){
   html += '<div class="sec-banner"><i class="fas fa-running"></i> بيانات اللاعب</div>';
   html += '<div class="mb"><label class="lbl">اسم اللاعب كاملاً *</label><input type="text" class="inp" name="playerName" required></div>';
   html += '<div class="r2 mb">';
-  html += '<div><label class="lbl">سنة الميلاد *</label><input type="number" class="inp" name="playerBirthYear" min="2005" max="2022" required></div>';
+  html += '<div><label class="lbl">تاريخ الميلاد *</label><input type="date" class="inp" name="playerBirthDate" min="2005-01-01" max="2022-12-31" required></div>';
   html += '<div><label class="lbl">الجنسية *</label>';
   html += '<select class="inp" name="playerNationality" required>';
   html += '<option value="">اختر...</option><option>عُماني</option><option>سعودي</option><option>إماراتي</option><option>كويتي</option><option>بحريني</option><option>قطري</option><option>يمني</option><option>مصري</option><option>أردني</option><option>باكستاني</option><option>هندي</option><option>أخرى</option>';
@@ -2417,7 +2418,7 @@ function showSuccess(id, data) {
     '</div>'+
     // Details
     '<div style="padding:14px 16px;background:#fff;">'+
-      idRow('🗓️','سنة الميلاد', data.playerBirthYear)+
+      idRow('🗓️','تاريخ الميلاد', data.playerBirthDate || data.playerBirthYear)+
       idRow('🌍','الجنسية', data.playerNationality)+
       idRow('👨‍👦','ولي الأمر', data.parentName)+
       idRow('📞','الهاتف', data.parentPhone)+
