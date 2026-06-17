@@ -2221,9 +2221,7 @@ function sendReportFromReq(playerId, playerName, phone){
         '</body></html>';
       var w = window.open('','_blank','width=900,height=750');
       w.document.write(html); w.document.close();
-      // تحديث حالة الطلب إلى "مُرسَل"
-      apiUpdate('طلبات التقارير','رقم الملف',playerId,{'الحالة':'مُرسَل'}).catch(function(){});
-      setTimeout(function(){ loadReqBadge(); renderReportReqs(); }, 1500);
+      setTimeout(function(){ renderReportReqs(); }, 500);
     });
   });
 }
@@ -2285,15 +2283,10 @@ function confirmForward(){
   var appUrl = 'https://salimsrsamri4-tech.github.io/shamali-academy/';
   var msg = 'السلام عليكم المدرب '+coach.name+'،\n\nلديك طلب تقرير تقييم من ولي أمر اللاعب:\n• اسم اللاعب: '+playerName+'\n• رقم الملف: '+playerId+'\n• واتساب ولي الأمر: '+parentPhone+'\n\nيرجى الدخول للمنصة وإرسال التقرير:\n'+appUrl;
   btn.disabled=true; btn.textContent='جارٍ التحويل...';
-  var url = CONFIG.SHEETDB_URL+'/'+encodeURIComponent('رقم الملف')+'/'+encodeURIComponent(playerId)+'?sheet='+encodeURIComponent('طلبات التقارير');
-  function afterForward(){
-    var m = document.getElementById('fwdModal'); if(m) m.remove();
-    window.open('https://wa.me/'+coachPhone+'?text='+encodeURIComponent(msg),'_blank');
-    loadReqBadge();
-    renderReportReqs();
-  }
-  fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{'الحالة':'محوّل للمدرب','المدرب':coach.name}})})
-  .then(function(){ afterForward(); }, function(){ afterForward(); });
+  var m = document.getElementById('fwdModal'); if(m) m.remove();
+  window.open('https://wa.me/'+coachPhone+'?text='+encodeURIComponent(msg),'_blank');
+  loadReqBadge();
+  renderReportReqs();
 }
 
 // ===== COACH REPORT REQUESTS =====
