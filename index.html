@@ -200,6 +200,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
     <button class="sb-btn coach" data-pg="playereval"><i class="fas fa-star"></i> تقييم اللاعبين</button>
     <button class="sb-btn coach" data-pg="awd"><i class="fas fa-trophy"></i> لاعب الشهر</button>
     <button class="sb-btn coach" data-pg="coachreport"><i class="fas fa-file-alt"></i> التقرير الشهري</button>
+    <button class="sb-btn coach" data-pg="coachreqreports"><i class="fas fa-file-export"></i> طلبات التقارير <span id="coachReqBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
   </div>
   <button class="sb-btn gold" data-page="adminlogin" data-pg="adminlogin"><i class="fas fa-user-shield"></i> دخول الإدارة</button>
   <div id="admMenu" style="display:none;">
@@ -1675,6 +1676,7 @@ function renderPage(page) {
     case 'birthdays': renderBirthdays(); break;
     case 'reportreq': renderReportReq(); break;
     case 'reportreqs': renderReportReqs(); break;
+    case 'coachreqreports': renderCoachReqReports(); break;
     case 'groupmsg': renderGroupMsg(); break;
     case 'substrack': renderSubsTrack(); break;
     default: renderReg();
@@ -1704,6 +1706,7 @@ function checkCoach() {
     isCoach = true;
     document.getElementById('coachMenu').style.display = 'block';
     go('att');
+    loadCoachReqBadge();
   } else {
     document.getElementById('coachErr').style.display = 'block';
   }
@@ -2053,7 +2056,9 @@ function renderReportReqs(){
           '</div>'+
           '<div style="display:flex;flex-direction:column;gap:6px;">'+
           '<button onclick="sendReportFromReq(\''+r['رقم الملف']+'\',\''+r['اسم اللاعب']+'\',\''+r['هاتف ولي الأمر']+'\')" '+
-          'style="padding:8px 14px;background:#b81d22;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📄 إرسال التقرير</button>'+
+          'style="padding:8px 14px;background:#b81d22;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;margin-bottom:5px;">📄 إرسال التقرير</button>'+
+          '<button onclick="forwardToCoach(\''+r['رقم الملف']+'\',\''+r['اسم اللاعب']+'\',\''+r['هاتف ولي الأمر']+'\')" '+
+          'style="padding:8px 14px;background:#0f172a;color:#d4af37;border:1.5px solid #d4af37;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">↪️ تحويل للمدرب</button>'+
           '</div></div></div>';
       });
     }
@@ -2170,6 +2175,92 @@ function loadReqBadge(){
   apiGet('طلبات التقارير').then(function(rows){
     var n = Array.isArray(rows)?rows.filter(function(r){return r['الحالة']==='معلّق';}).length:0;
     var b = document.getElementById('reqBadge');
+    if(b){ b.textContent=n; b.style.display=n?'inline':'none'; }
+  }).catch(function(){});
+}
+
+// ===== FORWARD TO COACH =====
+function forwardToCoach(playerId, playerName, parentPhone){
+  getCoaches().then(function(coaches){
+    if(!coaches.length){ alert('لا توجد بيانات مدربين'); return; }
+    var opts = coaches.map(function(c,i){
+      return '<option value="'+i+'">'+c.name+(c.category?' — '+c.category:'')+'</option>';
+    }).join('');
+    var modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    modal.innerHTML =
+      '<div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:380px;font-family:inherit;">'+
+      '<div style="font-size:16px;font-weight:900;margin-bottom:6px;">↪️ تحويل للمدرب</div>'+
+      '<div style="font-size:12px;color:#64748b;margin-bottom:16px;">اللاعب: <b>'+playerName+'</b> — رقم الملف: <b>'+playerId+'</b></div>'+
+      '<label style="font-size:12px;font-weight:700;color:#475569;">اختر المدرب</label>'+
+      '<select id="fwdCoachSel" class="inp" style="margin-top:6px;margin-bottom:16px;">'+opts+'</select>'+
+      '<div style="display:flex;gap:8px;">'+
+      '<button onclick="confirmForward(\''+playerId+'\',\''+playerName+'\',\''+parentPhone+'\')" '+
+      'style="flex:1;padding:11px;background:#b81d22;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">إرسال إشعار واتساب</button>'+
+      '<button onclick="this.closest(\'div[style*=fixed]\').remove()" '+
+      'style="padding:11px 16px;background:#f1f5f9;color:#64748b;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">إلغاء</button>'+
+      '</div></div>';
+    modal._coaches = coaches;
+    document.body.appendChild(modal);
+  });
+}
+
+function confirmForward(playerId, playerName, parentPhone){
+  var sel = document.getElementById('fwdCoachSel');
+  var modal = sel.closest('div[style*="fixed"]');
+  var coaches = modal._coaches || [];
+  var coach = coaches[parseInt(sel.value)];
+  if(!coach){ alert('اختر مدرباً'); return; }
+  var coachPhone = coach.phone.replace(/\D/g,'');
+  var appUrl = 'https://salimsrsamri4-tech.github.io/shamali-academy/';
+  var msg = 'السلام عليكم المدرب '+coach.name+'،\n\n'+'لديك طلب تقرير تقييم من ولي أمر اللاعب:\n'+'• اسم اللاعب: '+playerName+'\n'+'• رقم الملف: '+playerId+'\n'+'• واتساب ولي الأمر: '+parentPhone+'\n\nيرجى الدخول للمنصة وإرسال التقرير:\n'+appUrl;
+  // تحديث الطلب في الشيت
+  apiUpdate('طلبات التقارير','رقم الملف',playerId,{'الحالة':'محوّل للمدرب','المدرب':coach.name}).catch(function(){});
+  modal.remove();
+  setTimeout(function(){
+    window.open('https://wa.me/'+coachPhone+'?text='+encodeURIComponent(msg),'_blank');
+    renderReportReqs();
+  }, 300);
+}
+
+// ===== COACH REPORT REQUESTS =====
+function renderCoachReqReports(){
+  document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
+  apiGet('طلبات التقارير').then(function(rows){
+    var reqs = Array.isArray(rows) ? rows.filter(function(r){
+      return r['الحالة']==='محوّل للمدرب';
+    }) : [];
+    var html = '<div class="card">'+
+      '<div class="sec-title"><i class="fas fa-file-export"></i> طلبات التقارير الموجّهة إليك '+
+      (reqs.length?'<span style="background:#ef4444;color:#fff;border-radius:10px;padding:2px 10px;font-size:12px;margin-right:6px;">'+reqs.length+'</span>':'')+
+      '</div>';
+    if(!reqs.length){
+      html += '<div class="al al-info">لا توجد طلبات موجّهة إليك حالياً</div>';
+    } else {
+      reqs.forEach(function(r){
+        html +=
+          '<div style="border:1.5px solid #fde68a;border-radius:12px;padding:14px 16px;margin-bottom:12px;background:#fffbeb;">'+
+          '<div style="font-weight:800;font-size:15px;margin-bottom:4px;">'+r['اسم اللاعب']+'</div>'+
+          '<div style="font-size:11px;color:#64748b;margin-bottom:4px;">رقم الملف: <b>'+r['رقم الملف']+'</b> &nbsp;|&nbsp; '+r['التاريخ']+'</div>'+
+          '<div style="font-size:12px;margin-bottom:10px;"><i class="fab fa-whatsapp" style="color:#25d366;"></i> ولي الأمر: '+r['هاتف ولي الأمر']+'</div>'+
+          (r['ملاحظة']?'<div style="font-size:11px;color:#92400e;margin-bottom:10px;">📝 '+r['ملاحظة']+'</div>':'')+
+          '<button onclick="sendReportFromReq(\''+r['رقم الملف']+'\',\''+r['اسم اللاعب']+'\',\''+r['هاتف ولي الأمر']+'\')" '+
+          'style="width:100%;padding:11px;background:#b81d22;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">'+
+          '📄 فتح التقرير وإرساله لولي الأمر</button>'+
+          '</div>';
+      });
+    }
+    html += '</div>';
+    document.getElementById('content').innerHTML = html;
+  }).catch(function(){
+    document.getElementById('content').innerHTML = '<div class="card"><div class="al al-warn">تعذّر تحميل الطلبات</div></div>';
+  });
+}
+
+function loadCoachReqBadge(){
+  apiGet('طلبات التقارير').then(function(rows){
+    var n = Array.isArray(rows)?rows.filter(function(r){return r['الحالة']==='محوّل للمدرب';}).length:0;
+    var b = document.getElementById('coachReqBadge');
     if(b){ b.textContent=n; b.style.display=n?'inline':'none'; }
   }).catch(function(){});
 }
