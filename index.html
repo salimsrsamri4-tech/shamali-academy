@@ -348,13 +348,14 @@ var CONFIG = {
   API_KEY: 'AIzaSyBOiSr2yaHT8eWbUuQnn6hNY6w6zHzhqUo',
   SHEET_URL: 'https://sheets.googleapis.com/v4/spreadsheets/',
   UPLOAD_URL: 'https://script.google.com/macros/s/AKfycbx7tusYxtQP-eeP2Gp6vK5u0hxeJiE_e4zoaCLuS-62Tq--fPZSz0NalTrsJLbLX_xA/exec',
+  GAS_URL: '', // سيُملأ بعد نشر Apps Script الجديد
   SHEETDB_URL: 'https://sheetdb.io/api/v1/19dnaxf04au5l',
   ADMIN_PASS: ['98555987'],
   COACH_PASS: ['92126558'],
   WA_NUM: '96892126558'
 };
 
-// ===== SheetDB API =====
+// ===== API (يدعم Apps Script و SheetDB) =====
 var _apiCache = {};
 var _CACHE_TTL = 5 * 60 * 1000; // 5 دقائق
 
@@ -364,7 +365,9 @@ function apiGet(sheetName, forceRefresh) {
   if(!forceRefresh && cached && (now - cached.ts) < _CACHE_TTL) {
     return Promise.resolve(cached.data);
   }
-  var url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName) + '&limit=500';
+  var url = CONFIG.GAS_URL
+    ? CONFIG.GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheetName) + '&limit=500'
+    : CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName) + '&limit=500';
   return fetch(url).then(function(r){ return r.json(); }).then(function(data){
     _apiCache[sheetName] = { data: data, ts: Date.now() };
     return data;
@@ -378,19 +381,38 @@ function apiClearCache(sheetName) {
 
 function apiAppend(sheetName, dataObj) {
   return new Promise(function(resolve, reject) {
-    var url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
+    var url, body;
+    if(CONFIG.GAS_URL) {
+      url = CONFIG.GAS_URL;
+      body = JSON.stringify({action:'append', sheet:sheetName, data: Array.isArray(dataObj)?dataObj:[dataObj]});
+    } else {
+      url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
+      body = JSON.stringify({data: Array.isArray(dataObj)?dataObj:[dataObj]});
+    }
     var xhr = new XMLHttpRequest();
     xhr.open('POST', url, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.timeout = 20000;
-    xhr.onload = function() {
-      apiClearCache(sheetName); // امسح الكاش بعد الكتابة
-      resolve({status:'ok'});
-    };
+    xhr.onload = function() { apiClearCache(sheetName); resolve({status:'ok'}); };
     xhr.onerror = function() { reject(new Error('فشل الاتصال بالخادم')); };
     xhr.ontimeout = function() { reject(new Error('انتهت مهلة الاتصال')); };
-    xhr.send(JSON.stringify({data: Array.isArray(dataObj) ? dataObj : [dataObj]}));
+    xhr.send(body);
   });
+}
+
+function apiDelete(sheetName, column, value) {
+  if(CONFIG.GAS_URL) {
+    return fetch(CONFIG.GAS_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({action:'delete', sheet:sheetName, column:column, value:value})
+    }).then(function(r){ return r.json(); }).then(function(){
+      apiClearCache(sheetName);
+    });
+  } else {
+    var url = CONFIG.SHEETDB_URL+'/'+encodeURIComponent(column)+'/'+encodeURIComponent(value)+'?sheet='+encodeURIComponent(sheetName);
+    return fetch(url,{method:'DELETE'}).then(function(){ apiClearCache(sheetName); });
+  }
 }
 
 // Get all players
@@ -1570,9 +1592,8 @@ function submitAddCoach(){
 
 function deleteCoach(name){
   if(!confirm('هل تريد حذف المدرب "'+name+'" ؟')) return;
-  var url = CONFIG.SHEETDB_URL+'/الاسم/'+encodeURIComponent(name)+'?sheet='+encodeURIComponent('بيانات المدربين');
   showL(true);
-  fetch(url,{method:'DELETE'}).then(function(r){ return r.json(); }).then(function(){
+  apiDelete('بيانات المدربين','الاسم',name).then(function(){
     showL(false);
     renderCoaches();
   }).catch(function(){
@@ -2356,8 +2377,7 @@ function saveCalEvent(){
 
 function deleteCalEvent(title, date){
   if(!confirm('هل تريد حذف هذا الحدث؟')) return;
-  var url = CONFIG.SHEETDB_URL+'/'+encodeURIComponent('العنوان')+'/'+encodeURIComponent(title)+'?sheet='+encodeURIComponent('تقويم الأكاديمية');
-  fetch(url,{method:'DELETE'}).then(function(){
+  apiDelete('تقويم الأكاديمية','العنوان',title).then(function(){
     _calEvents = _calEvents.filter(function(e){ return !(e['العنوان']===title&&e['التاريخ']===date); });
     buildCalendarView(true);
   }).catch(function(){ alert('تعذّر الحذف'); });
