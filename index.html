@@ -1636,7 +1636,8 @@ function saveCoachPhone(){
   apiAppend('أرقام المدربين', {'اسم المدرب': name, 'الهاتف': phone, 'التاريخ': new Date().toISOString()})
   .then(function(){
     modal.remove();
-    renderCoaches();
+    apiClearCache();
+    setTimeout(function(){ renderCoaches(); }, 2000);
   }, function(){
     btn.disabled=false; btn.textContent='💾 حفظ';
     err.style.display='block'; err.textContent='تعذّر الحفظ، تحقق من الاتصال';
