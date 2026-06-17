@@ -1439,6 +1439,7 @@ function deleteCoach(name){
 
 function editCoachPhone(name, currentPhone){
   var modal = document.createElement('div');
+  modal.id = 'coachPhoneModal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
   modal.innerHTML =
     '<div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px;font-family:inherit;">'+
@@ -1446,32 +1447,38 @@ function editCoachPhone(name, currentPhone){
     '<div style="font-size:12px;color:#64748b;margin-bottom:14px;">'+name+'</div>'+
     '<input id="editPhoneInp" type="tel" value="'+(currentPhone||'')+'" placeholder="مثال: 96892126558" '+
     'style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:11px;font-family:Cairo,sans-serif;font-size:14px;box-sizing:border-box;margin-bottom:14px;">'+
+    '<div id="editPhoneErr" style="display:none;color:#dc2626;font-size:12px;margin-bottom:10px;"></div>'+
     '<div style="display:flex;gap:8px;">'+
-    '<button onclick="saveCoachPhone(\''+name+'\')" '+
+    '<button id="savePhoneBtn" onclick="saveCoachPhone()" '+
     'style="flex:1;padding:11px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">💾 حفظ</button>'+
-    '<button onclick="this.closest(\'div[style*=fixed]\').remove()" '+
+    '<button onclick="document.getElementById(\'coachPhoneModal\').remove()" '+
     'style="padding:11px 16px;background:#f1f5f9;color:#64748b;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">إلغاء</button>'+
     '</div></div>';
+  modal._coachName = name;
   document.body.appendChild(modal);
-  setTimeout(function(){ document.getElementById('editPhoneInp').focus(); }, 100);
+  setTimeout(function(){ var inp=document.getElementById('editPhoneInp'); if(inp) inp.focus(); }, 100);
 }
 
-function saveCoachPhone(name){
+function saveCoachPhone(){
+  var modal = document.getElementById('coachPhoneModal');
+  if(!modal) return;
+  var name = modal._coachName;
   var phone = (document.getElementById('editPhoneInp').value||'').trim();
-  if(!phone){ alert('أدخل رقم الواتساب'); return; }
-  showL(true);
+  var err = document.getElementById('editPhoneErr');
+  if(!phone){ err.style.display='block'; err.textContent='أدخل رقم الواتساب'; return; }
+  var btn = document.getElementById('savePhoneBtn');
+  btn.disabled=true; btn.textContent='جارٍ الحفظ...';
   var url = CONFIG.SHEETDB_URL+'/الاسم/'+encodeURIComponent(name)+'?sheet='+encodeURIComponent('بيانات المدربين');
   fetch(url, {
     method: 'PATCH',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({data:{'الهاتف': phone}})
   }).then(function(r){ return r.json(); }).then(function(){
-    showL(false);
-    document.querySelector('div[style*="fixed"]').remove();
+    modal.remove();
     renderCoaches();
   }).catch(function(){
-    showL(false);
-    alert('تعذّر الحفظ، تحقق من الاتصال');
+    btn.disabled=false; btn.textContent='💾 حفظ';
+    err.style.display='block'; err.textContent='تعذّر الحفظ، تحقق من الاتصال';
   });
 }
 
