@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -394,17 +394,27 @@ function getPlayers() {
 
 // Get coaches
 function getCoaches() {
-  return apiGet('بيانات المدربين').then(function(rows){
-    if(!Array.isArray(rows)) return [];
+  return Promise.all([
+    apiGet('بيانات المدربين'),
+    apiGet('أرقام المدربين').then(function(r){ return r; }, function(){ return []; })
+  ]).then(function(results){
+    var rows = Array.isArray(results[0]) ? results[0] : [];
+    var phones = Array.isArray(results[1]) ? results[1] : [];
+    var phoneMap = {};
+    phones.forEach(function(p){
+      var n = p['اسم المدرب'] || '';
+      if(n && p['الهاتف']) phoneMap[n] = p['الهاتف'];
+    });
     return rows.map(function(r){
+      var name = r['الاسم'] || r['اسم المدرب'] || r['الاسم الكامل'] || r['name'] || '';
       return {
-        name: r['الاسم'] || r['اسم المدرب'] || r['الاسم الكامل'] || r['name'] || '',
+        name: name,
         role: r['المنصب'] || r['الدور'] || r['الوظيفة'] || r['role'] || '',
         category: r['الفئة'] || r['الفئة العمرية'] || r['category'] || '',
         certificates: r['الشهادات'] || r['المؤهلات'] || r['certificates'] || '',
         experience: r['الخبرة'] || r['سنوات الخبرة'] || r['experience'] || '',
         bio: r['النبذة'] || r['نبذة'] || r['نبذة تعريفية'] || r['bio'] || '',
-        phone: r['الهاتف'] || r['رقم الهاتف'] || r['phone'] || '',
+        phone: phoneMap[name] || r['الهاتف'] || r['رقم الهاتف'] || r['phone'] || '',
         photo: r['الصورة'] || r['رابط الصورة'] || r['معرف الصورة'] || r['photo'] || ''
       };
     }).filter(function(c){ return c.name; });
@@ -1468,17 +1478,11 @@ function saveCoachPhone(){
   if(!phone){ err.style.display='block'; err.textContent='أدخل رقم الواتساب'; return; }
   var btn = document.getElementById('savePhoneBtn');
   btn.disabled=true; btn.textContent='جارٍ الحفظ...';
-  var url = CONFIG.SHEETDB_URL+'/'+encodeURIComponent('الاسم')+'/'+encodeURIComponent(name)+'?sheet='+encodeURIComponent('بيانات المدربين');
-  fetch(url, {
-    method: 'PATCH',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({data:{'الهاتف': phone}})
-  }).then(function(r){ return r.json(); }).then(function(res){
-    console.log('PATCH coach phone:', res);
+  apiAppend('أرقام المدربين', {'اسم المدرب': name, 'الهاتف': phone, 'التاريخ': new Date().toISOString()})
+  .then(function(){
     modal.remove();
     renderCoaches();
-  }, function(e){
-    console.error('PATCH error:', e);
+  }, function(){
     btn.disabled=false; btn.textContent='💾 حفظ';
     err.style.display='block'; err.textContent='تعذّر الحفظ، تحقق من الاتصال';
   });
