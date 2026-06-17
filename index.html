@@ -380,23 +380,22 @@ function apiClearCache(sheetName) {
 }
 
 function apiAppend(sheetName, dataObj) {
-  return new Promise(function(resolve, reject) {
-    var url, body;
-    if(CONFIG.GAS_URL) {
-      url = CONFIG.GAS_URL;
-      body = JSON.stringify({action:'append', sheet:sheetName, data: Array.isArray(dataObj)?dataObj:[dataObj]});
-    } else {
-      url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
-      body = JSON.stringify({data: Array.isArray(dataObj)?dataObj:[dataObj]});
-    }
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', url, true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.timeout = 20000;
-    xhr.onload = function() { apiClearCache(sheetName); resolve({status:'ok'}); };
-    xhr.onerror = function() { reject(new Error('فشل الاتصال بالخادم')); };
-    xhr.ontimeout = function() { reject(new Error('انتهت مهلة الاتصال')); };
-    xhr.send(body);
+  var url, body;
+  if(CONFIG.GAS_URL) {
+    url = CONFIG.GAS_URL;
+    body = JSON.stringify({action:'append', sheet:sheetName, data: Array.isArray(dataObj)?dataObj:[dataObj]});
+  } else {
+    url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
+    body = JSON.stringify({data: Array.isArray(dataObj)?dataObj:[dataObj]});
+  }
+  return fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    redirect: 'follow',
+    body: body
+  }).then(function(r){
+    apiClearCache(sheetName);
+    return {status:'ok'};
   });
 }
 
