@@ -2700,14 +2700,15 @@ function sendReportFromReq(playerId, playerName, phone){
         '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>'+
         '<script>var PHONE="'+ph+'";'+
         'function shareToWA(){var btn=document.querySelector("button[onclick=\'shareToWA()\']");btn.disabled=true;btn.textContent="⏳ جاري التحضير...";'+
-        'html2canvas(document.querySelector(".page"),{scale:2,useCORS:true,backgroundColor:"#ffffff"}).then(function(canvas){'+
+        'document.fonts.ready.then(function(){'+
+        'html2canvas(document.querySelector(".page"),{scale:2,useCORS:true,allowTaint:true,backgroundColor:"#ffffff",onclone:function(doc){doc.querySelectorAll("*").forEach(function(el){el.style.fontFamily="Cairo,Arial,sans-serif";})}}).then(function(canvas){'+
         'canvas.toBlob(function(blob){'+
         'if(navigator.share&&navigator.canShare&&navigator.canShare({files:[new File([blob],"r.png",{type:"image/png"})]})){'+
         'navigator.share({title:"تقرير تقييم '+playerName+'",text:"مرفق تقرير التقييم الشهري للاعب '+playerName+'",files:[new File([blob],"تقرير_'+playerName.replace(/\s/g,'_')+'.png",{type:"image/png"})]})'+
         '.then(function(){btn.disabled=false;btn.textContent="📲 إرسال واتساب";})'+
         '.catch(function(){fallback(blob);});'+
         '}else{fallback(blob);}'+
-        '},"image/png");});}'+
+        '},"image/png");});});}'+
         'function fallback(blob){var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="تقرير_'+playerName.replace(/\s/g,'_')+'.png";a.click();'+
         'if(PHONE)setTimeout(function(){window.open("https://wa.me/"+PHONE+"?text="+encodeURIComponent("مرحباً، مرفق تقرير التقييم الشهري للاعب '+playerName+' 📊\\nيرجى مراجعة التقرير المرفق."),"_blank");},800);'+
         'var b=document.querySelector("button[onclick=\'shareToWA()\']");if(b){b.disabled=false;b.textContent="📲 إرسال واتساب";}}<\/script>'+
