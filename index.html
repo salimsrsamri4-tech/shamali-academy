@@ -436,10 +436,10 @@ function getPlayers() {
 }
 
 // Get coaches
-function getCoaches() {
+function getCoaches(forceRefresh) {
   return Promise.all([
-    apiGet('بيانات المدربين'),
-    apiGet('أرقام المدربين').then(function(r){ return r; }, function(){ return []; })
+    apiGet('بيانات المدربين', forceRefresh),
+    apiGet('أرقام المدربين', forceRefresh).then(function(r){ return r; }, function(){ return []; })
   ]).then(function(results){
     var rows = Array.isArray(results[0]) ? results[0] : [];
     var phones = Array.isArray(results[1]) ? results[1] : [];
@@ -1469,10 +1469,10 @@ function submitAwd(){
 }
 
 // ===== COACHES ADMIN =====
-function renderCoaches(){
+function renderCoaches(forceRefresh){
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ التحميل...</div>';
-  getCoaches().then(function(coaches){
+  getCoaches(forceRefresh).then(function(coaches){
     var html =
       // ── هيدر ──
       '<div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:20px 16px;text-align:center;color:#fff;">'+
@@ -1637,7 +1637,7 @@ function saveCoachPhone(){
   .then(function(){
     modal.remove();
     apiClearCache();
-    setTimeout(function(){ renderCoaches(); }, 2000);
+    setTimeout(function(){ renderCoaches(true); }, 4000);
   }, function(){
     btn.disabled=false; btn.textContent='💾 حفظ';
     err.style.display='block'; err.textContent='تعذّر الحفظ، تحقق من الاتصال';
@@ -1739,7 +1739,7 @@ function submitSuggest(){
 function renderSuggestions(){
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ تحميل المقترحات...</div>';
-  apiGet('المقترحات والملاحظات').then(function(rows){
+  apiGet('المقترحات والملاحظات', true).then(function(rows){
     if(!Array.isArray(rows)||!rows.length){
       el.innerHTML='<div style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8);padding:20px;text-align:center;color:#fff;border-radius:0;">'+
         '<div style="font-size:28px;">📭</div><div style="font-weight:900;margin-top:6px;">لا توجد رسائل بعد</div></div>';
@@ -2433,7 +2433,7 @@ function submitReportReq(){
 // ===== REPORT REQUESTS (ADMIN) =====
 function renderReportReqs(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
-  apiGet('طلبات التقارير').then(function(rows){
+  apiGet('طلبات التقارير', true).then(function(rows){
     var reqs = Array.isArray(rows) ? rows : [];
     var pending = reqs.filter(function(r){return r['الحالة']==='معلّق';});
     var done = reqs.filter(function(r){return r['الحالة']==='مُرسَل';});
@@ -2572,7 +2572,7 @@ function sendReportFromReq(playerId, playerName, phone){
 }
 
 function loadReqBadge(){
-  apiGet('طلبات التقارير').then(function(rows){
+  apiGet('طلبات التقارير', true).then(function(rows){
     var n = Array.isArray(rows)?rows.filter(function(r){return r['الحالة']==='معلّق';}).length:0;
     var b = document.getElementById('reqBadge');
     if(b){ b.textContent=n; b.style.display=n?'inline':'none'; }
@@ -2637,7 +2637,7 @@ function confirmForward(){
 // ===== COACH REPORT REQUESTS =====
 function renderCoachReqReports(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
-  apiGet('طلبات التقارير').then(function(rows){
+  apiGet('طلبات التقارير', true).then(function(rows){
     var reqs = Array.isArray(rows) ? rows.filter(function(r){
       return r['الحالة']==='محوّل للمدرب';
     }) : [];
