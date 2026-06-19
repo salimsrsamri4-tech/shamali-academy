@@ -764,22 +764,55 @@ function renderRen(){
 
 // ===== SCHEDULE =====
 function renderSched(){
-  var cats = [
-    {color:'🔴',years:'2011/2012'},
-    {color:'🔵',years:'2013/2014'},
-    {color:'🟢',years:'2015/2016'},
-    {color:'🟡',years:'2017/2018'},
-    {color:'🌱',years:'2019/2021'}
-  ];
-  var html = '<div class="card"><div class="sec-title"><i class="fas fa-calendar-alt"></i> جدول مواعيد التدريب</div>'+
-    '<div style="background:#f1f5f9;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#64748b;">'+
-    '<i class="fas fa-map-marker-alt" style="color:#b81d22;"></i> <b style="color:#0f172a;">ملعب فريق الشمالي</b> · سيب — المعابلة</div>';
-  cats.forEach(function(c){
-    html += '<div style="font-size:11px;font-weight:800;color:#64748b;margin-bottom:7px;">'+c.color+' مواليد '+c.years+'</div>'+
-      '<div class="sch-i"><div class="sch-d"><div class="sch-dn">الاثنين</div><div class="sch-dt">عصراً</div></div><div><b>مواليد '+c.years+'</b></div></div>'+
-      '<div class="sch-i" style="margin-bottom:12px;"><div class="sch-d"><div class="sch-dn">الأربعاء</div><div class="sch-dt">عصراً</div></div><div><b>مواليد '+c.years+'</b></div></div>';
-  });
-  html += '</div>';
+  var html =
+    '<div style="background:linear-gradient(135deg,#3b0a0a,#b81d22);padding:28px 16px 24px;text-align:center;color:#fff;">'+
+      '<div style="font-size:40px;margin-bottom:8px;">⚽</div>'+
+      '<div style="font-size:20px;font-weight:900;">جدول التدريب</div>'+
+      '<div style="font-size:12px;opacity:.75;margin-top:4px;">أكاديمية الشمالي لكرة القدم</div>'+
+    '</div>'+
+    '<div style="padding:20px 16px;">'+
+
+    // بطاقة الموعد
+    '<div style="background:#fff;border-radius:18px;box-shadow:0 4px 20px rgba(184,29,34,.15);border:2px solid #f1e4e4;overflow:hidden;margin-bottom:16px;">'+
+      '<div style="background:linear-gradient(135deg,#b81d22,#7a1015);padding:14px 18px;display:flex;align-items:center;gap:12px;">'+
+        '<div style="font-size:28px;">🗓️</div>'+
+        '<div>'+
+          '<div style="color:#d4af37;font-size:11px;font-weight:800;letter-spacing:1px;">أيام التدريب</div>'+
+          '<div style="color:#fff;font-size:18px;font-weight:900;">الاثنين والأربعاء</div>'+
+        '</div>'+
+      '</div>'+
+      '<div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px;">'+
+        '<div style="display:flex;align-items:center;gap:12px;">'+
+          '<div style="width:42px;height:42px;background:#fff7ed;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🌅</div>'+
+          '<div>'+
+            '<div style="font-size:11px;color:#94a3b8;font-weight:700;">الوقت</div>'+
+            '<div style="font-size:16px;font-weight:900;color:#0f172a;">عصراً</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="display:flex;align-items:center;gap:12px;">'+
+          '<div style="width:42px;height:42px;background:#fef2f2;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📍</div>'+
+          '<div>'+
+            '<div style="font-size:11px;color:#94a3b8;font-weight:700;">الملعب</div>'+
+            '<div style="font-size:16px;font-weight:900;color:#0f172a;">ملعب فريق الشمالي</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="display:flex;align-items:center;gap:12px;">'+
+          '<div style="width:42px;height:42px;background:#f0fdf4;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👥</div>'+
+          '<div>'+
+            '<div style="font-size:11px;color:#94a3b8;font-weight:700;">الفئات</div>'+
+            '<div style="font-size:16px;font-weight:900;color:#0f172a;">جميع الفئات العمرية</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+
+    // تنبيه
+    '<div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;padding:13px 16px;display:flex;align-items:center;gap:10px;">'+
+      '<div style="font-size:20px;">💡</div>'+
+      '<div style="font-size:12px;color:#92400e;font-weight:700;line-height:1.6;">يُرجى الحضور قبل موعد التدريب بـ 15 دقيقة والالتزام بالزي الرسمي للأكاديمية</div>'+
+    '</div>'+
+    '</div>';
+
   document.getElementById('content').innerHTML = html;
 }
 
