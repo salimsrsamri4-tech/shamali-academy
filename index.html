@@ -1209,27 +1209,79 @@ function doSearch(){
 function renderPlayers(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
   getPlayers().then(function(players){
-    var html = '<div class="card"><div class="sec-title"><i class="fas fa-users"></i> قائمة اللاعبين ('+players.length+')</div>';
-    players.forEach(function(p,i){
-      var initials = p.playerName.trim().split(' ').map(function(w){return w[0];}).slice(0,2).join('');
-      var age = new Date().getFullYear() - parseInt(p.birthYear||0);
-      var cat = age<=8?'U8':age<=10?'U10':age<=12?'U12':age<=14?'U14':'U16+';
-      html +=
-        '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9;">'+
-        '<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#d4af37;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+initials+'</div>'+
-        '<div style="flex:1;min-width:0;">'+
-          '<div style="font-size:13px;font-weight:800;color:#0f172a;">'+p.playerName+'</div>'+
-          '<div style="font-size:11px;color:#64748b;">'+p.id+' · '+cat+' · '+p.nationality+'</div>'+
-        '</div>'+
-        '<button onclick="showPlayerCard(\''+i+'\')" '+
-        'style="background:linear-gradient(135deg,#b81d22,#7a1015);color:#d4af37;border:none;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;white-space:nowrap;">'+
-        '🪪 البطاقة</button>'+
-        '</div>';
-    });
-    html += '</div>';
-    document.getElementById('content').innerHTML = html;
     window._playersList = players;
+    // استخراج سنوات الميلاد المتاحة
+    var years = [];
+    players.forEach(function(p){
+      var y = p.birthDate ? p.birthDate.split(/[-\/]/)[0] : (p.birthYear||'');
+      if(y && y.length===4 && years.indexOf(y)===-1) years.push(y);
+    });
+    years.sort(function(a,b){return b-a;});
+    window._playersFilterYears = [];
+    renderPlayersFiltered(players, years);
   });
+}
+
+function renderPlayersFiltered(players, years){
+  var selected = window._playersFilterYears || [];
+  var filtered = selected.length===0 ? players : players.filter(function(p){
+    var y = p.birthDate ? p.birthDate.split(/[-\/]/)[0] : (p.birthYear||'');
+    return selected.indexOf(y) !== -1;
+  });
+
+  var html =
+    '<div class="card">'+
+    '<div class="sec-title"><i class="fas fa-users"></i> قائمة اللاعبين ('+filtered.length+' من '+players.length+')</div>'+
+    // فلتر السنوات
+    '<div style="margin-bottom:12px;">'+
+    '<div style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:8px;">🎂 فرز حسب سنة الميلاد (يمكن تحديد أكثر من سنة):</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+
+  html += '<button onclick="toggleYearFilter(\'all\','+JSON.stringify(players)+','+JSON.stringify(years)+')" '+
+    'style="padding:5px 12px;border-radius:20px;border:2px solid '+(selected.length===0?'#b81d22':'#cbd5e1')+';background:'+(selected.length===0?'#b81d22':'#fff')+';color:'+(selected.length===0?'#fff':'#475569')+';font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">'+
+    'الكل</button>';
+
+  years.forEach(function(y){
+    var active = selected.indexOf(y) !== -1;
+    html += '<button onclick="toggleYearFilter(\''+y+'\','+JSON.stringify(players)+','+JSON.stringify(years)+')" '+
+      'style="padding:5px 12px;border-radius:20px;border:2px solid '+(active?'#b81d22':'#cbd5e1')+';background:'+(active?'#b81d22':'#fff')+';color:'+(active?'#fff':'#475569')+';font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">'+
+      y+'</button>';
+  });
+
+  html += '</div></div>';
+
+  filtered.forEach(function(p,i){
+    var realIdx = players.indexOf(p);
+    var initials = p.playerName.trim().split(' ').map(function(w){return w[0];}).slice(0,2).join('');
+    var by = p.birthDate ? p.birthDate.split(/[-\/]/)[0] : (p.birthYear||'');
+    var age = by ? new Date().getFullYear() - parseInt(by) : 0;
+    var cat = age<=8?'U8':age<=10?'U10':age<=12?'U12':age<=14?'U14':'U16+';
+    html +=
+      '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9;">'+
+      '<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#d4af37;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+initials+'</div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-size:13px;font-weight:800;color:#0f172a;">'+p.playerName+'</div>'+
+        '<div style="font-size:11px;color:#64748b;">'+p.id+' · '+cat+(by?' · '+by:'')+' · '+p.nationality+'</div>'+
+      '</div>'+
+      '<button onclick="showPlayerCard(\''+realIdx+'\')" '+
+      'style="background:linear-gradient(135deg,#b81d22,#7a1015);color:#d4af37;border:none;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;white-space:nowrap;">'+
+      '🪪 البطاقة</button>'+
+      '</div>';
+  });
+  html += '</div>';
+  document.getElementById('content').innerHTML = html;
+}
+
+function toggleYearFilter(year, players, years){
+  if(year==='all'){
+    window._playersFilterYears = [];
+  } else {
+    var sel = window._playersFilterYears || [];
+    var idx = sel.indexOf(year);
+    if(idx===-1) sel.push(year); else sel.splice(idx,1);
+    window._playersFilterYears = sel;
+  }
+  renderPlayersFiltered(players, years);
 }
 
 function showPlayerCard(idx){
