@@ -420,6 +420,12 @@ function getPlayers() {
   return apiGet('الورقة1').then(function(rows){
     if(!Array.isArray(rows)) return [];
     return rows.map(function(r){
+      var photoRaw = r['صورة اللاعب'] || r['الصورة'] || '';
+      // استخراج معرّف Drive من الرابط الكامل إن وُجد
+      var photoId = '';
+      var m = photoRaw.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if(m) photoId = m[1];
+      else if(photoRaw && !photoRaw.includes('http')) photoId = photoRaw;
       return {
         id: r['رقم الملف'] || '',
         parentName: r['اسم ولي الأمر'] || '',
@@ -429,7 +435,8 @@ function getPlayers() {
         nationality: r['الجنسية'] || '',
         health: r['الصحة'] || 'لا يوجد',
         phone: r['الهاتف'] || '',
-        email: r['البريد'] || ''
+        email: r['البريد'] || '',
+        photo: photoId
       };
     }).filter(function(p){ return p.id && p.playerName; });
   });
