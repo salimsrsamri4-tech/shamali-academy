@@ -1,4 +1,4 @@
-const CACHE = 'shamali-v3';
+const CACHE = 'shamali-v5';
 const ASSETS = [
   '/shamali-academy/',
   '/shamali-academy/index.html',
@@ -23,9 +23,27 @@ self.addEventListener('activate', function(e) {
 });
 
 self.addEventListener('fetch', function(e) {
-  // للشبكة أولاً (بيانات Google Sheets)، ثم الكاش للملفات الثابتة
-  if(e.request.url.includes('sheetdb.io') || e.request.url.includes('googleapis.com')) {
-    e.respondWith(fetch(e.request).catch(function(){ return new Response('{}'); }));
+  // الشبكة أولاً دائماً لأي بيانات خارجية
+  if(
+    e.request.url.includes('sheetdb.io') ||
+    e.request.url.includes('googleapis.com') ||
+    e.request.url.includes('script.google.com') ||
+    e.request.url.includes('googleusercontent.com')
+  ) {
+    e.respondWith(fetch(e.request).catch(function(){ return new Response('[]'); }));
+    return;
+  }
+  // الشبكة أولاً لـ index.html لضمان التحديث دائماً
+  if(e.request.url.includes('index.html') || e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).then(function(res) {
+        var clone = res.clone();
+        caches.open(CACHE).then(function(c){ c.put(e.request, clone); });
+        return res;
+      }).catch(function() {
+        return caches.match(e.request);
+      })
+    );
     return;
   }
   e.respondWith(
