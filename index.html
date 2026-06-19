@@ -1206,23 +1206,29 @@ function doSearch(){
 }
 
 // ===== PLAYERS =====
+var _allPlayers = [];
+var _allYears = [];
+
 function renderPlayers(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
   getPlayers().then(function(players){
     window._playersList = players;
-    // استخراج سنوات الميلاد المتاحة
+    _allPlayers = players;
     var years = [];
     players.forEach(function(p){
       var y = p.birthDate ? p.birthDate.split(/[-\/]/)[0] : (p.birthYear||'');
       if(y && y.length===4 && years.indexOf(y)===-1) years.push(y);
     });
     years.sort(function(a,b){return b-a;});
+    _allYears = years;
     window._playersFilterYears = [];
-    renderPlayersFiltered(players, years);
+    renderPlayersFiltered();
   });
 }
 
-function renderPlayersFiltered(players, years){
+function renderPlayersFiltered(){
+  var players = _allPlayers;
+  var years = _allYears;
   var selected = window._playersFilterYears || [];
   var filtered = selected.length===0 ? players : players.filter(function(p){
     var y = p.birthDate ? p.birthDate.split(/[-\/]/)[0] : (p.birthYear||'');
@@ -1232,25 +1238,24 @@ function renderPlayersFiltered(players, years){
   var html =
     '<div class="card">'+
     '<div class="sec-title"><i class="fas fa-users"></i> قائمة اللاعبين ('+filtered.length+' من '+players.length+')</div>'+
-    // فلتر السنوات
     '<div style="margin-bottom:12px;">'+
-    '<div style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:8px;">🎂 فرز حسب سنة الميلاد (يمكن تحديد أكثر من سنة):</div>'+
+    '<div style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:8px;">🎂 فرز حسب سنة الميلاد:</div>'+
     '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
 
-  html += '<button onclick="toggleYearFilter(\'all\','+JSON.stringify(players)+','+JSON.stringify(years)+')" '+
-    'style="padding:5px 12px;border-radius:20px;border:2px solid '+(selected.length===0?'#b81d22':'#cbd5e1')+';background:'+(selected.length===0?'#b81d22':'#fff')+';color:'+(selected.length===0?'#fff':'#475569')+';font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">'+
+  html += '<button onclick="toggleYearFilter(\'all\')" '+
+    'style="padding:5px 14px;border-radius:20px;border:2px solid '+(selected.length===0?'#b81d22':'#cbd5e1')+';background:'+(selected.length===0?'#b81d22':'#fff')+';color:'+(selected.length===0?'#fff':'#475569')+';font-size:12px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">'+
     'الكل</button>';
 
   years.forEach(function(y){
     var active = selected.indexOf(y) !== -1;
-    html += '<button onclick="toggleYearFilter(\''+y+'\','+JSON.stringify(players)+','+JSON.stringify(years)+')" '+
-      'style="padding:5px 12px;border-radius:20px;border:2px solid '+(active?'#b81d22':'#cbd5e1')+';background:'+(active?'#b81d22':'#fff')+';color:'+(active?'#fff':'#475569')+';font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">'+
+    html += '<button onclick="toggleYearFilter(\''+y+'\')" '+
+      'style="padding:5px 14px;border-radius:20px;border:2px solid '+(active?'#b81d22':'#cbd5e1')+';background:'+(active?'#b81d22':'#fff')+';color:'+(active?'#fff':'#475569')+';font-size:12px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">'+
       y+'</button>';
   });
 
   html += '</div></div>';
 
-  filtered.forEach(function(p,i){
+  filtered.forEach(function(p){
     var realIdx = players.indexOf(p);
     var initials = p.playerName.trim().split(' ').map(function(w){return w[0];}).slice(0,2).join('');
     var by = p.birthDate ? p.birthDate.split(/[-\/]/)[0] : (p.birthYear||'');
@@ -1272,7 +1277,7 @@ function renderPlayersFiltered(players, years){
   document.getElementById('content').innerHTML = html;
 }
 
-function toggleYearFilter(year, players, years){
+function toggleYearFilter(year){
   if(year==='all'){
     window._playersFilterYears = [];
   } else {
@@ -1281,7 +1286,7 @@ function toggleYearFilter(year, players, years){
     if(idx===-1) sel.push(year); else sel.splice(idx,1);
     window._playersFilterYears = sel;
   }
-  renderPlayersFiltered(players, years);
+  renderPlayersFiltered();
 }
 
 function showPlayerCard(idx){
