@@ -417,17 +417,29 @@ function apiDelete(sheetName, column, value) {
 
 // Get all players
 function getPlayers() {
-  return apiGet('الورقة1').then(function(rows){
-    if(!Array.isArray(rows)) return [];
+  return Promise.all([
+    apiGet('الورقة1'),
+    apiGet('صور اللاعبين').then(function(r){ return r; }, function(){ return []; })
+  ]).then(function(results){
+    var rows = Array.isArray(results[0]) ? results[0] : [];
+    var photoRows = Array.isArray(results[1]) ? results[1] : [];
+    // بناء خريطة صور من ورقة صور اللاعبين (الأحدث يسبق)
+    var photoMap = {};
+    photoRows.forEach(function(r){
+      var fid = r['رقم الملف'] || '';
+      if(fid && r['معرف الصورة']) photoMap[fid] = r['معرف الصورة'];
+    });
     return rows.map(function(r){
       var photoRaw = r['صورة اللاعب'] || r['الصورة'] || '';
-      // استخراج معرّف Drive من الرابط الكامل إن وُجد
       var photoId = '';
       var m = photoRaw.match(/\/d\/([a-zA-Z0-9_-]+)/);
       if(m) photoId = m[1];
       else if(photoRaw && !photoRaw.includes('http')) photoId = photoRaw;
+      var fid = r['رقم الملف'] || '';
+      // صورة ورقة الصور تتغلب على صورة التسجيل
+      if(photoMap[fid]) photoId = photoMap[fid];
       return {
-        id: r['رقم الملف'] || '',
+        id: fid,
         parentName: r['اسم ولي الأمر'] || '',
         playerName: r['اسم اللاعب'] || '',
         birthDate: r['تاريخ الميلاد'] || '',
@@ -1275,13 +1287,52 @@ function renderPlayersFiltered(){
         '<div style="font-size:13px;font-weight:800;color:#0f172a;">'+p.playerName+'</div>'+
         '<div style="font-size:11px;color:#64748b;">'+p.id+' · '+cat+(by?' · '+by:'')+' · '+p.nationality+'</div>'+
       '</div>'+
+      '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">'+
       '<button onclick="showPlayerCard(\''+realIdx+'\')" '+
-      'style="background:linear-gradient(135deg,#b81d22,#7a1015);color:#d4af37;border:none;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;white-space:nowrap;">'+
+      'style="background:linear-gradient(135deg,#b81d22,#7a1015);color:#d4af37;border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;white-space:nowrap;">'+
       '🪪 البطاقة</button>'+
+      '<button onclick="uploadPlayerPhoto(\''+realIdx+'\')" '+
+      'style="background:'+(p.photo?'#16a34a':'#64748b')+';color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;white-space:nowrap;">'+
+      (p.photo?'📷 تغيير':'📷 رفع صورة')+'</button>'+
+      '</div>'+
       '</div>';
   });
   html += '</div>';
   document.getElementById('content').innerHTML = html;
+}
+
+function uploadPlayerPhoto(idx){
+  var p = _allPlayers[parseInt(idx)];
+  if(!p) return;
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = function(){
+    var file = input.files[0];
+    if(!file) return;
+    if(file.size > 5*1024*1024){ alert('حجم الصورة يجب أن يكون أقل من 5MB'); return; }
+    showL(true);
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var base64 = e.target.result.split(',')[1];
+      fetch(CONFIG.UPLOAD_URL, {
+        method: 'POST',
+        body: JSON.stringify({file: base64, mimeType: file.type, filename: p.id+'_photo.jpg'})
+      }).then(function(r){ return r.json(); }).then(function(res){
+        if(!res.id){ showL(false); alert('فشل رفع الصورة'); return; }
+        // حفظ الرابط في الشيت
+        return apiAppend('صور اللاعبين', {'رقم الملف': p.id, 'معرف الصورة': res.id, 'التاريخ': new Date().toISOString()})
+        .then(function(){
+          showL(false);
+          alert('✅ تم رفع الصورة بنجاح! ستظهر عند التحديث.');
+          apiClearCache();
+          setTimeout(function(){ renderPlayers(); }, 3000);
+        });
+      }).catch(function(){ showL(false); alert('حدث خطأ أثناء الرفع'); });
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
 }
 
 function toggleYearFilter(year){
