@@ -445,11 +445,11 @@ function getCoaches() {
     var phones = Array.isArray(results[1]) ? results[1] : [];
     var phoneMap = {};
     phones.forEach(function(p){
-      var n = p['اسم المدرب'] || '';
-      if(n && p['الهاتف']) phoneMap[n] = p['الهاتف'];
+      var n = (p['اسم المدرب'] || '').trim();
+      if(n && p['الهاتف']) phoneMap[n] = p['الهاتف'].trim();
     });
     return rows.map(function(r){
-      var name = r['الاسم'] || r['اسم المدرب'] || r['الاسم الكامل'] || r['name'] || '';
+      var name = (r['الاسم'] || r['اسم المدرب'] || r['الاسم الكامل'] || r['name'] || '').trim();
       return {
         name: name,
         role: r['المنصب'] || r['الدور'] || r['الوظيفة'] || r['role'] || '',
@@ -2195,6 +2195,7 @@ function exportEvalPDF(btn){
     '</body></html>';
 
   var w = window.open('','_blank','width=900,height=750');
+  if(!w){ alert('يرجى السماح بالنوافذ المنبثقة في المتصفح ثم المحاولة مرة أخرى'); return; }
   w.document.write(html);
   w.document.close();
 }
@@ -2423,7 +2424,7 @@ function submitReportReq(){
       '<div style="font-size:48px;margin-bottom:12px;">✅</div>'+
       '<div style="font-size:18px;font-weight:800;color:#16a34a;margin-bottom:8px;">تم استلام طلبك</div>'+
       '<div style="font-size:13px;color:#64748b;line-height:1.7;">سيتواصل معك فريق الأكاديمية عبر واتساب على الرقم <b>'+phone+'</b> بمجرد جهوز التقرير.</div>'+
-      '<button onclick="go(\'home\')" style="margin-top:20px;padding:10px 28px;background:#b81d22;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">العودة للرئيسية</button>'+
+      '<button onclick="go(\'reg\')" style="margin-top:20px;padding:10px 28px;background:#b81d22;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">العودة للرئيسية</button>'+
       '</div>';
     loadReqBadge();
   }).catch(function(){showL(false);alert('حدث خطأ، حاول مجدداً');});
@@ -2563,6 +2564,7 @@ function sendReportFromReq(playerId, playerName, phone){
         'var b=document.querySelector("button[onclick=\'shareToWA()\']");if(b){b.disabled=false;b.textContent="📲 إرسال واتساب";}}<\/script>'+
         '</body></html>';
       var w = window.open('','_blank','width=900,height=750');
+      if(!w){ alert('يرجى السماح بالنوافذ المنبثقة في المتصفح ثم المحاولة مرة أخرى'); return; }
       w.document.write(html); w.document.close();
       setTimeout(function(){ renderReportReqs(); }, 500);
     });
@@ -2828,7 +2830,8 @@ function sendGroupMsg(){
   var i=0;
   function sendNext(){
     if(i>=phones.length){alert('✅ تم فتح واتساب لـ '+phones.length+' رقم. تأكد من إرسال الرسائل.');return;}
-    var num='968'+phones[i].replace(/\s/g,'');
+    var cleaned=phones[i].replace(/\s/g,'');
+    var num=cleaned.startsWith('968')?cleaned:'968'+cleaned;
     window.open('https://api.whatsapp.com/send?phone='+num+'&text='+encodeURIComponent(msg),'_blank');
     i++;
     setTimeout(sendNext,1500);
@@ -2883,7 +2886,9 @@ function renderSubsTrack(){
 function remindParent(phone,name){
   if(!phone){alert('لا يوجد رقم هاتف محفوظ لهذا اللاعب');return;}
   var msg='🦅 أكاديمية الشمالي\n\nنذكّركم بسداد رسوم اشتراك '+name+' لشهر '+MONTHS[new Date().getMonth()]+'\nالمبلغ: 20 ريال عماني\n\nشكراً لتعاونكم 🙏';
-  window.open('https://api.whatsapp.com/send?phone=968'+phone.replace(/\s/g,'')+'&text='+encodeURIComponent(msg),'_blank');
+  var cleanPhone=phone.replace(/\s/g,'');
+  var waPhone=cleanPhone.startsWith('968')?cleanPhone:'968'+cleanPhone;
+  window.open('https://api.whatsapp.com/send?phone='+waPhone+'&text='+encodeURIComponent(msg),'_blank');
 }
 function remindAll(){
   var players=window._notRenewed||[];
@@ -3355,6 +3360,7 @@ function printCard() {
   var card = document.getElementById('playerIdCard');
   if(!card) return;
   var w = window.open('','_blank','width=420,height=620');
+  if(!w){ alert('يرجى السماح بالنوافذ المنبثقة في المتصفح ثم المحاولة مرة أخرى'); return; }
   w.document.write(
     '<!DOCTYPE html><html dir="rtl"><head>'+
     '<meta charset="utf-8"><title>بطاقة اللاعب</title>'+
