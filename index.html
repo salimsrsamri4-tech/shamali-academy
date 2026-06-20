@@ -219,6 +219,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
     <button class="sb-btn gold" data-page="substrack" data-pg="substrack"><i class="fas fa-bell"></i> متابعة الاشتراكات</button>
     <button class="sb-btn gold" data-page="calendaradmin" data-pg="calendaradmin"><i class="fas fa-calendar-plus"></i> إدارة التقويم</button>
     <button class="sb-btn gold" data-page="reportreqs" data-pg="reportreqs"><i class="fas fa-file-export"></i> طلبات التقارير <span id="reqBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
+    <button class="sb-btn gold" data-page="tournaments" data-pg="tournaments"><i class="fas fa-shield-alt"></i> إدارة البطولات</button>
     <button class="sb-btn danger" id="logoutBtn" data-act="logout"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
   <div class="sb-foot">
@@ -2041,6 +2042,9 @@ function renderPage(page) {
     case 'coachreqreports': renderCoachReqReports(); break;
     case 'calendar': renderCalendar(); break;
     case 'calendaradmin': renderCalendarAdmin(); break;
+    case 'tournaments': renderTournaments(); break;
+    case 'tournament_reg': renderTournamentReg(); break;
+    case 'tournament_view': renderTournamentView(); break;
     case 'groupmsg': renderGroupMsg(); break;
     case 'substrack': renderSubsTrack(); break;
     default: renderReg();
@@ -3990,6 +3994,400 @@ function renderAttAdmin(){
   }).catch(function(){
     el.innerHTML = '<div class="card"><div class="al al-warn">تأكد من وجود ورقة "سجل الحضور" في Google Sheets</div></div>';
   });
+}
+
+// ===== TOURNAMENTS =====
+var _currentTournament = null;
+
+// فحص رابط البطولة عند فتح الصفحة
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var tid = params.get('tournament');
+  if(tid){
+    window._tournamentId = tid;
+    window.addEventListener('load', function(){
+      setTimeout(function(){ go('tournament_reg'); }, 500);
+    });
+  }
+})();
+
+// ===== ADMIN: قائمة البطولات =====
+function renderTournaments(){
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
+  apiGet('البطولات', true).then(function(rows){
+    var tournaments = Array.isArray(rows) ? rows : [];
+    var html =
+      '<div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:24px 16px 18px;text-align:center;color:#fff;">'+
+      '<div style="font-size:36px;margin-bottom:6px;">🏆</div>'+
+      '<div style="font-size:20px;font-weight:900;">إدارة البطولات</div>'+
+      '<div style="font-size:11px;opacity:.7;margin-top:4px;">إنشاء وإدارة البطولات الكروية</div></div>'+
+      '<div style="padding:16px;">'+
+      '<button onclick="showCreateTournament()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:16px;">'+
+      '<i class="fas fa-plus"></i> إنشاء بطولة جديدة</button>';
+
+    if(!tournaments.length){
+      html += '<div style="text-align:center;padding:32px;color:#64748b;">لا توجد بطولات بعد</div>';
+    } else {
+      tournaments.forEach(function(t){
+        var id = t['معرف البطولة']||'';
+        var regLink = window.location.origin+window.location.pathname+'?tournament='+id;
+        html +=
+          '<div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1.5px solid #e2e8f0;">'+
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">'+
+            '<div>'+
+              '<div style="font-size:15px;font-weight:900;color:#0f172a;">'+t['اسم البطولة']+'</div>'+
+              '<div style="font-size:11px;color:#64748b;margin-top:2px;">الفئة: '+t['الفئة']+' · '+t['عدد الفرق']+' فرق · '+t['مدة المباراة']+' دقيقة</div>'+
+            '</div>'+
+            '<span style="background:'+(t['الحالة']==='مفتوحة'?'#dcfce7':'#f1f5f9')+';color:'+(t['الحالة']==='مفتوحة'?'#16a34a':'#64748b')+';border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800;">'+t['الحالة']+'</span>'+
+          '</div>'+
+          '<div style="background:#f8fafc;border-radius:8px;padding:8px 10px;font-size:11px;color:#475569;margin-bottom:10px;word-break:break-all;">'+
+            '🔗 '+regLink+
+          '</div>'+
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+
+            '<button onclick="copyTournLink(\''+regLink+'\')" style="flex:1;padding:8px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📋 نسخ الرابط</button>'+
+            '<button onclick="sendTournWA(\''+regLink+'\',\''+t['اسم البطولة']+'\')" style="flex:1;padding:8px;background:#25d366;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📲 إرسال واتساب</button>'+
+            '<button onclick="viewTournament(\''+id+'\')" style="flex:1;padding:8px;background:#1e3a5f;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">👁 عرض</button>'+
+          '</div>'+
+          '</div>';
+      });
+    }
+    html += '</div><div id="tournModalHolder"></div>';
+    el.innerHTML = html;
+  });
+}
+
+function copyTournLink(link){
+  navigator.clipboard.writeText(link).then(function(){ alert('✅ تم نسخ الرابط'); }).catch(function(){
+    prompt('انسخ الرابط:', link);
+  });
+}
+
+function sendTournWA(link, name){
+  var msg = encodeURIComponent('🏆 دعوة تسجيل في بطولة *'+name+'*\n\nللتسجيل وإدخال بيانات اللاعبين:\n'+link+'\n\n⚽ أكاديمية الشمالي لكرة القدم');
+  window.open('https://wa.me/?text='+msg,'_blank');
+}
+
+function showCreateTournament(){
+  var old = document.getElementById('tournCreateModal');
+  if(old) old.remove();
+  var modal = document.createElement('div');
+  modal.id = 'tournCreateModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML =
+    '<div style="background:#fff;border-radius:18px;width:100%;max-width:420px;overflow:hidden;">'+
+    '<div style="background:linear-gradient(135deg,#b81d22,#7a1015);padding:18px 20px;color:#fff;font-size:16px;font-weight:900;">🏆 إنشاء بطولة جديدة</div>'+
+    '<div style="padding:20px;display:flex;flex-direction:column;gap:12px;">'+
+      '<div><label style="font-size:12px;font-weight:800;color:#475569;display:block;margin-bottom:4px;">اسم البطولة *</label>'+
+      '<input id="tn_name" class="inp" placeholder="مثال: بطولة الشمالي الأولى"></div>'+
+      '<div><label style="font-size:12px;font-weight:800;color:#475569;display:block;margin-bottom:4px;">الفئة العمرية *</label>'+
+      '<select id="tn_cat" class="inp">'+
+        '<option>2012-2013</option><option>2013-2014</option>'+
+        '<option>2015-2016</option><option>2017-2018</option>'+
+      '</select></div>'+
+      '<div style="display:flex;gap:10px;">'+
+        '<div style="flex:1"><label style="font-size:12px;font-weight:800;color:#475569;display:block;margin-bottom:4px;">عدد الفرق</label>'+
+        '<input id="tn_teams" class="inp" type="number" value="6" min="2" max="16"></div>'+
+        '<div style="flex:1"><label style="font-size:12px;font-weight:800;color:#475569;display:block;margin-bottom:4px;">مدة المباراة (دقيقة)</label>'+
+        '<input id="tn_dur" class="inp" type="number" value="15" min="10" max="15"></div>'+
+      '</div>'+
+      '<div><label style="font-size:12px;font-weight:800;color:#475569;display:block;margin-bottom:4px;">تاريخ البطولة</label>'+
+      '<input id="tn_date" class="inp" type="date"></div>'+
+      '<div><label style="font-size:12px;font-weight:800;color:#475569;display:block;margin-bottom:4px;">الملعب</label>'+
+      '<input id="tn_venue" class="inp" placeholder="اسم الملعب"></div>'+
+    '</div>'+
+    '<div style="padding:0 20px 20px;display:flex;gap:10px;">'+
+      '<button onclick="createTournament()" style="flex:1;background:#b81d22;color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">إنشاء البطولة</button>'+
+      '<button onclick="document.getElementById(\'tournCreateModal\').remove()" style="padding:13px 18px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">إلغاء</button>'+
+    '</div></div>';
+  document.body.appendChild(modal);
+}
+
+function createTournament(){
+  var name = document.getElementById('tn_name').value.trim();
+  var cat  = document.getElementById('tn_cat').value;
+  var teams= document.getElementById('tn_teams').value;
+  var dur  = document.getElementById('tn_dur').value;
+  var date = document.getElementById('tn_date').value;
+  var venue= document.getElementById('tn_venue').value.trim();
+  if(!name){ alert('أدخل اسم البطولة'); return; }
+  var id = 'T'+Date.now();
+  showL(true);
+  apiAppend('البطولات',{
+    'معرف البطولة': id,
+    'اسم البطولة': name,
+    'الفئة': cat,
+    'عدد الفرق': teams,
+    'مدة المباراة': dur,
+    'تاريخ البطولة': date,
+    'الملعب': venue,
+    'الحالة': 'مفتوحة',
+    'التاريخ': new Date().toISOString()
+  }).then(function(){
+    showL(false);
+    document.getElementById('tournCreateModal').remove();
+    setTimeout(function(){ renderTournaments(); }, 2000);
+  }).catch(function(){ showL(false); alert('حدث خطأ'); });
+}
+
+// ===== صفحة تسجيل الأكاديمية =====
+function renderTournamentReg(){
+  var el = document.getElementById('content');
+  var tid = window._tournamentId;
+  if(!tid){ el.innerHTML='<div class="card"><div class="al al-warn">رابط البطولة غير صحيح</div></div>'; return; }
+  el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
+  apiGet('البطولات').then(function(rows){
+    var t = (Array.isArray(rows)?rows:[]).find(function(r){ return r['معرف البطولة']===tid; });
+    if(!t){ el.innerHTML='<div class="card"><div class="al al-warn">البطولة غير موجودة</div></div>'; return; }
+    _currentTournament = t;
+    var html =
+      '<div style="background:linear-gradient(135deg,#1e3a5f,#b81d22);padding:28px 16px 20px;text-align:center;color:#fff;">'+
+      '<div style="font-size:36px;margin-bottom:8px;">🏆</div>'+
+      '<div style="font-size:18px;font-weight:900;">'+t['اسم البطولة']+'</div>'+
+      '<div style="font-size:12px;opacity:.8;margin-top:6px;">الفئة: '+t['الفئة']+' · مدة المباراة: '+t['مدة المباراة']+' دقيقة</div>'+
+      (t['تاريخ البطولة']?'<div style="font-size:11px;opacity:.7;margin-top:3px;">📅 '+t['تاريخ البطولة']+'</div>':'')+
+      (t['الملعب']?'<div style="font-size:11px;opacity:.7;">📍 '+t['الملعب']+'</div>':'')+
+      '</div>'+
+      '<div style="padding:16px;">'+
+      '<div style="background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:14px;">'+
+      '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:14px;border-bottom:2px solid #f1f5f9;padding-bottom:8px;">بيانات الأكاديمية</div>'+
+      '<div style="display:flex;flex-direction:column;gap:10px;">'+
+        '<div><label class="lbl">اسم الأكاديمية *</label><input class="inp" id="tr_acad"></div>'+
+        '<div><label class="lbl">اسم المسؤول *</label><input class="inp" id="tr_mgr"></div>'+
+        '<div><label class="lbl">رقم واتساب المسؤول *</label><input class="inp" id="tr_phone" type="tel" placeholder="968XXXXXXXX"></div>'+
+      '</div></div>'+
+
+      '<div style="background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:14px;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:2px solid #f1f5f9;padding-bottom:8px;">'+
+        '<div style="font-size:14px;font-weight:900;color:#0f172a;">قائمة اللاعبين</div>'+
+        '<div style="font-size:11px;color:#64748b;">الحد الأقصى 20 لاعب</div>'+
+      '</div>'+
+      '<div id="tr_players_list"></div>'+
+      '<button onclick="addTournPlayer()" id="addPlayerBtn" style="width:100%;padding:10px;background:#f8fafc;border:2px dashed #cbd5e1;border-radius:10px;color:#475569;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;margin-top:8px;">'+
+        '<i class="fas fa-plus"></i> إضافة لاعب</button>'+
+      '</div>'+
+
+      '<button onclick="submitTournReg()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
+        '<i class="fas fa-paper-plane"></i> إرسال التسجيل</button>'+
+      '</div>';
+    el.innerHTML = html;
+    window._tournPlayers = [];
+    addTournPlayer();
+  });
+}
+
+var _tournPlayerCount = 0;
+function addTournPlayer(){
+  if((window._tournPlayers||[]).length >= 20){ alert('الحد الأقصى 20 لاعب'); return; }
+  _tournPlayerCount++;
+  var n = _tournPlayerCount;
+  var div = document.createElement('div');
+  div.id = 'tp_'+n;
+  div.style.cssText = 'background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:8px;border:1.5px solid #e2e8f0;';
+  div.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'+
+      '<div style="font-size:12px;font-weight:800;color:#1e3a5f;">لاعب #'+n+'</div>'+
+      (n>1?'<button onclick="removeTournPlayer('+n+')" style="background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;">حذف</button>':'')+
+    '</div>'+
+    '<div style="display:flex;flex-direction:column;gap:8px;">'+
+      '<input class="inp" id="tp_name_'+n+'" placeholder="اسم اللاعب الكامل *" style="font-size:13px;">'+
+      '<input class="inp" id="tp_birth_'+n+'" type="date" placeholder="تاريخ الميلاد *" style="font-size:13px;">'+
+      '<div><label style="font-size:11px;color:#64748b;font-weight:700;">وثيقة الهوية (جواز/شهادة ميلاد) *</label>'+
+      '<input type="file" id="tp_doc_'+n+'" accept="image/*,.pdf" class="inp" style="font-size:12px;padding:6px;"></div>'+
+    '</div>';
+  document.getElementById('tr_players_list').appendChild(div);
+  if(!window._tournPlayers) window._tournPlayers = [];
+  window._tournPlayers.push(n);
+}
+
+function removeTournPlayer(n){
+  var div = document.getElementById('tp_'+n);
+  if(div) div.remove();
+  window._tournPlayers = (window._tournPlayers||[]).filter(function(x){ return x!==n; });
+}
+
+function submitTournReg(){
+  var acad = document.getElementById('tr_acad').value.trim();
+  var mgr  = document.getElementById('tr_mgr').value.trim();
+  var phone= document.getElementById('tr_phone').value.trim();
+  if(!acad||!mgr||!phone){ alert('يرجى تعبئة بيانات الأكاديمية كاملة'); return; }
+  var players = window._tournPlayers||[];
+  if(!players.length){ alert('أضف لاعباً واحداً على الأقل'); return; }
+
+  var valid = true;
+  players.forEach(function(n){
+    var nm = (document.getElementById('tp_name_'+n)||{}).value||'';
+    var bd = (document.getElementById('tp_birth_'+n)||{}).value||'';
+    if(!nm||!bd) valid=false;
+  });
+  if(!valid){ alert('يرجى تعبئة اسم وتاريخ ميلاد جميع اللاعبين'); return; }
+
+  showL(true);
+  var t = _currentTournament;
+  var tid = window._tournamentId;
+  var regId = 'REG-'+Date.now();
+
+  // رفع وثائق اللاعبين ثم حفظ البيانات
+  var uploads = players.map(function(n){
+    var file = (document.getElementById('tp_doc_'+n)||{}).files;
+    if(file && file[0]){
+      return uploadFile(file[0], 'بطولة_'+tid+'_لاعب_'+n);
+    }
+    return Promise.resolve('');
+  });
+
+  Promise.all(uploads).then(function(docIds){
+    var rows = players.map(function(n, i){
+      return {
+        'معرف التسجيل': regId,
+        'معرف البطولة': tid,
+        'اسم البطولة': t['اسم البطولة'],
+        'الفئة': t['الفئة'],
+        'اسم الأكاديمية': acad,
+        'مسؤول الأكاديمية': mgr,
+        'واتساب المسؤول': phone,
+        'اسم اللاعب': document.getElementById('tp_name_'+n).value.trim(),
+        'تاريخ الميلاد': document.getElementById('tp_birth_'+n).value,
+        'وثيقة الهوية': docIds[i] ? 'https://drive.google.com/file/d/'+docIds[i]+'/view' : '',
+        'الحالة': 'معلّق',
+        'التاريخ': new Date().toISOString()
+      };
+    });
+    return apiAppend('لاعبو البطولة', rows);
+  }).then(function(){
+    showL(false);
+    document.getElementById('content').innerHTML =
+      '<div style="padding:32px 16px;text-align:center;">'+
+      '<div style="font-size:60px;margin-bottom:12px;">✅</div>'+
+      '<div style="font-size:18px;font-weight:900;color:#16a34a;margin-bottom:8px;">تم استلام تسجيلكم بنجاح!</div>'+
+      '<div style="font-size:13px;color:#64748b;line-height:1.7;margin-bottom:8px;">شكراً لـ <b>'+document.getElementById('tr_acad')?acad:''+'</b><br>سيتم مراجعة بيانات اللاعبين وإرسال بطاقاتهم قريباً</div>'+
+      '<div style="font-size:12px;color:#94a3b8;">🏆 '+(_currentTournament?_currentTournament['اسم البطولة']:'')+'</div>'+
+      '</div>';
+  }).catch(function(){ showL(false); alert('حدث خطأ، حاول مجدداً'); });
+}
+
+function uploadFile(file, name){
+  return new Promise(function(resolve){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var base64 = e.target.result.split(',')[1];
+      fetch(CONFIG.UPLOAD_URL,{
+        method:'POST',
+        body: JSON.stringify({file:base64, mimeType:file.type, filename:name})
+      }).then(function(r){ return r.json(); }).then(function(res){
+        resolve(res.id||'');
+      }).catch(function(){ resolve(''); });
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ===== عرض تفاصيل البطولة للأدمن =====
+function viewTournament(tid){
+  window._viewTournId = tid;
+  go('tournament_view');
+}
+
+function renderTournamentView(){
+  var el = document.getElementById('content');
+  var tid = window._viewTournId;
+  el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
+  Promise.all([
+    apiGet('البطولات', true),
+    apiGet('لاعبو البطولة', true)
+  ]).then(function(results){
+    var t = (Array.isArray(results[0])?results[0]:[]).find(function(r){ return r['معرف البطولة']===tid; });
+    var allPlayers = Array.isArray(results[1]) ? results[1].filter(function(r){ return r['معرف البطولة']===tid; }) : [];
+    if(!t){ el.innerHTML='<div class="card"><div class="al al-warn">البطولة غير موجودة</div></div>'; return; }
+
+    // تجميع حسب الأكاديمية
+    var academies = {};
+    allPlayers.forEach(function(p){
+      var a = p['اسم الأكاديمية']||'غير محدد';
+      if(!academies[a]) academies[a]={mgr:p['مسؤول الأكاديمية']||'',phone:p['واتساب المسؤول']||'',players:[]};
+      academies[a].players.push(p);
+    });
+
+    var pending = allPlayers.filter(function(p){ return p['الحالة']==='معلّق'; }).length;
+    var approved = allPlayers.filter(function(p){ return p['الحالة']==='مقبول'; }).length;
+
+    var html =
+      '<div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:20px 16px;color:#fff;text-align:center;">'+
+      '<div style="font-size:28px;margin-bottom:4px;">🏆</div>'+
+      '<div style="font-size:18px;font-weight:900;">'+t['اسم البطولة']+'</div>'+
+      '<div style="font-size:11px;opacity:.7;margin-top:3px;">'+t['الفئة']+' · '+t['مدة المباراة']+' دقيقة</div></div>'+
+      '<div style="padding:12px;">'+
+
+      // إحصائيات
+      '<div style="display:flex;gap:8px;margin-bottom:12px;">'+
+        statBox(Object.keys(academies).length+'/'+t['عدد الفرق'],'الأكاديميات','#1e3a5f')+
+        statBox(allPlayers.length,'إجمالي اللاعبين','#b81d22')+
+        statBox(pending,'معلّق','#f59e0b')+
+        statBox(approved,'مقبول','#16a34a')+
+      '</div>';
+
+    Object.keys(academies).forEach(function(aName){
+      var acad = academies[aName];
+      html +=
+        '<div style="background:#fff;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);">'+
+        '<div style="background:#f8fafc;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px solid #e2e8f0;">'+
+          '<div>'+
+            '<div style="font-size:14px;font-weight:900;color:#0f172a;">'+aName+'</div>'+
+            '<div style="font-size:11px;color:#64748b;">'+acad.mgr+' · '+acad.phone+'</div>'+
+          '</div>'+
+          '<div style="display:flex;gap:6px;">'+
+            '<span style="background:#e0f2fe;color:#0369a1;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:800;">'+acad.players.length+' لاعب</span>'+
+            '<button onclick="approveAcademy(\''+tid+'\',\''+aName+'\')" style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">✅ قبول الكل</button>'+
+          '</div>'+
+        '</div>';
+
+      acad.players.forEach(function(p){
+        var isApproved = p['الحالة']==='مقبول';
+        html +=
+          '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid #f8fafc;">'+
+          '<div>'+
+            '<div style="font-size:12px;font-weight:800;color:#0f172a;">'+p['اسم اللاعب']+'</div>'+
+            '<div style="font-size:10px;color:#94a3b8;">'+p['تاريخ الميلاد']+'</div>'+
+          '</div>'+
+          '<div style="display:flex;gap:5px;align-items:center;">'+
+            (p['وثيقة الهوية']?'<a href="'+p['وثيقة الهوية']+'" target="_blank" style="background:#f0f9ff;color:#0369a1;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;text-decoration:none;">📄 وثيقة</a>':'')+
+            '<span style="font-size:10px;font-weight:800;color:'+(isApproved?'#16a34a':'#f59e0b')+';background:'+(isApproved?'#dcfce7':'#fef9c3')+';border-radius:6px;padding:3px 8px;">'+(isApproved?'✅ مقبول':'⏳ معلّق')+'</span>'+
+          '</div>'+
+          '</div>';
+      });
+      html += '</div>';
+    });
+
+    html +=
+      '<button onclick="go(\'tournaments\')" style="width:100%;margin-top:8px;padding:12px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">← رجوع</button>'+
+      '</div>';
+    el.innerHTML = html;
+  });
+}
+
+function statBox(val, label, color){
+  return '<div style="flex:1;background:'+color+';color:#fff;border-radius:10px;padding:10px;text-align:center;">'+
+    '<div style="font-size:18px;font-weight:900;">'+val+'</div>'+
+    '<div style="font-size:10px;opacity:.8;">'+label+'</div></div>';
+}
+
+function approveAcademy(tid, acadName){
+  if(!confirm('هل تريد قبول جميع لاعبي '+acadName+'؟')) return;
+  showL(true);
+  apiGet('لاعبو البطولة', true).then(function(rows){
+    var toApprove = (Array.isArray(rows)?rows:[]).filter(function(r){
+      return r['معرف البطولة']===tid && r['اسم الأكاديمية']===acadName && r['الحالة']==='معلّق';
+    });
+    // حفظ في ورقة مقبولي البطولة
+    var approved = toApprove.map(function(p){
+      return Object.assign({}, p, {'الحالة':'مقبول'});
+    });
+    return apiAppend('مقبولو البطولة', approved);
+  }).then(function(){
+    showL(false);
+    alert('✅ تم القبول! سيتم إصدار البطاقات قريباً');
+    renderTournamentView();
+  }).catch(function(){ showL(false); alert('حدث خطأ'); });
 }
 
 </script>
