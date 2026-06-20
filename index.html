@@ -219,8 +219,13 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
     <button class="sb-btn gold" data-page="substrack" data-pg="substrack"><i class="fas fa-bell"></i> متابعة الاشتراكات</button>
     <button class="sb-btn gold" data-page="calendaradmin" data-pg="calendaradmin"><i class="fas fa-calendar-plus"></i> إدارة التقويم</button>
     <button class="sb-btn gold" data-page="reportreqs" data-pg="reportreqs"><i class="fas fa-file-export"></i> طلبات التقارير <span id="reqBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
-    <button class="sb-btn gold" data-page="tournaments" data-pg="tournaments"><i class="fas fa-shield-alt"></i> إدارة البطولات</button>
     <button class="sb-btn danger" id="logoutBtn" data-act="logout"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
+  </div>
+  <hr class="sb-hr">
+  <button class="sb-btn" data-pg="tournlogin" style="color:#f59e0b;" onclick="go('tournlogin')"><i class="fas fa-shield-alt"></i> بوابة البطولات</button>
+  <div id="tournMenu" style="display:none;">
+    <button class="sb-btn" style="color:#f59e0b;" data-pg="tournaments"><i class="fas fa-list"></i> البطولات</button>
+    <button class="sb-btn danger" id="tournLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
   <div class="sb-foot">
     <a href="https://api.whatsapp.com/send?phone=96892126558" target="_blank">
@@ -2042,7 +2047,8 @@ function renderPage(page) {
     case 'coachreqreports': renderCoachReqReports(); break;
     case 'calendar': renderCalendar(); break;
     case 'calendaradmin': renderCalendarAdmin(); break;
-    case 'tournaments': renderTournaments(); break;
+    case 'tournlogin': renderTournLogin(); break;
+    case 'tournaments': if(!sessionStorage.getItem('tournAuth')){ go('tournlogin'); return; } renderTournaments(); break;
     case 'tournament_reg': renderTournamentReg(); break;
     case 'tournament_view': renderTournamentView(); break;
     case 'groupmsg': renderGroupMsg(); break;
@@ -4012,6 +4018,44 @@ var _currentTournament = null;
 })();
 
 // ===== ADMIN: قائمة البطولات =====
+function renderTournLogin(){
+  document.getElementById('content').innerHTML =
+    '<div style="padding:40px 16px;max-width:360px;margin:0 auto;">'+
+    '<div style="text-align:center;margin-bottom:28px;">'+
+      '<div style="font-size:52px;margin-bottom:8px;">🏆</div>'+
+      '<div style="font-size:20px;font-weight:900;color:#0f172a;">بوابة البطولات</div>'+
+      '<div style="font-size:12px;color:#64748b;margin-top:4px;">أكاديمية الشمالي لكرة القدم</div>'+
+    '</div>'+
+    '<div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.08);">'+
+      '<div class="mb"><label class="lbl">كلمة المرور</label>'+
+      '<input type="password" class="inp" id="tournPass" placeholder="أدخل كلمة المرور" onkeydown="if(event.key===\'Enter\')doTournLogin()"></div>'+
+      '<div id="tournErr" style="display:none;color:#b91c1c;font-size:12px;margin-bottom:10px;font-weight:700;"></div>'+
+      '<button onclick="doTournLogin()" style="width:100%;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">دخول</button>'+
+    '</div></div>';
+  setTimeout(function(){ var i=document.getElementById('tournPass'); if(i)i.focus(); },300);
+}
+
+function doTournLogin(){
+  var pass = (document.getElementById('tournPass').value||'').trim();
+  var err = document.getElementById('tournErr');
+  if(CONFIG.ADMIN_PASS.indexOf(pass)===-1){
+    err.style.display='block'; err.textContent='كلمة المرور غير صحيحة';
+    return;
+  }
+  sessionStorage.setItem('tournAuth','1');
+  document.getElementById('tournMenu').style.display='block';
+  go('tournaments');
+}
+
+// تسجيل خروج البطولات
+document.addEventListener('click', function(e){
+  if(e.target && e.target.id==='tournLogoutBtn'){
+    sessionStorage.removeItem('tournAuth');
+    document.getElementById('tournMenu').style.display='none';
+    go('reg');
+  }
+});
+
 function renderTournaments(){
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
