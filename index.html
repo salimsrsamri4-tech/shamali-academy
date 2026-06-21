@@ -4138,8 +4138,10 @@ function showCreateTournament(){
         '<div style="flex:1"><label style="font-size:12px;font-weight:800;color:#475569;display:block;margin-bottom:4px;">عدد الفرق</label>'+
         '<input id="tn_teams" class="inp" type="number" value="6" min="2" max="16"></div>'+
         '<div style="flex:1"><label style="font-size:12px;font-weight:800;color:#475569;display:block;margin-bottom:4px;">مدة المباراة (دقيقة)</label>'+
-        '<input id="tn_dur" class="inp" type="number" value="15" min="10" max="15"></div>'+
+        '<input id="tn_dur" class="inp" type="number" value="15" min="10" max="90"></div>'+
       '</div>'+
+      '<div><label style="font-size:12px;font-weight:800;color:#475569;display:block;margin-bottom:4px;">الحد الأقصى للاعبين لكل أكاديمية</label>'+
+      '<input id="tn_maxplayers" class="inp" type="number" value="20" min="5" max="30" placeholder="مثال: 20"></div>'+
       '<div><label style="font-size:12px;font-weight:800;color:#475569;display:block;margin-bottom:4px;">تاريخ البطولة</label>'+
       '<input id="tn_date" class="inp" type="date"></div>'+
       '<div><label style="font-size:12px;font-weight:800;color:#475569;display:block;margin-bottom:4px;">الملعب</label>'+
@@ -4159,6 +4161,7 @@ function createTournament(){
   var dur  = document.getElementById('tn_dur').value;
   var date = document.getElementById('tn_date').value;
   var venue= document.getElementById('tn_venue').value.trim();
+  var maxp = document.getElementById('tn_maxplayers').value || '20';
   if(!name){ alert('أدخل اسم البطولة'); return; }
   var id = 'T'+Date.now();
   showL(true);
@@ -4170,6 +4173,7 @@ function createTournament(){
     'مدة المباراة': dur,
     'تاريخ البطولة': date,
     'الملعب': venue,
+    'الحد الأقصى للاعبين': maxp,
     'الحالة': 'مفتوحة',
     'التاريخ': new Date().toISOString()
   }).then(function(){
@@ -4298,7 +4302,7 @@ function showRegStep2(){
     '<div style="background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:14px;">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:2px solid #f1f5f9;padding-bottom:8px;">'+
         '<div style="font-size:14px;font-weight:900;color:#0f172a;"><i class="fas fa-users" style="color:#b81d22;margin-left:6px;"></i>إضافة لاعب</div>'+
-        '<div style="background:#1e3a5f;color:#fff;border-radius:20px;padding:3px 12px;font-size:11px;font-weight:900;">'+playerCount+' / 20 لاعب</div>'+
+        '<div style="background:'+(playerCount>=(parseInt((_currentTournament||{})['الحد الأقصى للاعبين']||'20'))?'#b81d22':'#1e3a5f')+';color:#fff;border-radius:20px;padding:3px 12px;font-size:11px;font-weight:900;">'+playerCount+' / '+((_currentTournament||{})['الحد الأقصى للاعبين']||'20')+' لاعب</div>'+
       '</div>'+
       '<div style="display:flex;flex-direction:column;gap:12px;">'+
         '<div><label class="lbl">الاسم الثلاثي *</label><input class="inp" id="s2_name" placeholder="الاسم الأول الأب الجد"></div>'+
@@ -4318,8 +4322,8 @@ function showRegStep2(){
           '</div>'+
         '</div>'+
         '<div>'+
-          '<label class="lbl">وثيقة الهوية <span style="font-weight:500;color:#64748b;">(جواز / شهادة ميلاد — اختياري)</span></label>'+
-          '<input type="file" id="s2_doc" accept="image/*,.pdf" class="inp" style="font-size:12px;padding:8px;">'+
+          '<label class="lbl">وثيقة الهوية * <span style="font-weight:500;color:#b81d22;">(جواز / شهادة ميلاد — إلزامي)</span></label>'+
+          '<input type="file" id="s2_doc" accept="image/*,.pdf" class="inp" style="font-size:12px;padding:8px;border-color:#b81d22;">'+
         '</div>'+
       '</div>'+
       '<button onclick="addRegPlayer()" style="width:100%;margin-top:14px;background:#16a34a;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
@@ -4339,7 +4343,10 @@ function showRegStep2(){
           '<div style="font-size:13px;font-weight:800;color:#0f172a;">'+(i+1)+'. '+p.name+'</div>'+
           '<div style="font-size:11px;color:#64748b;">مواليد '+p.year+(p.docB64?' · 📄':'')+'</div>'+
         '</div>'+
-        '<button onclick="removeRegPlayer('+i+')" style="background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;">حذف</button>'+
+        '<div style="display:flex;flex-direction:column;gap:4px;">'+
+          '<button onclick="editRegPlayer('+i+')" style="background:#e0f2fe;color:#0369a1;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:Cairo,sans-serif;">✏️ تعديل</button>'+
+          '<button onclick="removeRegPlayer('+i+')" style="background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:Cairo,sans-serif;">🗑 حذف</button>'+
+        '</div>'+
       '</div>';
     });
     html += '</div>';
@@ -4389,23 +4396,87 @@ function addRegPlayer(){
   name = name.trim();
   if(!name||!year){ alert('يرجى إدخال الاسم الثلاثي وسنة الميلاد'); return; }
   if(!window._s2photoB64){ alert('يرجى رفع صورة اللاعب بالزي الرياضي لإصدار البطاقة'); return; }
-  if(_regData.players.length>=20){ alert('الحد الأقصى 20 لاعب'); return; }
-
-  // قراءة الوثيقة إذا وُجدت
   var docFile = (document.getElementById('s2_doc')||{}).files;
-  var addPlayer = function(docB64){
-    _regData.players.push({ name:name, year:year, photoB64:window._s2photoB64, docB64:docB64 });
+  if(!docFile||!docFile[0]){ alert('وثيقة الهوية إلزامية لضمان الشفافية'); return; }
+  var maxP = parseInt((_currentTournament||{})['الحد الأقصى للاعبين']||'20');
+  if(_regData.players.length>=maxP){ alert('الحد الأقصى للاعبين هو '+maxP+' لاعب لهذه البطولة'); return; }
+
+  var r2=new FileReader();
+  r2.onload=function(e){
+    _regData.players.push({ name:name, year:year, photoB64:window._s2photoB64, docB64:e.target.result });
     window._s2photoB64='';
     showRegStep2();
   };
-  if(docFile&&docFile[0]){
-    var r2=new FileReader(); r2.onload=function(e){ addPlayer(e.target.result); }; r2.readAsDataURL(docFile[0]);
-  } else { addPlayer(''); }
+  r2.readAsDataURL(docFile[0]);
 }
 
 function removeRegPlayer(i){
   _regData.players.splice(i,1);
   showRegStep2();
+}
+
+function editRegPlayer(i){
+  var p = _regData.players[i];
+  if(!p) return;
+  var old = document.getElementById('editPlayerModal');
+  if(old) old.remove();
+  var modal = document.createElement('div');
+  modal.id = 'editPlayerModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML =
+    '<div style="background:#fff;border-radius:18px;width:100%;max-width:380px;overflow:hidden;">'+
+    '<div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:16px 18px;color:#fff;font-size:15px;font-weight:900;">✏️ تعديل بيانات اللاعب</div>'+
+    '<div style="padding:18px;display:flex;flex-direction:column;gap:12px;">'+
+      '<div><label class="lbl">الاسم الثلاثي *</label><input class="inp" id="ep_name" value="'+p.name+'"></div>'+
+      '<div><label class="lbl">سنة الميلاد *</label>'+
+        '<select class="inp" id="ep_year">'+
+          (function(){ var o=''; for(var y=2018;y>=2005;y--) o+='<option'+(p.year==y?' selected':'')+'>'+y+'</option>'; return o; })()+
+        '</select>'+
+      '</div>'+
+      '<div>'+
+        '<label class="lbl">صورة اللاعب <span style="color:#64748b;font-weight:500;">(اتركها فارغة للإبقاء على الحالية)</span></label>'+
+        (p.photoB64?'<img src="'+p.photoB64+'" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:2px solid #e2e8f0;display:block;margin-bottom:6px;">':'')+
+        '<input type="file" id="ep_photo" accept="image/*" class="inp" style="font-size:12px;padding:6px;">'+
+      '</div>'+
+      '<div>'+
+        '<label class="lbl">وثيقة الهوية * <span style="color:#b81d22;font-weight:500;">(اتركها فارغة للإبقاء على الحالية)</span></label>'+
+        (p.docB64?'<div style="font-size:11px;color:#16a34a;margin-bottom:4px;">✅ وثيقة مرفوعة</div>':'')+
+        '<input type="file" id="ep_doc" accept="image/*,.pdf" class="inp" style="font-size:12px;padding:6px;">'+
+      '</div>'+
+    '</div>'+
+    '<div style="padding:0 18px 18px;display:flex;gap:10px;">'+
+      '<button onclick="saveEditPlayer('+i+')" style="flex:1;background:#b81d22;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">حفظ التعديل</button>'+
+      '<button onclick="document.getElementById(\'editPlayerModal\').remove()" style="padding:12px 16px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;cursor:pointer;font-family:Cairo,sans-serif;font-weight:700;">إلغاء</button>'+
+    '</div></div>';
+  document.body.appendChild(modal);
+}
+
+function saveEditPlayer(i){
+  var name = (document.getElementById('ep_name')||{}).value||'';
+  var year = (document.getElementById('ep_year')||{}).value||'';
+  name = name.trim();
+  if(!name||!year){ alert('يرجى إدخال الاسم وسنة الميلاد'); return; }
+
+  var photoFile = (document.getElementById('ep_photo')||{}).files;
+  var docFile   = (document.getElementById('ep_doc')||{}).files;
+
+  var doSave = function(photoB64, docB64){
+    if(photoB64) _regData.players[i].photoB64 = photoB64;
+    if(docB64)   _regData.players[i].docB64   = docB64;
+    _regData.players[i].name = name;
+    _regData.players[i].year = year;
+    document.getElementById('editPlayerModal').remove();
+    showRegStep2();
+  };
+
+  var getPhoto = photoFile&&photoFile[0]
+    ? new Promise(function(res){ var r=new FileReader(); r.onload=function(e){res(e.target.result);}; r.readAsDataURL(photoFile[0]); })
+    : Promise.resolve('');
+  var getDoc = docFile&&docFile[0]
+    ? new Promise(function(res){ var r=new FileReader(); r.onload=function(e){res(e.target.result);}; r.readAsDataURL(docFile[0]); })
+    : Promise.resolve('');
+
+  Promise.all([getPhoto, getDoc]).then(function(r){ doSave(r[0], r[1]); });
 }
 
 function showRegStep3(){
