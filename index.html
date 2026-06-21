@@ -369,7 +369,7 @@ var CONFIG = {
 
 // ===== API (يدعم Apps Script و SheetDB) =====
 var _apiCache = {};
-var _CACHE_TTL = 5 * 60 * 1000; // 5 دقائق
+var _CACHE_TTL = 10 * 60 * 1000; // 5 دقائق
 
 function apiGet(sheetName, forceRefresh) {
   var now = Date.now();
@@ -1899,7 +1899,7 @@ function submitSuggest(){
 function renderSuggestions(){
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ تحميل المقترحات...</div>';
-  apiGet('المقترحات والملاحظات', true).then(function(rows){
+  apiGet('المقترحات والملاحظات').then(function(rows){
     if(!Array.isArray(rows)||!rows.length){
       el.innerHTML='<div style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8);padding:20px;text-align:center;color:#fff;border-radius:0;">'+
         '<div style="font-size:28px;">📭</div><div style="font-weight:900;margin-top:6px;">لا توجد رسائل بعد</div></div>';
@@ -2633,7 +2633,7 @@ function submitReportReq(){
 // ===== REPORT REQUESTS (ADMIN) =====
 function renderReportReqs(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
-  apiGet('طلبات التقارير', true).then(function(rows){
+  apiGet('طلبات التقارير').then(function(rows){
     var reqs = Array.isArray(rows) ? rows : [];
     var pending = reqs.filter(function(r){return r['الحالة']==='معلّق';});
     var done = reqs.filter(function(r){return r['الحالة']==='مُرسَل';});
@@ -2773,7 +2773,7 @@ function sendReportFromReq(playerId, playerName, phone){
 }
 
 function loadReqBadge(){
-  apiGet('طلبات التقارير', true).then(function(rows){
+  apiGet('طلبات التقارير').then(function(rows){
     var n = Array.isArray(rows)?rows.filter(function(r){return r['الحالة']==='معلّق';}).length:0;
     var b = document.getElementById('reqBadge');
     if(b){ b.textContent=n; b.style.display=n?'inline':'none'; }
@@ -2838,7 +2838,7 @@ function confirmForward(){
 // ===== COACH REPORT REQUESTS =====
 function renderCoachReqReports(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
-  apiGet('طلبات التقارير', true).then(function(rows){
+  apiGet('طلبات التقارير').then(function(rows){
     var reqs = Array.isArray(rows) ? rows.filter(function(r){
       return r['الحالة']==='محوّل للمدرب';
     }) : [];
@@ -3987,7 +3987,7 @@ function saveAttendance(){
 function renderAttAdmin(){
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
-  apiGet('سجل الحضور', true).then(function(rows){
+  apiGet('سجل الحضور').then(function(rows){
     if(!Array.isArray(rows)||!rows.length){
       el.innerHTML = '<div class="card"><div style="text-align:center;padding:32px;color:#64748b;">لا يوجد سجل حضور بعد</div></div>';
       return;
@@ -4118,7 +4118,7 @@ document.addEventListener('click', function(e){
 function renderTournaments(){
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
-  apiGet('البطولات', true).then(function(rows){
+  apiGet('البطولات').then(function(rows){
     var tournaments = Array.isArray(rows) ? rows : [];
     var html =
       '<div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:24px 16px 18px;text-align:center;color:#fff;">'+
@@ -5064,8 +5064,8 @@ function renderTournamentView(){
   var tid = window._viewTournId;
   el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
   Promise.all([
-    apiGet('البطولات', true),
-    apiGet('لاعبو البطولة', true)
+    apiGet('البطولات'),
+    apiGet('لاعبو البطولة')
   ]).then(function(results){
     var t = (Array.isArray(results[0])?results[0]:[]).find(function(r){ return r['معرف البطولة']===tid; });
     var allPlayers = Array.isArray(results[1]) ? results[1].filter(function(r){ return r['معرف البطولة']===tid; }) : [];
@@ -5158,7 +5158,7 @@ function statBox(val, label, color){
 function approveAcademy(tid, acadName){
   if(!confirm('اعتماد جميع لاعبي '+acadName+' وإصدار بطاقاتهم؟')) return;
   showL(true);
-  apiGet('لاعبو البطولة', true).then(function(rows){
+  apiGet('لاعبو البطولة').then(function(rows){
     var toApprove = (Array.isArray(rows)?rows:[]).filter(function(r){
       return r['معرف البطولة']===tid && r['اسم الأكاديمية']===acadName;
     });
@@ -5176,7 +5176,7 @@ function approveAcademy(tid, acadName){
 
 function showAdminCards(tid, acadName){
   showL(true);
-  apiGet('لاعبو البطولة', true).then(function(rows){
+  apiGet('لاعبو البطولة').then(function(rows){
     showL(false);
     var players = (Array.isArray(rows)?rows:[]).filter(function(r){
       return r['معرف البطولة']===tid && r['اسم الأكاديمية']===acadName;
@@ -5304,8 +5304,8 @@ function renderScheduleAdmin(){
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
   Promise.all([
-    apiGet('البطولات', true),
-    apiGet('المباريات', true)
+    apiGet('البطولات'),
+    apiGet('المباريات')
   ]).then(function(res){
     var tournaments = Array.isArray(res[0]) ? res[0] : [];
     var matches     = Array.isArray(res[1]) ? res[1] : [];
@@ -5448,8 +5448,8 @@ function buildStandingsHTML(tid, matches){
 function generateSchedule(tid){
   showL(true);
   Promise.all([
-    apiGet('البطولات', true),
-    apiGet('لاعبو البطولة', true)
+    apiGet('البطولات'),
+    apiGet('لاعبو البطولة')
   ]).then(function(res){
     var t = (Array.isArray(res[0])?res[0]:[]).find(function(r){ return r['معرف البطولة']===tid; });
     var players = Array.isArray(res[1]) ? res[1].filter(function(r){ return r['معرف البطولة']===tid; }) : [];
@@ -5580,7 +5580,7 @@ function loadUpdateList(){
   if(!phone){ alert('أدخل رقم الواتساب'); return; }
   var tid = window._tournamentId;
   showL(true);
-  apiGet('لاعبو البطولة', true).then(function(rows){
+  apiGet('لاعبو البطولة').then(function(rows){
     showL(false);
     var myPlayers = (Array.isArray(rows)?rows:[]).filter(function(r){
       return r['معرف البطولة']===tid && (r['واتساب المسؤول']||'').replace(/\s/g,'')===phone.replace(/\s/g,'');
@@ -6173,7 +6173,7 @@ function showAcadManageDashboard(acad, tid, acid){
   var draft = loadRegProgress(tid);
   var hasDraft = draft && draft.regId === acid && draft.players && draft.players.length > 0;
 
-  apiGet('لاعبو البطولة',true).then(function(rows){
+  apiGet('لاعبو البطولة').then(function(rows){
     var players = (Array.isArray(rows)?rows:[]).filter(function(r){
       return r['معرف التسجيل']===acid && r['معرف البطولة']===tid;
     });
@@ -6528,8 +6528,8 @@ function loadAcadDashboard(){
 
   showL(true);
   Promise.all([
-    apiGet('لاعبو البطولة', true),
-    apiGet('طلبات اللاعبين', true)
+    apiGet('لاعبو البطولة'),
+    apiGet('طلبات اللاعبين')
   ]).then(function(res){
     showL(false);
     var players  = Array.isArray(res[0]) ? res[0] : [];
@@ -6626,7 +6626,7 @@ function loadAcadDashboard(){
 
 function reviewRequest(rid, action){
   showL(true);
-  apiGet('طلبات اللاعبين', true).then(function(rows){
+  apiGet('طلبات اللاعبين').then(function(rows){
     var req = (Array.isArray(rows)?rows:[]).find(function(r){ return r['معرف الطلب']===rid; });
     if(!req){ showL(false); alert('لم يتم العثور على الطلب'); return; }
 
