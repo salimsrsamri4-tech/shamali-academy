@@ -4256,8 +4256,8 @@ function deleteTournament(tid, tname){
   }).catch(function(){ showL(false); alert('حدث خطأ'); });
 }
 
-// ===== معالج تسجيل الأكاديمية (3 خطوات) =====
-var _regData = { step:1, acad:'', mgr:'', phone:'', logoB64:'', players:[] };
+// ===== معالج تسجيل الأكاديمية (4 خطوات) =====
+var _regData = { step:1, acad:'', mgr:'', phone:'', logoB64:'', players:[], regId:'' };
 
 function renderTournamentReg(){
   var tid = window._tournamentId;
@@ -4268,7 +4268,7 @@ function renderTournamentReg(){
     var t = (Array.isArray(rows)?rows:[]).find(function(r){ return r['معرف البطولة']===tid; });
     if(!t){ el.innerHTML='<div class="card"><div class="al al-warn">البطولة غير موجودة</div></div>'; return; }
     _currentTournament = t;
-    _regData = { step:1, acad:'', mgr:'', phone:'', logoB64:'', players:[] };
+    _regData = { step:1, acad:'', mgr:'', phone:'', logoB64:'', players:[], regId:'' };
     showRegStep1();
   });
 }
@@ -4285,23 +4285,24 @@ function _regHeader(){
 }
 
 function _regSteps(active){
-  var steps = ['بيانات الأكاديمية','إضافة اللاعبين','مراجعة وإرسال'];
-  var html = '<div style="display:flex;align-items:center;justify-content:center;gap:0;padding:14px 16px;background:#fff;border-bottom:1.5px solid #f1f5f9;">';
+  var steps = ['بيانات الأكاديمية','رابط التسجيل','إضافة اللاعبين','مراجعة وإرسال'];
+  var html = '<div style="display:flex;align-items:center;justify-content:center;gap:0;padding:12px 8px;background:#fff;border-bottom:1.5px solid #f1f5f9;overflow-x:auto;">';
   steps.forEach(function(s,i){
-    var done = (i+1)<active, cur = (i+1)===active;
+    var done=(i+1)<active, cur=(i+1)===active;
     html += '<div style="display:flex;align-items:center;gap:0;">'+
-      '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">'+
-        '<div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;'+
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:60px;">'+
+        '<div style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;'+
           (done?'background:#16a34a;color:#fff;':cur?'background:#b81d22;color:#fff;':'background:#e2e8f0;color:#94a3b8;')+'">'+
           (done?'✓':(i+1))+'</div>'+
-        '<div style="font-size:9px;font-weight:700;white-space:nowrap;color:'+(cur?'#b81d22':done?'#16a34a':'#94a3b8')+';">'+s+'</div>'+
+        '<div style="font-size:8px;font-weight:700;text-align:center;color:'+(cur?'#b81d22':done?'#16a34a':'#94a3b8')+';line-height:1.2;">'+s+'</div>'+
       '</div>'+
-      (i<2?'<div style="width:40px;height:2px;background:'+(done?'#16a34a':'#e2e8f0')+';margin-bottom:14px;"></div>':'')+
+      (i<3?'<div style="width:20px;height:2px;background:'+(done?'#16a34a':'#e2e8f0')+';margin-bottom:14px;flex-shrink:0;"></div>':'')+
     '</div>';
   });
   return html+'</div>';
 }
 
+// الخطوة 1: بيانات الأكاديمية
 function showRegStep1(){
   _regData.step=1;
   var el = document.getElementById('content');
@@ -4316,17 +4317,13 @@ function showRegStep1(){
         '<div>'+
           '<label class="lbl">شعار الأكاديمية <span style="font-weight:500;color:#64748b;">(مطلوب لبطاقات اللاعبين)</span></label>'+
           '<div id="s1_logo_preview" style="'+(
-            _regData.logoB64
-              ? 'display:flex;align-items:center;gap:10px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;margin-bottom:8px;'
-              : 'display:none;'
+            _regData.logoB64?'display:flex;align-items:center;gap:10px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;margin-bottom:8px;':'display:none;'
           )+'">'+
-            '<img id="s1_logo_img" src="'+ (_regData.logoB64||'')  +'" style="width:56px;height:56px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid #e2e8f0;">'+
-            '<div>'+
-              '<div style="font-size:12px;font-weight:700;color:#16a34a;">✅ تم رفع الشعار</div>'+
-              '<button onclick="document.getElementById(\'s1_logo_file\').click()" style="font-size:11px;color:#64748b;background:none;border:none;cursor:pointer;padding:0;">تغيير الشعار</button>'+
-            '</div>'+
+            '<img id="s1_logo_img" src="'+(_regData.logoB64||'')+'" style="width:56px;height:56px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid #e2e8f0;">'+
+            '<div><div style="font-size:12px;font-weight:700;color:#16a34a;">✅ تم رفع الشعار</div>'+
+              '<button onclick="document.getElementById(\'s1_logo_file\').click()" style="font-size:11px;color:#64748b;background:none;border:none;cursor:pointer;padding:0;">تغيير الشعار</button></div>'+
           '</div>'+
-          '<label id="s1_logo_drop" style="display:'+(  _regData.logoB64?'none':'flex'  )+';flex-direction:column;align-items:center;justify-content:center;gap:6px;border:2px dashed #cbd5e1;border-radius:12px;padding:20px;cursor:pointer;background:#f8fafc;" onclick="document.getElementById(\'s1_logo_file\').click()">'+
+          '<label id="s1_logo_drop" style="display:'+(_regData.logoB64?'none':'flex')+';flex-direction:column;align-items:center;gap:6px;border:2px dashed #cbd5e1;border-radius:12px;padding:20px;cursor:pointer;background:#f8fafc;" onclick="document.getElementById(\'s1_logo_file\').click()">'+
             '<i class="fas fa-cloud-upload-alt" style="font-size:28px;color:#b81d22;"></i>'+
             '<div style="font-size:13px;font-weight:700;color:#475569;">اضغط لرفع شعار الأكاديمية</div>'+
             '<div style="font-size:10px;color:#94a3b8;">PNG أو JPG</div>'+
@@ -4335,8 +4332,8 @@ function showRegStep1(){
         '</div>'+
       '</div>'+
     '</div>'+
-    '<button onclick="goRegStep2()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
-      'التالي: إضافة اللاعبين <i class="fas fa-arrow-left"></i></button>'+
+    '<button onclick="goRegStep2()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;" id="s1_next_btn">'+
+      'التالي <i class="fas fa-arrow-left"></i></button>'+
     '</div>';
 }
 
@@ -4356,6 +4353,7 @@ function previewLogo(input){
   reader.readAsDataURL(file);
 }
 
+// الانتقال من الخطوة 1 إلى 2: توليد الرابط فوراً + حفظ في الخلفية
 function goRegStep2(){
   var acad = document.getElementById('s1_acad').value.trim();
   var mgr  = document.getElementById('s1_mgr').value.trim();
@@ -4363,14 +4361,112 @@ function goRegStep2(){
   if(!acad||!mgr||!phone){ alert('يرجى تعبئة جميع الحقول المطلوبة'); return; }
   if(!_regData.logoB64){ if(!confirm('لم يتم رفع شعار الأكاديمية. هل تريد المتابعة بدون شعار؟')) return; }
   _regData.acad=acad; _regData.mgr=mgr; _regData.phone=phone;
+
+  // توليد المعرف والانتقال فوراً — الحفظ يصير في الخلفية
+  var regId = 'REG-'+Date.now();
+  _regData.regId = regId;
+  window._currentRegId = regId;
   showRegStep2();
+
+  // حفظ في الخلفية (fire and forget)
+  var t = _currentTournament||{};
+  var tid = window._tournamentId;
+  var logoUpload = _regData.logoB64
+    ? uploadFileBlob(dataURLtoBlob(_regData.logoB64), 'logo_'+regId)
+    : Promise.resolve('');
+  logoUpload.then(function(logoId){
+    _regData.logoId = logoId;
+    return apiAppend('الأكاديميات المسجلة',{
+      'معرف التسجيل': regId,
+      'معرف البطولة': tid,
+      'اسم البطولة': t['اسم البطولة']||'',
+      'اسم الأكاديمية': acad,
+      'مسؤول الأكاديمية': mgr,
+      'واتساب المسؤول': phone,
+      'شعار الأكاديمية': logoId?'https://drive.google.com/thumbnail?id='+logoId+'&sz=w200':'',
+      'التاريخ': new Date().toISOString()
+    });
+  }).catch(function(){});
 }
 
+// الخطوة 2: رابط التسجيل — اختيار المسار
 function showRegStep2(){
   _regData.step=2;
   var el = document.getElementById('content');
+  var tid = window._tournamentId;
+  var acid = _regData.regId;
+  var parentLink = window.location.origin+window.location.pathname+'?tournament='+tid+'&acad='+acid;
+  var tname = (_currentTournament||{})['اسم البطولة']||'البطولة';
+  var maxP = (_currentTournament||{})['الحد الأقصى للاعبين']||'20';
+
+  el.innerHTML = _regHeader() + _regSteps(2) +
+    '<div style="padding:16px;">'+
+
+    // تأكيد التسجيل
+    '<div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:14px;padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">'+
+      (_regData.logoB64?'<img src="'+_regData.logoB64+'" style="width:52px;height:52px;object-fit:contain;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;flex-shrink:0;">':'')+
+      '<div>'+
+        '<div style="font-size:15px;font-weight:900;color:#15803d;">✅ تم تسجيل الأكاديمية!</div>'+
+        '<div style="font-size:12px;color:#16a34a;margin-top:2px;">'+_regData.acad+' · '+_regData.mgr+'</div>'+
+      '</div>'+
+    '</div>'+
+
+    // رابط ولي الأمر
+    '<div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:16px;padding:18px;margin-bottom:16px;border:2px solid rgba(212,175,55,.3);">'+
+      '<div style="display:flex;align-items:center;gap:8px;color:#d4af37;font-size:13px;font-weight:900;margin-bottom:6px;">'+
+        '<i class="fas fa-link"></i> رابط تسجيل أولياء الأمور'+
+      '</div>'+
+      '<div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:10px;">أرسل هذا الرابط لأولياء الأمور — كل ولي يسجّل بيانات ابنه مباشرة 📲</div>'+
+      '<div style="background:rgba(255,255,255,.07);border-radius:8px;padding:9px;font-size:10px;color:rgba(255,255,255,.5);word-break:break-all;margin-bottom:10px;direction:ltr;text-align:left;">'+parentLink+'</div>'+
+      '<div style="display:flex;gap:8px;">'+
+        '<button onclick="copyParentLink(\''+parentLink+'\')" style="flex:1;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">'+
+          '<i class="fas fa-copy"></i> نسخ الرابط</button>'+
+        '<button onclick="sendParentLinkWA(\''+parentLink+'\',\''+tname+'\')" style="flex:1;background:#25d366;color:#fff;border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">'+
+          '<i class="fab fa-whatsapp"></i> إرسال واتساب</button>'+
+      '</div>'+
+    '</div>'+
+
+    // خط فاصل
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">'+
+      '<div style="flex:1;height:1px;background:#e2e8f0;"></div>'+
+      '<div style="font-size:12px;color:#94a3b8;font-weight:700;white-space:nowrap;">أو اختر طريقة الإدخال</div>'+
+      '<div style="flex:1;height:1px;background:#e2e8f0;"></div>'+
+    '</div>'+
+
+    // خياران
+    '<div style="display:flex;flex-direction:column;gap:10px;">'+
+      // خيار 1: إرسال الرابط والانتظار
+      '<div style="background:#fff;border-radius:14px;padding:16px;border:2px solid #e2e8f0;cursor:pointer;" onclick="window._acadDashPhone=\''+_regData.phone+'\';window._acadDashTid=\''+tid+'\';go(\'acad_dashboard\')">'+
+        '<div style="display:flex;align-items:center;gap:12px;">'+
+          '<div style="width:44px;height:44px;background:#e0f2fe;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📲</div>'+
+          '<div>'+
+            '<div style="font-size:14px;font-weight:900;color:#0f172a;">أرسل الرابط وتابع الطلبات</div>'+
+            '<div style="font-size:11px;color:#64748b;margin-top:2px;">أولياء الأمور يسجلون أبناءهم بأنفسهم — أنت تقبل أو ترفض</div>'+
+          '</div>'+
+          '<i class="fas fa-arrow-left" style="color:#94a3b8;font-size:14px;margin-right:auto;"></i>'+
+        '</div>'+
+      '</div>'+
+      // خيار 2: إدخال اللاعبين يدوياً
+      '<div style="background:#fff;border-radius:14px;padding:16px;border:2px solid #e2e8f0;cursor:pointer;" onclick="showRegStep3()">'+
+        '<div style="display:flex;align-items:center;gap:12px;">'+
+          '<div style="width:44px;height:44px;background:#fff0f0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">✍️</div>'+
+          '<div>'+
+            '<div style="font-size:14px;font-weight:900;color:#0f172a;">أدخل اللاعبين بنفسي</div>'+
+            '<div style="font-size:11px;color:#64748b;margin-top:2px;">أضف بيانات اللاعبين مباشرة (الحد الأقصى '+maxP+' لاعب)</div>'+
+          '</div>'+
+          '<i class="fas fa-arrow-left" style="color:#94a3b8;font-size:14px;margin-right:auto;"></i>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '</div>';
+}
+
+// الخطوة 3: إضافة اللاعبين يدوياً
+function showRegStep3(){
+  _regData.step=3;
+  var el = document.getElementById('content');
   var playerCount = _regData.players.length;
-  var html = _regHeader() + _regSteps(2) +
+  var html = _regHeader() + _regSteps(3) +
     '<div style="padding:16px;">'+
     '<div style="background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:14px;">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:2px solid #f1f5f9;padding-bottom:8px;">'+
@@ -4427,8 +4523,8 @@ function showRegStep2(){
 
   html +=
     '<div style="display:flex;gap:10px;">'+
-      '<button onclick="showRegStep1()" style="flex:0 0 auto;padding:12px 16px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-arrow-right"></i> رجوع</button>'+
-      (playerCount>0?'<button onclick="showRegStep3()" style="flex:1;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">مراجعة وإرسال <i class="fas fa-arrow-left"></i></button>':'')+
+      '<button onclick="showRegStep2()" style="flex:0 0 auto;padding:12px 16px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-arrow-right"></i> رجوع</button>'+
+      (playerCount>0?'<button onclick="showRegStep4()" style="flex:1;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">مراجعة وإرسال <i class="fas fa-arrow-left"></i></button>':'')+
     '</div>'+
     '</div>';
 
@@ -4478,14 +4574,14 @@ function addRegPlayer(){
   r2.onload=function(e){
     _regData.players.push({ name:name, year:year, photoB64:window._s2photoB64, docB64:e.target.result });
     window._s2photoB64='';
-    showRegStep2();
+    showRegStep3();
   };
   r2.readAsDataURL(docFile[0]);
 }
 
 function removeRegPlayer(i){
   _regData.players.splice(i,1);
-  showRegStep2();
+  showRegStep3();
 }
 
 function editRegPlayer(i){
@@ -4539,7 +4635,7 @@ function saveEditPlayer(i){
     _regData.players[i].name = name;
     _regData.players[i].year = year;
     document.getElementById('editPlayerModal').remove();
-    showRegStep2();
+    showRegStep3();
   };
 
   var getPhoto = photoFile&&photoFile[0]
@@ -4552,11 +4648,11 @@ function saveEditPlayer(i){
   Promise.all([getPhoto, getDoc]).then(function(r){ doSave(r[0], r[1]); });
 }
 
-function showRegStep3(){
+function showRegStep4(){
   if(!_regData.players.length){ alert('أضف لاعباً واحداً على الأقل'); return; }
-  _regData.step=3;
+  _regData.step=4;
   var el = document.getElementById('content');
-  var html = _regHeader() + _regSteps(3) +
+  var html = _regHeader() + _regSteps(4) +
     '<div style="padding:16px;">'+
     '<div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:14px;">'+
       '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:10px;border-bottom:2px solid #f1f5f9;padding-bottom:8px;">ملخص التسجيل</div>'+
@@ -4584,7 +4680,7 @@ function showRegStep3(){
       '<i class="fas fa-info-circle"></i> بعد الإرسال ستُصدر البطاقات تلقائياً ويمكنك تحميلها أو مشاركتها'+
     '</div>'+
     '<div style="display:flex;gap:10px;">'+
-      '<button onclick="showRegStep2()" style="flex:0 0 auto;padding:13px 16px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-arrow-right"></i> رجوع</button>'+
+      '<button onclick="showRegStep3()" style="flex:0 0 auto;padding:13px 16px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-arrow-right"></i> رجوع</button>'+
       '<button onclick="submitTournReg()" style="flex:1;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-paper-plane"></i> إرسال التسجيل وإصدار البطاقات</button>'+
     '</div>'+
     '</div>';
@@ -4634,7 +4730,7 @@ function submitTournReg(){
   showL(true);
   var t = _currentTournament;
   var tid = window._tournamentId;
-  var regId = 'REG-'+Date.now();
+  var regId = _regData.regId || window._currentRegId || ('REG-'+Date.now());
   window._currentRegId = regId;
 
   // رفع الصور والوثائق
