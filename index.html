@@ -157,6 +157,11 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
 </head>
 <body>
 
+<div id="backBar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:990;padding:10px 16px 16px;background:linear-gradient(to top,#fff 60%,transparent);pointer-events:none;">
+  <button onclick="goBack()" style="pointer-events:all;width:100%;max-width:500px;display:block;margin:0 auto;background:#0f172a;color:#fff;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:900;font-family:Cairo,sans-serif;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;gap:8px;">
+    <i class="fas fa-arrow-right"></i> رجوع للصفحة السابقة
+  </button>
+</div>
 <div id="lov" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.6);z-index:9999;align-items:center;justify-content:center;">
   <div class="lb2"><div class="spbig"></div><p>جارٍ المعالجة...</p></div>
 </div>
@@ -165,9 +170,6 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   <div class="hdr-brand">🛡️ <span>أكاديمية الشمالي</span></div>
   <img src="https://www.vhv.rs/dpng/d/578-5785861_oman-vision-2040-hd-png-download.png" alt="رؤية عُمان 2040" style="height:32px;object-fit:contain;opacity:.9;mix-blend-mode:multiply;" onerror="this.style.display='none'">
   <div style="display:flex;align-items:center;gap:8px;">
-    <button id="backNavBtn" onclick="goBack()" style="display:none;align-items:center;gap:5px;background:#f1f5f9;border:1.5px solid #e2e8f0;color:#1e293b;cursor:pointer;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:800;font-family:Cairo,sans-serif;">
-      <i class="fas fa-arrow-right" style="font-size:12px;"></i> رجوع
-    </button>
     <button onclick="shareApp()" style="background:#16a34a;border:none;color:#fff;cursor:pointer;padding:7px 11px;border-radius:8px;font-size:15px;"><i class="fas fa-share-alt"></i></button>
     <button class="menu-btn" id="menuBtn" data-act="toggleSb"><i class="fas fa-bars"></i></button>
   </div>
@@ -2021,11 +2023,15 @@ function goBack(){
   renderPage(prev);
 }
 
+var _homePages = ['reg'];
 function updateBackBtn(){
-  var btn = document.getElementById('backNavBtn');
-  if(!btn) return;
+  var bar = document.getElementById('backBar');
+  if(!bar) return;
   var show = _navHistory.length > 0;
-  btn.style.display = show ? 'flex' : 'none';
+  bar.style.display = show ? 'block' : 'none';
+  // إضافة مسافة سفلية للمحتوى حتى لا يُغطيه الزر
+  var content = document.getElementById('content');
+  if(content) content.style.paddingBottom = show ? '80px' : '12px';
 }
 
 function toggleSb() {
@@ -2081,6 +2087,8 @@ function renderPage(page) {
     case 'tournament_public': renderTournamentPublic(); break;
     case 'tournament_schedule': if(!sessionStorage.getItem('tournAuth')){ go('tournlogin'); return; } renderScheduleAdmin(); break;
     case 'tourn_update': renderTournUpdate(); break;
+    case 'parent_reg': renderParentReg(); break;
+    case 'acad_dashboard': renderAcadDashboard(); break;
     case 'groupmsg': renderGroupMsg(); break;
     case 'substrack': renderSubsTrack(); break;
     default: renderReg();
@@ -4035,14 +4043,22 @@ function renderAttAdmin(){
 // ===== TOURNAMENTS =====
 var _currentTournament = null;
 
-// فحص رابط البطولة عند فتح الصفحة
+// فحص روابط البطولة عند فتح الصفحة
 (function(){
   var params = new URLSearchParams(window.location.search);
-  var tid = params.get('tournament');
+  var tid  = params.get('tournament');
+  var acid = params.get('acad');  // معرف الأكاديمية لتسجيل ولي الأمر
   if(tid){
     window._tournamentId = tid;
     window.addEventListener('load', function(){
-      setTimeout(function(){ go('tournament_reg'); }, 500);
+      setTimeout(function(){
+        if(acid){
+          window._parentAcadId = acid;
+          go('parent_reg');      // ولي الأمر يسجل ابنه
+        } else {
+          go('tournament_reg');  // الأكاديمية تسجل
+        }
+      }, 500);
     });
   }
 })();
@@ -4619,6 +4635,7 @@ function submitTournReg(){
   var t = _currentTournament;
   var tid = window._tournamentId;
   var regId = 'REG-'+Date.now();
+  window._currentRegId = regId;
 
   // رفع الصور والوثائق
   var uploads = _regData.players.map(function(p, i){
@@ -4672,15 +4689,48 @@ function submitTournReg(){
 
 function showCardsPage(){
   var el = document.getElementById('content');
+  var tid  = window._tournamentId||'';
+  var acid = window._currentRegId||'';
+  var parentLink = window.location.origin+window.location.pathname+'?tournament='+tid+'&acad='+acid;
+  var tname = (_currentTournament||{})['اسم البطولة']||'البطولة';
+
   var html = _regHeader()+
-    '<div style="padding:16px;text-align:center;">'+
+    '<div style="padding:16px;">'+
+    '<div style="text-align:center;margin-bottom:16px;">'+
     '<div style="font-size:48px;margin-bottom:8px;">✅</div>'+
-    '<div style="font-size:17px;font-weight:900;color:#16a34a;margin-bottom:4px;">تم التسجيل بنجاح!</div>'+
-    '<div style="font-size:12px;color:#64748b;margin-bottom:16px;">بطاقات لاعبي '+_regData.acad+'</div>'+
-    '<div id="cards_grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;">';
+    '<div style="font-size:17px;font-weight:900;color:#16a34a;margin-bottom:4px;">تم تسجيل '+_regData.acad+' بنجاح!</div>'+
+    '<div style="font-size:12px;color:#64748b;">'+_regData.players.length+' لاعب مسجّل</div>'+
+    '</div>'+
+
+    // رابط ولي الأمر
+    '<div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:16px;padding:16px;margin-bottom:16px;border:2px solid rgba(212,175,55,.3);">'+
+      '<div style="display:flex;align-items:center;gap:8px;color:#d4af37;font-size:13px;font-weight:900;margin-bottom:10px;">'+
+        '<i class="fas fa-share-alt"></i> شارك رابط التسجيل مع أولياء الأمور'+
+      '</div>'+
+      '<div style="background:rgba(255,255,255,.08);border-radius:10px;padding:10px;font-size:10px;color:rgba(255,255,255,.6);word-break:break-all;margin-bottom:10px;direction:ltr;text-align:left;">'+
+        parentLink+
+      '</div>'+
+      '<div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:10px;text-align:center;">كل ولي أمر يفتح الرابط ويسجل بيانات ابنه مباشرة 📲</div>'+
+      '<div style="display:flex;gap:8px;">'+
+        '<button onclick="copyParentLink(\''+parentLink+'\')" style="flex:1;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">'+
+          '<i class="fas fa-copy"></i> نسخ الرابط</button>'+
+        '<button onclick="sendParentLinkWA(\''+parentLink+'\',\''+tname+'\')" style="flex:1;background:#25d366;color:#fff;border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">'+
+          '<i class="fab fa-whatsapp"></i> إرسال واتساب</button>'+
+      '</div>'+
+    '</div>'+
+
+    // متابعة الطلبات
+    '<button onclick="window._acadDashPhone=\''+_regData.phone+'\';window._acadDashTid=\''+tid+'\';go(\'acad_dashboard\')" style="width:100%;background:#1e3a5f;color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:10px;">'+
+      '<i class="fas fa-list-check"></i> متابعة طلبات الأولياء</button>'+
+
+    // البطاقات
+    '<div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:10px;"><i class="fas fa-id-card" style="color:#b81d22;margin-left:6px;"></i>بطاقات اللاعبين المسجّلين</div>'+
+    '<div id="cards_grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;">';
+
   _regData.players.forEach(function(p,i){
     html += buildCardHTML(p, i+1, false);
   });
+
   html +=
     '</div>'+
     '<div style="display:flex;flex-direction:column;gap:8px;">'+
@@ -4691,6 +4741,14 @@ function showCardsPage(){
     '</div>'+
     '</div>';
   el.innerHTML = html;
+}
+
+function copyParentLink(link){
+  navigator.clipboard.writeText(link).then(function(){ alert('✅ تم نسخ الرابط'); }).catch(function(){ prompt('انسخ الرابط:',link); });
+}
+function sendParentLinkWA(link, tname){
+  var msg = '🏆 *'+tname+'*\n\nعزيزي ولي الأمر،\nيرجى تسجيل بيانات نجلك في البطولة عبر الرابط التالي:\n\n'+link+'\n\n📋 المطلوب: الاسم الثلاثي + سنة الميلاد + صورة بالزي + وثيقة الهوية';
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 
 function dataURLtoBlob(dataURL){
@@ -5545,6 +5603,343 @@ function downloadSingleCard(idx){
       a.click();
     }).catch(function(){ showL(false); });
   });
+}
+
+// =====================================================
+// صفحة تسجيل ولي الأمر لابنه
+// =====================================================
+function renderParentReg(){
+  var el = document.getElementById('content');
+  var tid  = window._tournamentId;
+  var acid = window._parentAcadId;
+  if(!tid||!acid){ el.innerHTML='<div class="card"><div class="al al-warn">رابط غير صحيح</div></div>'; return; }
+  el.innerHTML='<div class="ldg"><span class="sp"></span></div>';
+
+  // جلب بيانات الأكاديمية والبطولة
+  Promise.all([
+    apiGet('البطولات'),
+    apiGet('لاعبو البطولة')
+  ]).then(function(res){
+    var t = (Array.isArray(res[0])?res[0]:[]).find(function(r){ return r['معرف البطولة']===tid; });
+    var acadPlayers = (Array.isArray(res[1])?res[1]:[]).filter(function(r){
+      return r['معرف التسجيل']===acid && r['معرف البطولة']===tid;
+    });
+    var acadName = acadPlayers.length ? acadPlayers[0]['اسم الأكاديمية'] : '';
+    var logoUrl  = acadPlayers.length ? (acadPlayers[0]['شعار الأكاديمية']||'') : '';
+    var maxP = parseInt((t||{})['الحد الأقصى للاعبين']||'20');
+    var registered = acadPlayers.length;
+
+    if(!t){ el.innerHTML='<div class="card"><div class="al al-warn">البطولة غير موجودة</div></div>'; return; }
+
+    var html =
+      // هيدر البطولة
+      '<div style="background:linear-gradient(160deg,#0f172a,#b81d22);padding:24px 16px 18px;text-align:center;color:#fff;">'+
+        '<div style="font-size:32px;margin-bottom:6px;">🏆</div>'+
+        '<div style="font-size:17px;font-weight:900;">'+t['اسم البطولة']+'</div>'+
+        (logoUrl?'<img src="'+logoUrl+'" style="width:48px;height:48px;object-fit:contain;border-radius:10px;background:rgba(255,255,255,.15);padding:4px;margin:8px auto 0;display:block;">':'')+
+        (acadName?'<div style="font-size:13px;font-weight:700;margin-top:6px;opacity:.9;">'+acadName+'</div>':'')+
+        '<div style="font-size:11px;opacity:.6;margin-top:2px;">'+registered+' / '+maxP+' لاعب مسجّل</div>'+
+      '</div>'+
+
+      '<div style="padding:16px;">'+
+
+      // تنبيه إذا امتلأت القائمة
+      (registered>=maxP
+        ? '<div class="al al-err"><i class="fas fa-times-circle"></i> اكتملت قائمة الأكاديمية ('+maxP+' لاعب). تواصل مع مدير الأكاديمية.</div>'
+        :
+        // نموذج ولي الأمر
+        '<div style="background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:14px;">'+
+          '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #f1f5f9;">'+
+            '<i class="fas fa-child" style="color:#b81d22;margin-left:6px;"></i>بيانات اللاعب'+
+          '</div>'+
+          '<div style="display:flex;flex-direction:column;gap:12px;">'+
+            '<div><label class="lbl">الاسم الثلاثي للاعب *</label>'+
+              '<input class="inp" id="pr_name" placeholder="الاسم الأول الأب الجد"></div>'+
+            '<div><label class="lbl">سنة الميلاد *</label>'+
+              '<select class="inp" id="pr_year">'+
+                (function(){ var o='<option value="">-- اختر --</option>'; for(var y=2018;y>=2005;y--) o+='<option>'+y+'</option>'; return o; })()+
+              '</select></div>'+
+            '<div><label class="lbl">رقم واتساب ولي الأمر *</label>'+
+              '<input class="inp" id="pr_phone" type="tel" placeholder="968XXXXXXXX"></div>'+
+
+            // صورة اللاعب
+            '<div>'+
+              '<label class="lbl">صورة اللاعب بالزي الرياضي * <span style="color:#64748b;font-weight:500;">(لإصدار البطاقة)</span></label>'+
+              '<div id="pr_photo_wrap">'+
+                '<label style="display:flex;flex-direction:column;align-items:center;gap:6px;border:2px dashed #b81d22;border-radius:12px;padding:18px;cursor:pointer;background:#fff5f5;" onclick="document.getElementById(\'pr_photo_file\').click()">'+
+                  '<i class="fas fa-camera" style="font-size:26px;color:#b81d22;"></i>'+
+                  '<div style="font-size:13px;font-weight:700;color:#475569;">اضغط لرفع صورة اللاعب</div>'+
+                  '<div style="font-size:10px;color:#94a3b8;">بالزي الرياضي الخاص بالأكاديمية</div>'+
+                '</label>'+
+                '<input type="file" id="pr_photo_file" accept="image/*" style="display:none;" onchange="previewParentPhoto(this)">'+
+              '</div>'+
+            '</div>'+
+
+            // الوثيقة
+            '<div>'+
+              '<label class="lbl">وثيقة الهوية * <span style="color:#b81d22;font-weight:500;">(جواز / شهادة ميلاد — إلزامي)</span></label>'+
+              '<input type="file" id="pr_doc" accept="image/*,.pdf" class="inp" style="font-size:12px;padding:8px;border-color:#b81d22;">'+
+            '</div>'+
+          '</div>'+
+
+          '<button onclick="submitParentReg(\''+tid+'\',\''+acid+'\',\''+acadName+'\')" style="width:100%;margin-top:16px;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
+            '<i class="fas fa-paper-plane"></i> تسجيل ابني في البطولة'+
+          '</button>'+
+        '</div>'
+      )+
+
+      '<div id="pr_result"></div>'+
+      '</div>';
+
+    el.innerHTML = html;
+    window._prPhotoB64 = '';
+  });
+}
+
+function previewParentPhoto(input){
+  var file = input.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    window._prPhotoB64 = e.target.result;
+    document.getElementById('pr_photo_wrap').innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f0fdf4;border-radius:10px;border:1.5px solid #86efac;">'+
+        '<img src="'+e.target.result+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:2px solid #16a34a;">'+
+        '<div>'+
+          '<div style="font-size:12px;font-weight:700;color:#16a34a;">✅ تم رفع الصورة</div>'+
+          '<button onclick="document.getElementById(\'pr_photo_file\').click()" style="font-size:11px;color:#64748b;background:none;border:none;cursor:pointer;padding:0;">تغيير الصورة</button>'+
+        '</div>'+
+      '</div>'+
+      '<input type="file" id="pr_photo_file" accept="image/*" style="display:none;" onchange="previewParentPhoto(this)">';
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitParentReg(tid, acid, acadName){
+  var name  = (document.getElementById('pr_name')||{}).value||'';
+  var year  = (document.getElementById('pr_year')||{}).value||'';
+  var phone = (document.getElementById('pr_phone')||{}).value||'';
+  name = name.trim(); phone = phone.trim();
+  if(!name||!year||!phone){ alert('يرجى تعبئة جميع الحقول'); return; }
+  if(!window._prPhotoB64){ alert('يرجى رفع صورة اللاعب بالزي الرياضي'); return; }
+  var docFile = (document.getElementById('pr_doc')||{}).files;
+  if(!docFile||!docFile[0]){ alert('وثيقة الهوية إلزامية'); return; }
+
+  if(window._submittingParent) return;
+  window._submittingParent = true;
+  showL(true);
+
+  var photoBlob = dataURLtoBlob(window._prPhotoB64);
+  Promise.all([
+    uploadFileBlob(photoBlob, 'parent_photo_'+Date.now()),
+    new Promise(function(res){
+      var r=new FileReader(); r.onload=function(e){ res(dataURLtoBlob(e.target.result)); }; r.readAsDataURL(docFile[0]);
+    }).then(function(b){ return uploadFileBlob(b,'parent_doc_'+Date.now()); })
+  ]).then(function(ids){
+    return apiAppend('طلبات اللاعبين',{
+      'معرف الطلب': 'PR-'+Date.now(),
+      'معرف التسجيل': acid,
+      'معرف البطولة': tid,
+      'اسم الأكاديمية': acadName,
+      'اسم اللاعب': name,
+      'سنة الميلاد': year,
+      'واتساب ولي الأمر': phone,
+      'صورة اللاعب': ids[0]?'https://drive.google.com/thumbnail?id='+ids[0]+'&sz=w400':'',
+      'وثيقة الهوية': ids[1]?'https://drive.google.com/file/d/'+ids[1]+'/view':'',
+      'الحالة': 'معلّق',
+      'التاريخ': new Date().toISOString()
+    });
+  }).then(function(){
+    showL(false);
+    window._submittingParent = false;
+    document.getElementById('content').innerHTML =
+      '<div style="padding:40px 20px;text-align:center;">'+
+        '<div style="font-size:64px;margin-bottom:12px;">✅</div>'+
+        '<div style="font-size:18px;font-weight:900;color:#16a34a;margin-bottom:8px;">تم تسجيل '+name+' بنجاح!</div>'+
+        '<div style="font-size:13px;color:#64748b;line-height:1.8;margin-bottom:16px;">'+
+          'سيتم مراجعة بياناته من قِبل إدارة الأكاديمية<br>'+
+          'وإصدار بطاقته قريباً 🪪'+
+        '</div>'+
+        '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px;font-size:12px;color:#15803d;">'+
+          '<i class="fas fa-info-circle"></i> سيصلك إشعار على واتساب عند قبول التسجيل'+
+        '</div>'+
+      '</div>';
+  }).catch(function(e){
+    showL(false);
+    window._submittingParent = false;
+    alert('حدث خطأ، حاول مجدداً');
+  });
+}
+
+// =====================================================
+// لوحة تحكم الأكاديمية — مراجعة طلبات الأولياء
+// =====================================================
+function renderAcadDashboard(){
+  var el = document.getElementById('content');
+  var tid   = window._acadDashTid   || window._tournamentId;
+  var phone = window._acadDashPhone || '';
+
+  // إذا لم يكن لدينا رقم الهاتف اطلبه
+  if(!phone){
+    el.innerHTML =
+      '<div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:24px 16px;text-align:center;color:#fff;">'+
+        '<div style="font-size:32px;margin-bottom:6px;">📋</div>'+
+        '<div style="font-size:17px;font-weight:900;">لوحة متابعة الطلبات</div>'+
+        '<div style="font-size:11px;opacity:.6;margin-top:3px;">ادخل رقم واتساب المسؤول للوصول</div>'+
+      '</div>'+
+      '<div style="padding:16px;">'+
+        '<div style="background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.06);">'+
+          '<label class="lbl">رقم واتساب المسؤول</label>'+
+          '<input class="inp" id="adb_phone" type="tel" placeholder="968XXXXXXXX" style="margin-bottom:12px;">'+
+          '<button onclick="loadAcadDashboard()" style="width:100%;background:#1e3a5f;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
+            '<i class="fas fa-search"></i> عرض الطلبات</button>'+
+        '</div>'+
+        '<div id="adb_result"></div>'+
+      '</div>';
+    return;
+  }
+  loadAcadDashboard();
+}
+
+function loadAcadDashboard(){
+  var phone = window._acadDashPhone || (document.getElementById('adb_phone')||{}).value||'';
+  phone = phone.trim();
+  if(!phone){ alert('أدخل رقم الواتساب'); return; }
+  window._acadDashPhone = phone;
+
+  showL(true);
+  Promise.all([
+    apiGet('لاعبو البطولة', true),
+    apiGet('طلبات اللاعبين', true)
+  ]).then(function(res){
+    showL(false);
+    var players  = Array.isArray(res[0]) ? res[0] : [];
+    var requests = Array.isArray(res[1]) ? res[1] : [];
+
+    // إيجاد الأكاديمية بالرقم
+    var myReg = players.find(function(p){
+      return (p['واتساب المسؤول']||'').replace(/\s/g,'') === phone.replace(/\s/g,'');
+    });
+    if(!myReg){
+      var res2 = document.getElementById('adb_result');
+      if(res2) res2.innerHTML = '<div class="al al-err" style="margin-top:12px;">لم يتم العثور على أكاديمية مسجّلة بهذا الرقم</div>';
+      return;
+    }
+
+    var acid     = myReg['معرف التسجيل'];
+    var acadName = myReg['اسم الأكاديمية'];
+    var tid      = myReg['معرف البطولة'];
+    window._acadDashTid = tid;
+
+    var myRequests = requests.filter(function(r){
+      return r['معرف التسجيل']===acid && r['معرف البطولة']===tid;
+    });
+    var pending  = myRequests.filter(function(r){ return r['الحالة']==='معلّق'; });
+    var accepted = myRequests.filter(function(r){ return r['الحالة']==='مقبول'; });
+    var rejected = myRequests.filter(function(r){ return r['الحالة']==='مرفوض'; });
+
+    var html =
+      '<div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:22px 16px;text-align:center;color:#fff;">'+
+        '<div style="font-size:28px;margin-bottom:4px;">📋</div>'+
+        '<div style="font-size:16px;font-weight:900;">'+acadName+'</div>'+
+        '<div style="font-size:11px;opacity:.6;margin-top:3px;">طلبات تسجيل أولياء الأمور</div>'+
+      '</div>'+
+      '<div style="padding:14px;">'+
+
+      // إحصائيات
+      '<div style="display:flex;gap:8px;margin-bottom:14px;">'+
+        statBox(myRequests.length,'إجمالي الطلبات','#1e3a5f')+
+        statBox(pending.length,'معلّق','#f59e0b')+
+        statBox(accepted.length,'مقبول','#16a34a')+
+        statBox(rejected.length,'مرفوض','#b81d22')+
+      '</div>';
+
+    if(!myRequests.length){
+      html += '<div style="text-align:center;padding:32px;color:#64748b;background:#fff;border-radius:14px;">'+
+        '<div style="font-size:36px;margin-bottom:8px;">📭</div>لا توجد طلبات بعد</div>';
+    } else {
+      // الطلبات المعلّقة أولاً
+      var sorted = pending.concat(accepted).concat(rejected);
+      sorted.forEach(function(r){
+        var isPending  = r['الحالة']==='معلّق';
+        var isAccepted = r['الحالة']==='مقبول';
+        var rid = r['معرف الطلب']||'';
+        html +=
+          '<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-right:4px solid '+(isPending?'#f59e0b':isAccepted?'#16a34a':'#e2e8f0')+';display:flex;align-items:center;gap:12px;">'+
+            (r['صورة اللاعب']
+              ?'<img src="'+r['صورة اللاعب']+'" style="width:52px;height:52px;object-fit:cover;border-radius:50%;border:2px solid '+(isPending?'#f59e0b':isAccepted?'#16a34a':'#e2e8f0')+';flex-shrink:0;">'
+              :'<div style="width:52px;height:52px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">👤</div>')+
+            '<div style="flex:1;min-width:0;">'+
+              '<div style="font-size:13px;font-weight:900;color:#0f172a;">'+r['اسم اللاعب']+'</div>'+
+              '<div style="font-size:11px;color:#64748b;">مواليد '+r['سنة الميلاد']+' · 📞 '+r['واتساب ولي الأمر']+'</div>'+
+              '<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;">'+
+                '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:'+(isPending?'#fef9c3':isAccepted?'#dcfce7':'#fee2e2')+';color:'+(isPending?'#92400e':isAccepted?'#15803d':'#b91c1c')+';">'+r['الحالة']+'</span>'+
+                (r['وثيقة الهوية']?'<a href="'+r['وثيقة الهوية']+'" target="_blank" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#e0f2fe;color:#0369a1;text-decoration:none;">📄 وثيقة</a>':'')+
+              '</div>'+
+            '</div>'+
+            (isPending
+              ? '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">'+
+                  '<button onclick="reviewRequest(\''+rid+'\',\'accept\')" style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;white-space:nowrap;">✅ قبول</button>'+
+                  '<button onclick="reviewRequest(\''+rid+'\',\'reject\')" style="background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;white-space:nowrap;">❌ رفض</button>'+
+                '</div>'
+              : '')+
+          '</div>';
+      });
+    }
+
+    // رابط ولي الأمر للمشاركة
+    var parentLink = window.location.origin+window.location.pathname+'?tournament='+tid+'&acad='+acid;
+    html +=
+      '<div style="background:#0f172a;border-radius:14px;padding:14px;margin-top:4px;">'+
+        '<div style="font-size:12px;color:#d4af37;font-weight:900;margin-bottom:8px;"><i class="fas fa-share-alt"></i> رابط تسجيل الأولياء</div>'+
+        '<div style="display:flex;gap:8px;">'+
+          '<button onclick="copyParentLink(\''+parentLink+'\')" style="flex:1;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📋 نسخ</button>'+
+          '<button onclick="sendParentLinkWA(\''+parentLink+'\',\''+myReg['اسم البطولة']+'\')" style="flex:1;background:#25d366;color:#fff;border:none;border-radius:8px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fab fa-whatsapp"></i> إرسال</button>'+
+        '</div>'+
+      '</div>'+
+      '</div>';
+
+    var container = document.getElementById('content');
+    if(container) container.innerHTML = html;
+    else el.innerHTML = html;
+  }).catch(function(){ showL(false); alert('حدث خطأ'); });
+}
+
+function reviewRequest(rid, action){
+  showL(true);
+  apiGet('طلبات اللاعبين', true).then(function(rows){
+    var req = (Array.isArray(rows)?rows:[]).find(function(r){ return r['معرف الطلب']===rid; });
+    if(!req){ showL(false); alert('لم يتم العثور على الطلب'); return; }
+
+    var newStatus = action==='accept' ? 'مقبول' : 'مرفوض';
+    return apiAppend('مراجعة الطلبات',{
+      'معرف الطلب': rid,
+      'الحالة الجديدة': newStatus,
+      'التاريخ': new Date().toISOString()
+    }).then(function(){
+      // إذا مقبول: أضفه للاعبي البطولة
+      if(action==='accept'){
+        return apiAppend('لاعبو البطولة',{
+          'معرف التسجيل': req['معرف التسجيل'],
+          'معرف البطولة': req['معرف البطولة'],
+          'اسم البطولة': req['اسم البطولة']||'',
+          'اسم الأكاديمية': req['اسم الأكاديمية'],
+          'اسم اللاعب': req['اسم اللاعب'],
+          'سنة الميلاد': req['سنة الميلاد'],
+          'واتساب المسؤول': window._acadDashPhone||'',
+          'صورة اللاعب': req['صورة اللاعب']||'',
+          'وثيقة الهوية': req['وثيقة الهوية']||'',
+          'الحالة': 'معلّق',
+          'التاريخ': new Date().toISOString()
+        });
+      }
+    });
+  }).then(function(){
+    showL(false);
+    apiClearCache('طلبات اللاعبين');
+    apiClearCache('لاعبو البطولة');
+    setTimeout(function(){ loadAcadDashboard(); }, 1500);
+  }).catch(function(){ showL(false); alert('حدث خطأ'); });
 }
 
 </script>
