@@ -6166,6 +6166,10 @@ function showAcadManageDashboard(acad, tid, acid){
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
 
+  // تحقق من وجود مسودة محفوظة في localStorage
+  var draft = loadRegProgress(tid);
+  var hasDraft = draft && draft.regId === acid && draft.players && draft.players.length > 0;
+
   apiGet('لاعبو البطولة',true).then(function(rows){
     var players = (Array.isArray(rows)?rows:[]).filter(function(r){
       return r['معرف التسجيل']===acid && r['معرف البطولة']===tid;
@@ -6191,12 +6195,28 @@ function showAcadManageDashboard(acad, tid, acid){
       // قائمة اللاعبين
       '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:12px;">لاعبو الأكاديمية</div>';
 
-    if(!players.length){
+    // عرض المسودة المحفوظة إذا وُجدت
+    if(hasDraft){
+      html +=
+        '<div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:14px;padding:14px;margin-bottom:12px;">'+
+          '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'+
+            '<div style="font-size:22px;">⏸️</div>'+
+            '<div>'+
+              '<div style="font-size:13px;font-weight:900;color:#92400e;">مسودة غير مرسلة</div>'+
+              '<div style="font-size:11px;color:#b45309;">'+draft.players.length+' لاعب محفوظ على جهازك — لم يُرسل بعد</div>'+
+            '</div>'+
+          '</div>'+
+          '<button onclick="resumeAndContinue(\''+acid+'\')" style="width:100%;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
+            '▶️ استكمال التسجيل وإرسال اللاعبين</button>'+
+        '</div>';
+    }
+
+    if(!players.length && !hasDraft){
       html += '<div style="background:#fff;border-radius:14px;padding:32px;text-align:center;color:#94a3b8;box-shadow:0 2px 8px rgba(0,0,0,.04);">'+
         '<div style="font-size:32px;margin-bottom:8px;">👤</div>'+
         '<div style="font-size:13px;">لا يوجد لاعبون مسجلون بعد</div>'+
       '</div>';
-    } else {
+    } else if(players.length) {
       players.forEach(function(p, i){
         var status = p['الحالة']||'معلق';
         var statusColor = status==='مقبول'?'#16a34a':status==='مرفوض'?'#b81d22':'#d97706';
@@ -6220,6 +6240,20 @@ function showAcadManageDashboard(acad, tid, acid){
     html += '</div>';
     el.innerHTML = html;
   });
+}
+
+function resumeAndContinue(acid){
+  var tid = window._tournamentId;
+  var saved = loadRegProgress(tid);
+  if(!saved || saved.regId !== acid){ alert('لم يتم العثور على المسودة المحفوظة على هذا الجهاز'); return; }
+  _regData = saved;
+  _currentTournament = window._manageAcadData ? {
+    'اسم البطولة': window._manageAcadData['اسم البطولة']||'',
+    'معرف البطولة': tid,
+    'الحد الأقصى للاعبين': '20'
+  } : (_currentTournament||{});
+  window._currentRegId = saved.regId;
+  showRegStep3();
 }
 
 function showPinModal(regId, acadName, tid){
