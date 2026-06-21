@@ -6178,49 +6178,57 @@ function showAcadManageDashboard(acad, tid, acid){
       return r['معرف التسجيل']===acid && r['معرف البطولة']===tid;
     });
 
+    var maxP = parseInt((window._manageAcadData||{})['الحد الأقصى للاعبين']||'20');
+    var locked = isRegLocked(window._manageAcadData||{});
+
     var html =
-      // رأس الصفحة
       '<div style="background:linear-gradient(135deg,#1e3a5f,#b81d22);padding:20px 16px;color:#fff;">'+
         '<div style="display:flex;align-items:center;gap:12px;">'+
           (acad['شعار الأكاديمية']?'<img src="'+acad['شعار الأكاديمية']+'" style="width:52px;height:52px;object-fit:contain;border-radius:10px;background:#fff;padding:4px;">':
            '<div style="width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;">🏫</div>')+
-          '<div>'+
+          '<div style="flex:1;">'+
             '<div style="font-size:16px;font-weight:900;">'+acad['اسم الأكاديمية']+'</div>'+
             '<div style="font-size:11px;opacity:.7;">'+acad['مسؤول الأكاديمية']+' · إدارة اللاعبين</div>'+
           '</div>'+
         '</div>'+
         '<div style="margin-top:12px;background:rgba(255,255,255,.1);border-radius:10px;padding:10px;display:flex;justify-content:space-between;align-items:center;">'+
-          '<div style="font-size:12px;opacity:.8;">إجمالي اللاعبين</div>'+
-          '<div style="font-size:20px;font-weight:900;">'+players.length+'</div>'+
+          '<div style="font-size:12px;opacity:.8;">إجمالي اللاعبين المسجلين</div>'+
+          '<div style="font-size:20px;font-weight:900;">'+players.length+' / '+maxP+'</div>'+
         '</div>'+
       '</div>'+
-      '<div style="padding:16px;">'+
-      // قائمة اللاعبين
-      '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:12px;">لاعبو الأكاديمية</div>';
+      '<div style="padding:16px;">';
 
-    // عرض المسودة المحفوظة إذا وُجدت
-    if(hasDraft){
-      html +=
-        '<div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:14px;padding:14px;margin-bottom:12px;">'+
-          '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'+
-            '<div style="font-size:22px;">⏸️</div>'+
-            '<div>'+
-              '<div style="font-size:13px;font-weight:900;color:#92400e;">مسودة غير مرسلة</div>'+
-              '<div style="font-size:11px;color:#b45309;">'+draft.players.length+' لاعب محفوظ على جهازك — لم يُرسل بعد</div>'+
-            '</div>'+
-          '</div>'+
-          '<button onclick="resumeAndContinue(\''+acid+'\')" style="width:100%;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
-            '▶️ استكمال التسجيل وإرسال اللاعبين</button>'+
-        '</div>';
+    // تنبيه القفل
+    if(locked){
+      html += '<div style="background:#fff0f0;border:1.5px solid #fecaca;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#b81d22;font-weight:700;">'+
+        '🔒 انتهى وقت التعديل (أقل من 24 ساعة على البطولة)</div>';
     }
 
+    // مسودة غير مرسلة
+    if(hasDraft){
+      html += '<div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:14px;padding:14px;margin-bottom:12px;">'+
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'+
+          '<div style="font-size:22px;">⏸️</div>'+
+          '<div><div style="font-size:13px;font-weight:900;color:#92400e;">مسودة غير مرسلة</div>'+
+          '<div style="font-size:11px;color:#b45309;">'+draft.players.length+' لاعب محفوظ على جهازك — لم يُرسل بعد</div></div>'+
+        '</div>'+
+        (!locked?'<button onclick="resumeAndContinue(\''+acid+'\')" style="width:100%;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">▶️ استكمال التسجيل وإرسال اللاعبين</button>':'')+'</div>';
+    }
+
+    // زر إضافة لاعب جديد
+    if(!locked && players.length < maxP){
+      html += '<button onclick="showAddPlayerModal(\''+acid+'\',\''+tid+'\')" style="width:100%;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:12px;">'+
+        '<i class="fas fa-plus"></i> إضافة لاعب جديد / بديل</button>';
+    }
+
+    html += '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:10px;">لاعبو الأكاديمية</div>';
+
     if(!players.length && !hasDraft){
-      html += '<div style="background:#fff;border-radius:14px;padding:32px;text-align:center;color:#94a3b8;box-shadow:0 2px 8px rgba(0,0,0,.04);">'+
+      html += '<div style="background:#fff;border-radius:14px;padding:32px;text-align:center;color:#94a3b8;">'+
         '<div style="font-size:32px;margin-bottom:8px;">👤</div>'+
-        '<div style="font-size:13px;">لا يوجد لاعبون مسجلون بعد</div>'+
-      '</div>';
-    } else if(players.length) {
-      players.forEach(function(p, i){
+        '<div style="font-size:13px;">لا يوجد لاعبون مسجلون بعد</div></div>';
+    } else {
+      players.forEach(function(p){
         var status = p['الحالة']||'معلق';
         var statusColor = status==='مقبول'?'#16a34a':status==='مرفوض'?'#b81d22':'#d97706';
         var statusBg    = status==='مقبول'?'#f0fdf4':status==='مرفوض'?'#fff0f0':'#fffbeb';
@@ -6233,9 +6241,7 @@ function showAcadManageDashboard(acad, tid, acid){
               '<div style="font-size:11px;color:#64748b;margin-top:2px;">مواليد '+p['سنة الميلاد']+'</div>'+
               '<div style="display:inline-block;margin-top:4px;background:'+statusBg+';color:'+statusColor+';font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">'+status+'</div>'+
             '</div>'+
-            (status!=='مقبول'?
-              '<button onclick="deleteManagePlayer(\''+p['معرف اللاعب']+'\',\''+p['اسم اللاعب']+'\')" style="background:#fff0f0;color:#b81d22;border:1.5px solid #fecaca;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;flex-shrink:0;">'+
-                '<i class="fas fa-trash"></i></button>':'') +
+            (!locked?'<button onclick="deleteManagePlayer(\''+p['معرف اللاعب']+'\',\''+p['اسم اللاعب']+'\',\''+acid+'\',\''+tid+'\')" style="background:#fff0f0;color:#b81d22;border:1.5px solid #fecaca;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;flex-shrink:0;"><i class="fas fa-trash"></i> حذف</button>':'')+
           '</div>';
       });
     }
@@ -6371,17 +6377,116 @@ function confirmPinModal(regId, tid){
   });
 }
 
-function deleteManagePlayer(pid, pname){
-  if(!confirm('هل تريد حذف اللاعب: '+pname+'؟')) return;
+function deleteManagePlayer(pid, pname, acid, tid){
+  if(!confirm('حذف اللاعب: '+pname+'؟\n\nبعد الحذف يمكنك إضافة لاعب بديل.')) return;
   apiAppend('حذف اللاعبين',{
     'معرف اللاعب': pid,
     'اسم اللاعب': pname,
-    'معرف الأكاديمية': window._manageAcadId,
+    'معرف الأكاديمية': acid||window._manageAcadId,
+    'معرف البطولة': tid||window._tournamentId,
     'التاريخ': new Date().toISOString()
   }).then(function(){
     apiClearCache('لاعبو البطولة');
-    alert('✅ تم إرسال طلب الحذف للمراجعة');
     showAcadManageDashboard(window._manageAcadData, window._tournamentId, window._manageAcadId);
+  });
+}
+
+function showAddPlayerModal(acid, tid){
+  var old = document.getElementById('addPlayerModal');
+  if(old) old.remove();
+  var years = [];
+  for(var y=2010;y<=2020;y++) years.push('<option value="'+y+'">'+y+'</option>');
+  var modal = document.createElement('div');
+  modal.id = 'addPlayerModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;overflow-y:auto;padding:16px;display:flex;align-items:flex-start;justify-content:center;';
+  modal.innerHTML =
+    '<div style="background:#fff;border-radius:18px;width:100%;max-width:420px;margin:auto;overflow:hidden;">'+
+    '<div style="background:linear-gradient(135deg,#16a34a,#15803d);padding:16px 20px;color:#fff;font-size:15px;font-weight:900;display:flex;justify-content:space-between;align-items:center;">'+
+      '<span><i class="fas fa-user-plus"></i> إضافة لاعب جديد</span>'+
+      '<button onclick="document.getElementById(\'addPlayerModal\').remove()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">✕</button>'+
+    '</div>'+
+    '<div style="padding:18px;display:flex;flex-direction:column;gap:12px;">'+
+      '<div><label class="lbl">الاسم الثلاثي *</label><input class="inp" id="ap_name" placeholder="الاسم الأول الأب الجد"></div>'+
+      '<div><label class="lbl">سنة الميلاد *</label><select class="inp" id="ap_year"><option value="">-- اختر --</option>'+years.join('')+'</select></div>'+
+      '<div>'+
+        '<label class="lbl">صورة اللاعب بالزي الرياضي * (لإصدار البطاقة)</label>'+
+        '<div id="ap_photo_prev" style="display:none;margin-bottom:8px;"><img id="ap_photo_img" style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:2px solid #e2e8f0;"></div>'+
+        '<label style="display:flex;flex-direction:column;align-items:center;gap:6px;border:2px dashed #cbd5e1;border-radius:10px;padding:16px;cursor:pointer;background:#f8fafc;" onclick="document.getElementById(\'ap_photo_file\').click()">'+
+          '<i class="fas fa-camera" style="font-size:24px;color:#16a34a;"></i>'+
+          '<div style="font-size:12px;font-weight:700;color:#475569;">اضغط لرفع صورة اللاعب</div>'+
+        '</label>'+
+        '<input type="file" id="ap_photo_file" accept="image/*" style="display:none;" onchange="previewAddPhoto(this)">'+
+      '</div>'+
+      '<div>'+
+        '<label class="lbl">وثيقة الهوية * (إلزامية)</label>'+
+        '<input type="file" id="ap_doc_file" accept="image/*,application/pdf" class="inp" style="padding:8px;">'+
+      '</div>'+
+      '<button onclick="submitAddPlayer(\''+acid+'\',\''+tid+'\')" style="width:100%;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
+        '<i class="fas fa-check"></i> إضافة اللاعب</button>'+
+    '</div></div>';
+  document.body.appendChild(modal);
+}
+
+function previewAddPhoto(input){
+  var file = input.files[0]; if(!file) return;
+  var r = new FileReader();
+  r.onload = function(e){
+    document.getElementById('ap_photo_img').src = e.target.result;
+    document.getElementById('ap_photo_prev').style.display='block';
+  };
+  r.readAsDataURL(file);
+}
+
+function submitAddPlayer(acid, tid){
+  var name = (document.getElementById('ap_name').value||'').trim();
+  var year = document.getElementById('ap_year').value;
+  var photoFile = document.getElementById('ap_photo_file').files;
+  var docFile   = document.getElementById('ap_doc_file').files;
+  if(!name||!year){ alert('يرجى تعبئة الاسم وسنة الميلاد'); return; }
+  if(!photoFile||!photoFile[0]){ alert('صورة اللاعب بالزي الرياضي مطلوبة'); return; }
+  if(!docFile||!docFile[0]){ alert('وثيقة الهوية إلزامية'); return; }
+
+  var btn = document.querySelector('#addPlayerModal button:last-child');
+  if(btn){ btn.disabled=true; btn.textContent='جاري الرفع...'; }
+  showL(true);
+
+  var pid = 'PLY-'+Date.now();
+  var readPhoto = new Promise(function(res){ var r=new FileReader(); r.onload=function(e){res(e.target.result);}; r.readAsDataURL(photoFile[0]); });
+  var readDoc   = new Promise(function(res){ var r=new FileReader(); r.onload=function(e){res(e.target.result);}; r.readAsDataURL(docFile[0]); });
+
+  Promise.all([readPhoto, readDoc]).then(function(data){
+    var photoB64=data[0], docB64=data[1];
+    return Promise.all([
+      uploadFileBlob(dataURLtoBlob(photoB64),'photo_'+pid),
+      uploadFileBlob(dataURLtoBlob(docB64),'doc_'+pid)
+    ]);
+  }).then(function(ids){
+    var photoId=ids[0], docId=ids[1];
+    var t = window._manageAcadData||{};
+    return apiAppend('لاعبو البطولة',{
+      'معرف اللاعب': pid,
+      'معرف التسجيل': acid,
+      'معرف البطولة': tid,
+      'اسم البطولة': t['اسم البطولة']||'',
+      'اسم الأكاديمية': t['اسم الأكاديمية']||'',
+      'شعار الأكاديمية': t['شعار الأكاديمية']||'',
+      'اسم اللاعب': name,
+      'سنة الميلاد': year,
+      'صورة اللاعب': photoId?'https://drive.google.com/thumbnail?id='+photoId+'&sz=w400':'',
+      'وثيقة الهوية': docId?'https://drive.google.com/thumbnail?id='+docId+'&sz=w400':'',
+      'الحالة': 'معلق',
+      'التاريخ': new Date().toISOString()
+    });
+  }).then(function(){
+    showL(false);
+    apiClearCache('لاعبو البطولة');
+    document.getElementById('addPlayerModal').remove();
+    alert('✅ تم إضافة اللاعب بنجاح');
+    showAcadManageDashboard(window._manageAcadData, window._tournamentId, window._manageAcadId);
+  }).catch(function(){
+    showL(false);
+    if(btn){ btn.disabled=false; btn.textContent='إضافة اللاعب'; }
+    alert('حدث خطأ، حاول مجدداً');
   });
 }
 
