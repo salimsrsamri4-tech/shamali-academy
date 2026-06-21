@@ -6015,7 +6015,14 @@ function renderAcadList(){
 
     tourneys.forEach(function(t){
       var tid = t['معرف البطولة'];
-      var regs = allRegs.filter(function(r){ return r['معرف البطولة']===tid; });
+      // إزالة التكرار — نبقي آخر تسجيل لكل أكاديمية
+      var regsRaw = allRegs.filter(function(r){ return r['معرف البطولة']===tid; });
+      var seen = {}, regs = [];
+      regsRaw.forEach(function(r){
+        var name = (r['اسم الأكاديمية']||'').trim();
+        if(name) seen[name] = r; // آخر سجل يفوز
+      });
+      regs = Object.values(seen);
       if(!regs.length) return;
 
       html +=
