@@ -4666,30 +4666,43 @@ function renderTournamentView(){
 
     Object.keys(academies).forEach(function(aName){
       var acad = academies[aName];
+      var allApproved = acad.players.every(function(p){ return p['الحالة']==='مسجّل'||p['الحالة']==='مقبول'; });
+      var hasPending  = acad.players.some(function(p){ return p['الحالة']==='معلّق'||p['الحالة']==='مسجّل'; });
+      var logoUrl = acad.players[0] ? (acad.players[0]['شعار الأكاديمية']||'') : '';
       html +=
         '<div style="background:#fff;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);">'+
         '<div style="background:#f8fafc;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px solid #e2e8f0;">'+
-          '<div>'+
-            '<div style="font-size:14px;font-weight:900;color:#0f172a;">'+aName+'</div>'+
-            '<div style="font-size:11px;color:#64748b;">'+acad.mgr+' · '+acad.phone+'</div>'+
+          '<div style="display:flex;align-items:center;gap:8px;">'+
+            (logoUrl?'<img src="'+logoUrl+'" style="width:36px;height:36px;object-fit:contain;border-radius:6px;border:1px solid #e2e8f0;background:#fff;">':'')+
+            '<div>'+
+              '<div style="font-size:14px;font-weight:900;color:#0f172a;">'+aName+'</div>'+
+              '<div style="font-size:11px;color:#64748b;">'+acad.mgr+' · '+acad.phone+'</div>'+
+            '</div>'+
           '</div>'+
-          '<div style="display:flex;gap:6px;">'+
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">'+
             '<span style="background:#e0f2fe;color:#0369a1;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:800;">'+acad.players.length+' لاعب</span>'+
-            '<button onclick="approveAcademy(\''+tid+'\',\''+aName+'\')" style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">✅ قبول الكل</button>'+
+            (hasPending?
+              '<button onclick="approveAcademy(\''+tid+'\',\''+aName+'\')" style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">✅ اعتماد وإصدار البطاقات</button>'
+            :
+              '<button onclick="showAdminCards(\''+tid+'\',\''+aName+'\')" style="background:#b81d22;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">🪪 عرض البطاقات</button>'
+            )+
           '</div>'+
         '</div>';
 
-      acad.players.forEach(function(p){
-        var isApproved = p['الحالة']==='مقبول';
+      acad.players.forEach(function(p,idx){
+        var isApproved = p['الحالة']==='مقبول'||p['الحالة']==='مسجّل';
+        var photoUrl = p['صورة اللاعب']||'';
         html +=
-          '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid #f8fafc;">'+
-          '<div>'+
-            '<div style="font-size:12px;font-weight:800;color:#0f172a;">'+p['اسم اللاعب']+'</div>'+
-            '<div style="font-size:10px;color:#94a3b8;">'+p['تاريخ الميلاد']+'</div>'+
+          '<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #f8fafc;">'+
+          (photoUrl?'<img src="'+photoUrl+'" style="width:38px;height:38px;object-fit:cover;border-radius:50%;border:2px solid '+(isApproved?'#16a34a':'#f59e0b')+';">':
+           '<div style="width:38px;height:38px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">👤</div>')+
+          '<div style="flex:1;">'+
+            '<div style="font-size:12px;font-weight:800;color:#0f172a;">'+(idx+1)+'. '+p['اسم اللاعب']+'</div>'+
+            '<div style="font-size:10px;color:#94a3b8;">مواليد '+(p['سنة الميلاد']||p['تاريخ الميلاد']||'')+'</div>'+
           '</div>'+
           '<div style="display:flex;gap:5px;align-items:center;">'+
-            (p['وثيقة الهوية']?'<a href="'+p['وثيقة الهوية']+'" target="_blank" style="background:#f0f9ff;color:#0369a1;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;text-decoration:none;">📄 وثيقة</a>':'')+
-            '<span style="font-size:10px;font-weight:800;color:'+(isApproved?'#16a34a':'#f59e0b')+';background:'+(isApproved?'#dcfce7':'#fef9c3')+';border-radius:6px;padding:3px 8px;">'+(isApproved?'✅ مقبول':'⏳ معلّق')+'</span>'+
+            (p['وثيقة الهوية']?'<a href="'+p['وثيقة الهوية']+'" target="_blank" style="background:#f0f9ff;color:#0369a1;border-radius:6px;padding:3px 7px;font-size:10px;font-weight:700;text-decoration:none;">📄</a>':'')+
+            '<span style="font-size:10px;font-weight:800;color:'+(isApproved?'#16a34a':'#f59e0b')+';background:'+(isApproved?'#dcfce7':'#fef9c3')+';border-radius:6px;padding:3px 8px;">'+(isApproved?'✅ معتمد':'⏳ معلّق')+'</span>'+
           '</div>'+
           '</div>';
       });
@@ -4710,22 +4723,128 @@ function statBox(val, label, color){
 }
 
 function approveAcademy(tid, acadName){
-  if(!confirm('هل تريد قبول جميع لاعبي '+acadName+'؟')) return;
+  if(!confirm('اعتماد جميع لاعبي '+acadName+' وإصدار بطاقاتهم؟')) return;
   showL(true);
   apiGet('لاعبو البطولة', true).then(function(rows){
     var toApprove = (Array.isArray(rows)?rows:[]).filter(function(r){
-      return r['معرف البطولة']===tid && r['اسم الأكاديمية']===acadName && r['الحالة']==='معلّق';
+      return r['معرف البطولة']===tid && r['اسم الأكاديمية']===acadName;
     });
-    // حفظ في ورقة مقبولي البطولة
     var approved = toApprove.map(function(p){
       return Object.assign({}, p, {'الحالة':'مقبول'});
     });
-    return apiAppend('مقبولو البطولة', approved);
-  }).then(function(){
+    return apiAppend('مقبولو البطولة', approved).then(function(){
+      return toApprove;
+    });
+  }).then(function(players){
     showL(false);
-    alert('✅ تم القبول! سيتم إصدار البطاقات قريباً');
-    renderTournamentView();
+    showAdminCardsModal(players, acadName);
   }).catch(function(){ showL(false); alert('حدث خطأ'); });
+}
+
+function showAdminCards(tid, acadName){
+  showL(true);
+  apiGet('لاعبو البطولة', true).then(function(rows){
+    showL(false);
+    var players = (Array.isArray(rows)?rows:[]).filter(function(r){
+      return r['معرف البطولة']===tid && r['اسم الأكاديمية']===acadName;
+    });
+    showAdminCardsModal(players, acadName);
+  }).catch(function(){ showL(false); alert('حدث خطأ'); });
+}
+
+function showAdminCardsModal(players, acadName){
+  var old = document.getElementById('adminCardsModal');
+  if(old) old.remove();
+
+  var logoUrl = players[0] ? (players[0]['شعار الأكاديمية']||'') : '';
+  var tName   = players[0] ? (players[0]['اسم البطولة']||'بطولة الشمالي') : 'بطولة الشمالي';
+
+  // بناء بطاقات من بيانات الشيت
+  var cardsHtml = '';
+  players.forEach(function(p, i){
+    var photoUrl = p['صورة اللاعب']||'';
+    var num = p['رقم اللاعب']||(i+1);
+    var year = p['سنة الميلاد']||p['تاريخ الميلاد']||'';
+    cardsHtml +=
+      '<div style="background:linear-gradient(160deg,#0f172a 0%,#1e3a5f 50%,#0f172a 100%);border-radius:12px;overflow:hidden;border:2px solid rgba(212,175,55,.35);">'+
+        '<div style="background:linear-gradient(90deg,#b81d22,#7a1015);padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">'+
+          '<div style="font-size:9px;color:rgba(255,255,255,.85);font-weight:900;">⚽ '+tName+'</div>'+
+          '<div style="font-size:10px;color:#d4af37;font-weight:900;">#'+num+'</div>'+
+        '</div>'+
+        '<div style="text-align:center;padding:10px 10px 0;">'+
+          '<div style="display:flex;align-items:flex-start;justify-content:space-between;">'+
+            '<div style="width:36px;height:36px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,.1);border:1.5px solid rgba(212,175,55,.3);flex-shrink:0;">'+
+              (logoUrl?'<img src="'+logoUrl+'" style="width:100%;height:100%;object-fit:contain;" crossorigin="anonymous">':
+               '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px;">🛡️</div>')+
+            '</div>'+
+            '<div style="flex:1;display:flex;justify-content:center;">'+
+              '<div style="width:68px;height:68px;border-radius:50%;overflow:hidden;border:3px solid #d4af37;background:#1e3a5f;">'+
+                (photoUrl?'<img src="'+photoUrl+'" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous">':
+                 '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;">👤</div>')+
+              '</div>'+
+            '</div>'+
+            '<div style="width:36px;"></div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="padding:8px 10px 10px;text-align:center;">'+
+          '<div style="font-size:12px;font-weight:900;color:#fff;margin-bottom:2px;line-height:1.3;">'+p['اسم اللاعب']+'</div>'+
+          '<div style="font-size:10px;color:rgba(212,175,55,.9);font-weight:700;">'+year+'</div>'+
+          '<div style="font-size:9px;color:rgba(255,255,255,.6);margin-top:3px;font-weight:600;">'+acadName+'</div>'+
+        '</div>'+
+        '<div style="height:3px;background:linear-gradient(90deg,transparent,#d4af37,transparent);"></div>'+
+      '</div>';
+  });
+
+  var modal = document.createElement('div');
+  modal.id = 'adminCardsModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;overflow-y:auto;padding:16px;';
+  modal.innerHTML =
+    '<div style="background:#f1f5f9;border-radius:18px;max-width:500px;margin:0 auto;overflow:hidden;">'+
+      '<div style="background:linear-gradient(135deg,#b81d22,#7a1015);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;">'+
+        '<div>'+
+          '<div style="font-size:15px;font-weight:900;color:#fff;">🪪 بطاقات '+acadName+'</div>'+
+          '<div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px;">'+players.length+' لاعب معتمد</div>'+
+        '</div>'+
+        '<button onclick="document.getElementById(\'adminCardsModal\').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;line-height:30px;text-align:center;">×</button>'+
+      '</div>'+
+      '<div style="padding:14px;">'+
+        '<div id="adminCardsGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;">'+
+          cardsHtml+
+        '</div>'+
+        '<div style="display:flex;flex-direction:column;gap:8px;">'+
+          '<button onclick="downloadAdminCards()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-download"></i> تحميل جميع البطاقات</button>'+
+          '<button onclick="sendCardsWA(\''+acadName+'\')" style="width:100%;background:#25d366;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fab fa-whatsapp"></i> إرسال للأكاديمية عبر واتساب</button>'+
+          '<button onclick="document.getElementById(\'adminCardsModal\').remove()" style="width:100%;background:#f1f5f9;color:#475569;border:1.5px solid #e2e8f0;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">إغلاق</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(modal);
+}
+
+function downloadAdminCards(){
+  var grid = document.getElementById('adminCardsGrid');
+  if(!grid||typeof html2canvas==='undefined'){ alert('ميزة التحميل غير متوفرة'); return; }
+  showL(true);
+  document.fonts.ready.then(function(){
+    html2canvas(grid,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#f1f5f9'}).then(function(canvas){
+      showL(false);
+      var a=document.createElement('a');
+      a.download='بطاقات_البطولة.png';
+      a.href=canvas.toDataURL('image/png');
+      a.click();
+    }).catch(function(){ showL(false); alert('حدث خطأ في التحميل'); });
+  });
+}
+
+function sendCardsWA(acadName){
+  var phone = '';
+  // محاولة إيجاد رقم الأكاديمية من البيانات
+  apiGet('لاعبو البطولة').then(function(rows){
+    var p = (Array.isArray(rows)?rows:[]).find(function(r){ return r['اسم الأكاديمية']===acadName; });
+    phone = p ? (p['واتساب المسؤول']||'') : '';
+    var msg = '🏆 *أكاديمية الشمالي*\n\n✅ تم اعتماد تسجيل أكاديمية *'+acadName+'*\n🪪 بطاقات اللاعبين جاهزة\n\nللاستفسار تواصلوا معنا عبر واتساب';
+    window.open('https://wa.me/'+(phone||CONFIG.WA_NUM)+'?text='+encodeURIComponent(msg),'_blank');
+  });
 }
 
 </script>
