@@ -4328,6 +4328,9 @@ function renderTournamentReg(){
     if(!t){ el.innerHTML='<div class="card"><div class="al al-warn">البطولة غير موجودة</div></div>'; return; }
     _currentTournament = t;
 
+    // تحقق من قفل التسجيل
+    if(isRegLocked(t)){ showRegLocked(t); return; }
+
     // التحقق من وجود تقدم سابق
     var saved = loadRegProgress(tid);
     if(saved && saved.regId && saved.players && saved.players.length>0){
@@ -6246,14 +6249,53 @@ function resumeAndContinue(acid){
   var tid = window._tournamentId;
   var saved = loadRegProgress(tid);
   if(!saved || saved.regId !== acid){ alert('لم يتم العثور على المسودة المحفوظة على هذا الجهاز'); return; }
-  _regData = saved;
-  _currentTournament = window._manageAcadData ? {
-    'اسم البطولة': window._manageAcadData['اسم البطولة']||'',
-    'معرف البطولة': tid,
-    'الحد الأقصى للاعبين': '20'
-  } : (_currentTournament||{});
-  window._currentRegId = saved.regId;
-  showRegStep3();
+
+  showL(true);
+  apiGet('البطولات').then(function(rows){
+    showL(false);
+    var t = (Array.isArray(rows)?rows:[]).find(function(r){ return r['معرف البطولة']===tid; });
+    if(!t){ alert('تعذّر تحميل بيانات البطولة'); return; }
+
+    // تحقق من قفل التسجيل
+    if(isRegLocked(t)){ showRegLocked(t); return; }
+
+    _currentTournament = t;
+    _regData = saved;
+    window._currentRegId = saved.regId;
+    showRegStep3();
+  }).catch(function(){ showL(false); alert('خطأ في الاتصال، حاول مجدداً'); });
+}
+
+// تحقق من قفل التسجيل (24 ساعة قبل البطولة)
+function isRegLocked(t){
+  var dateStr = t['تاريخ البطولة']||'';
+  if(!dateStr) return false;
+  var tDate = new Date(dateStr);
+  if(isNaN(tDate.getTime())) return false;
+  var hoursLeft = (tDate - new Date()) / 3600000;
+  return hoursLeft < 24;
+}
+
+function showRegLocked(t){
+  var el = document.getElementById('content');
+  var dateStr = t['تاريخ البطولة']||'';
+  var tDate = new Date(dateStr);
+  var hoursLeft = Math.max(0, Math.round((tDate - new Date()) / 3600000));
+  el.innerHTML =
+    '<div style="padding:32px 16px;text-align:center;">'+
+    '<div style="font-size:56px;margin-bottom:12px;">🔒</div>'+
+    '<div style="font-size:18px;font-weight:900;color:#0f172a;margin-bottom:8px;">انتهى وقت التسجيل</div>'+
+    '<div style="font-size:13px;color:#64748b;margin-bottom:16px;">'+
+      'يُغلق التسجيل قبل 24 ساعة من موعد البطولة'+
+    '</div>'+
+    '<div style="background:#fff0f0;border:1.5px solid #fecaca;border-radius:14px;padding:16px;margin-bottom:16px;">'+
+      '<div style="font-size:13px;font-weight:700;color:#b81d22;">🏆 '+t['اسم البطولة']+'</div>'+
+      '<div style="font-size:12px;color:#64748b;margin-top:4px;">موعد البطولة: '+dateStr+'</div>'+
+      (hoursLeft>0?'<div style="font-size:11px;color:#b81d22;margin-top:4px;">متبقي '+hoursLeft+' ساعة</div>':
+       '<div style="font-size:11px;color:#b81d22;margin-top:4px;">البطولة بدأت</div>')+
+    '</div>'+
+    '<div style="font-size:12px;color:#94a3b8;">للتعديل الطارئ تواصل مع إدارة المنصة</div>'+
+    '</div>';
 }
 
 function showPinModal(regId, acadName, tid){
