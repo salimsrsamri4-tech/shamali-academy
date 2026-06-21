@@ -4052,6 +4052,12 @@ var _currentTournament = null;
   var tid    = params.get('tournament');
   var acid   = params.get('acad');
   var manage = params.get('manage');
+  var page   = params.get('page');
+  if(page==='academies'){
+    window.addEventListener('load', function(){
+      setTimeout(function(){ go('acad_list'); }, 500);
+    });
+  }
   if(tid){
     window._tournamentId = tid;
     window.addEventListener('load', function(){
@@ -4128,22 +4134,43 @@ function renderTournaments(){
     } else {
       tournaments.forEach(function(t){
         var id = t['معرف البطولة']||'';
-        var regLink = window.location.origin+window.location.pathname+'?tournament='+id;
+        var base = window.location.origin+window.location.pathname;
+        var regLink   = base+'?tournament='+id;
+        var acadLink  = base+'?page=academies';
         html +=
           '<div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1.5px solid #e2e8f0;">'+
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">'+
+
+          // رأس البطاقة
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">'+
             '<div>'+
               '<div style="font-size:15px;font-weight:900;color:#0f172a;">'+t['اسم البطولة']+'</div>'+
               '<div style="font-size:11px;color:#64748b;margin-top:2px;">الفئة: '+t['الفئة']+' · '+t['عدد الفرق']+' فرق · '+t['مدة المباراة']+' دقيقة</div>'+
             '</div>'+
             '<span style="background:'+(t['الحالة']==='مفتوحة'?'#dcfce7':'#f1f5f9')+';color:'+(t['الحالة']==='مفتوحة'?'#16a34a':'#64748b')+';border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800;">'+t['الحالة']+'</span>'+
           '</div>'+
-          '<div style="background:#f8fafc;border-radius:8px;padding:8px 10px;font-size:11px;color:#475569;margin-bottom:10px;word-break:break-all;">'+
-            '🔗 '+regLink+
+
+          // رابط 1: دعوة التسجيل
+          '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:10px 12px;margin-bottom:8px;">'+
+            '<div style="font-size:10px;font-weight:800;color:#16a34a;margin-bottom:4px;">📋 رابط دعوة تسجيل الأكاديميات</div>'+
+            '<div style="font-size:10px;color:#475569;word-break:break-all;margin-bottom:8px;">'+regLink+'</div>'+
+            '<div style="display:flex;gap:6px;">'+
+              '<button onclick="copyTournLink(\''+regLink+'\')" style="flex:1;padding:7px;background:#0f172a;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📋 نسخ</button>'+
+              '<button onclick="sendTournWA(\''+regLink+'\',\''+t['اسم البطولة']+'\')" style="flex:1;padding:7px;background:#25d366;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fab fa-whatsapp"></i> واتساب</button>'+
+            '</div>'+
           '</div>'+
+
+          // رابط 2: الأكاديميات المشاركة
+          '<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px 12px;margin-bottom:10px;">'+
+            '<div style="font-size:10px;font-weight:800;color:#1d4ed8;margin-bottom:4px;">🏫 رابط الأكاديميات المشاركة (دخول بالـ PIN)</div>'+
+            '<div style="font-size:10px;color:#475569;word-break:break-all;margin-bottom:8px;">'+acadLink+'</div>'+
+            '<div style="display:flex;gap:6px;">'+
+              '<button onclick="copyTournLink(\''+acadLink+'\')" style="flex:1;padding:7px;background:#1e3a5f;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📋 نسخ</button>'+
+              '<button onclick="sendAcadListWA(\''+acadLink+'\',\''+t['اسم البطولة']+'\')" style="flex:1;padding:7px;background:#25d366;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fab fa-whatsapp"></i> واتساب</button>'+
+            '</div>'+
+          '</div>'+
+
+          // أزرار الإدارة
           '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+
-            '<button onclick="copyTournLink(\''+regLink+'\')" style="flex:1;padding:8px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📋 نسخ الرابط</button>'+
-            '<button onclick="sendTournWA(\''+regLink+'\',\''+t['اسم البطولة']+'\')" style="flex:1;padding:8px;background:#25d366;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📲 واتساب</button>'+
             '<button onclick="viewTournament(\''+id+'\')" style="flex:1;padding:8px;background:#1e3a5f;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">👁 اللاعبون</button>'+
             '<button onclick="window._viewTournId=\''+id+'\';go(\'tournament_public\')" style="flex:1;padding:8px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">🌐 عام</button>'+
             '<button onclick="deleteTournament(\''+id+'\',\''+t['اسم البطولة']+'\')" style="flex:1;padding:8px;background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">🗑 حذف</button>'+
@@ -4164,6 +4191,10 @@ function copyTournLink(link){
 
 function sendTournWA(link, name){
   var msg = encodeURIComponent('🏆 دعوة تسجيل في بطولة *'+name+'*\n\nللتسجيل وإدخال بيانات اللاعبين:\n'+link+'\n\n⚽ أكاديمية الشمالي لكرة القدم');
+  window.open('https://wa.me/?text='+msg,'_blank');
+}
+function sendAcadListWA(link, name){
+  var msg = encodeURIComponent('🏫 *الأكاديميات المشاركة — '+name+'*\n\nلإدارة لاعبي أكاديميتك ادخل عبر الرابط التالي:\n'+link+'\n\n🔑 ستحتاج رمزك السري (PIN) عند الدخول\n\n⚽ أكاديمية الشمالي لكرة القدم');
   window.open('https://wa.me/?text='+msg,'_blank');
 }
 
