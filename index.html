@@ -4259,6 +4259,17 @@ function deleteTournament(tid, tname){
 // ===== معالج تسجيل الأكاديمية (4 خطوات) =====
 var _regData = { step:1, acad:'', mgr:'', phone:'', logoB64:'', players:[], regId:'' };
 
+// حفظ واسترجاع التقدم من localStorage
+function saveRegProgress(){
+  try { localStorage.setItem('reg_'+window._tournamentId, JSON.stringify(_regData)); } catch(e){}
+}
+function loadRegProgress(tid){
+  try { var d=localStorage.getItem('reg_'+tid); return d?JSON.parse(d):null; } catch(e){ return null; }
+}
+function clearRegProgress(tid){
+  try { localStorage.removeItem('reg_'+tid); } catch(e){}
+}
+
 function renderTournamentReg(){
   var tid = window._tournamentId;
   var el = document.getElementById('content');
@@ -4268,9 +4279,57 @@ function renderTournamentReg(){
     var t = (Array.isArray(rows)?rows:[]).find(function(r){ return r['معرف البطولة']===tid; });
     if(!t){ el.innerHTML='<div class="card"><div class="al al-warn">البطولة غير موجودة</div></div>'; return; }
     _currentTournament = t;
+
+    // التحقق من وجود تقدم سابق
+    var saved = loadRegProgress(tid);
+    if(saved && saved.regId && saved.players && saved.players.length>0){
+      el.innerHTML =
+        '<div style="padding:24px 16px;">'+
+        '<div style="background:linear-gradient(135deg,#1e3a5f,#b81d22);border-radius:16px;padding:20px;color:#fff;text-align:center;margin-bottom:16px;">'+
+          '<div style="font-size:32px;margin-bottom:8px;">⏸️</div>'+
+          '<div style="font-size:16px;font-weight:900;">لديك تسجيل غير مكتمل</div>'+
+          '<div style="font-size:12px;opacity:.75;margin-top:4px;">'+(t['اسم البطولة']||'')+'</div>'+
+        '</div>'+
+        '<div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:16px;">'+
+          '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:10px;">بيانات محفوظة</div>'+
+          '<div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">'+
+            (saved.logoB64?'<img src="'+saved.logoB64+'" style="width:48px;height:48px;object-fit:contain;border-radius:8px;border:1.5px solid #e2e8f0;background:#f8fafc;">':'')+
+            '<div>'+
+              '<div style="font-size:14px;font-weight:900;color:#0f172a;">'+saved.acad+'</div>'+
+              '<div style="font-size:12px;color:#64748b;">'+saved.mgr+' · '+saved.phone+'</div>'+
+            '</div>'+
+          '</div>'+
+          '<div style="background:#f0fdf4;border-radius:8px;padding:10px;font-size:13px;color:#16a34a;font-weight:700;">'+
+            '✅ '+saved.players.length+' لاعب مضاف'+
+          '</div>'+
+        '</div>'+
+        '<div style="display:flex;flex-direction:column;gap:10px;">'+
+          '<button onclick="resumeRegProgress()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
+            '▶️ استمرار التسجيل</button>'+
+          '<button onclick="startFreshReg()" style="width:100%;background:#f1f5f9;color:#475569;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">'+
+            '🔄 بدء تسجيل جديد</button>'+
+        '</div>'+
+        '</div>';
+      return;
+    }
+
     _regData = { step:1, acad:'', mgr:'', phone:'', logoB64:'', players:[], regId:'' };
     showRegStep1();
   });
+}
+
+function resumeRegProgress(){
+  var saved = loadRegProgress(window._tournamentId);
+  if(!saved) return;
+  _regData = saved;
+  window._currentRegId = saved.regId;
+  showRegStep3();
+}
+
+function startFreshReg(){
+  clearRegProgress(window._tournamentId);
+  _regData = { step:1, acad:'', mgr:'', phone:'', logoB64:'', players:[], regId:'' };
+  showRegStep1();
 }
 
 function _regHeader(){
@@ -4574,6 +4633,7 @@ function addRegPlayer(){
   r2.onload=function(e){
     _regData.players.push({ name:name, year:year, photoB64:window._s2photoB64, docB64:e.target.result });
     window._s2photoB64='';
+    saveRegProgress();
     showRegStep3();
   };
   r2.readAsDataURL(docFile[0]);
@@ -4581,6 +4641,7 @@ function addRegPlayer(){
 
 function removeRegPlayer(i){
   _regData.players.splice(i,1);
+  saveRegProgress();
   showRegStep3();
 }
 
@@ -4635,6 +4696,7 @@ function saveEditPlayer(i){
     _regData.players[i].name = name;
     _regData.players[i].year = year;
     document.getElementById('editPlayerModal').remove();
+    saveRegProgress();
     showRegStep3();
   };
 
@@ -4728,6 +4790,7 @@ function buildCardHTML(p, num, large){
 
 function submitTournReg(){
   showL(true);
+  clearRegProgress(window._tournamentId);
   var t = _currentTournament;
   var tid = window._tournamentId;
   var regId = _regData.regId || window._currentRegId || ('REG-'+Date.now());
