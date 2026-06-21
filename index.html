@@ -4149,24 +4149,20 @@ function renderTournaments(){
             '<span style="background:'+(t['الحالة']==='مفتوحة'?'#dcfce7':'#f1f5f9')+';color:'+(t['الحالة']==='مفتوحة'?'#16a34a':'#64748b')+';border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800;">'+t['الحالة']+'</span>'+
           '</div>'+
 
-          // رابط 1: دعوة التسجيل
-          '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:10px 12px;margin-bottom:8px;">'+
-            '<div style="font-size:10px;font-weight:800;color:#16a34a;margin-bottom:4px;">📋 رابط دعوة تسجيل الأكاديميات</div>'+
-            '<div style="font-size:10px;color:#475569;word-break:break-all;margin-bottom:8px;">'+regLink+'</div>'+
-            '<div style="display:flex;gap:6px;">'+
-              '<button onclick="copyTournLink(\''+regLink+'\')" style="flex:1;padding:7px;background:#0f172a;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📋 نسخ</button>'+
-              '<button onclick="sendTournWA(\''+regLink+'\',\''+t['اسم البطولة']+'\')" style="flex:1;padding:7px;background:#25d366;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fab fa-whatsapp"></i> واتساب</button>'+
+          // الرابطان
+          '<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:10px;">'+
+            '<div style="display:flex;gap:8px;margin-bottom:8px;">'+
+              '<div style="flex:1;background:#f0fdf4;border-radius:8px;padding:8px;">'+
+                '<div style="font-size:9px;font-weight:800;color:#16a34a;margin-bottom:3px;">📋 رابط تسجيل الأكاديميات</div>'+
+                '<div style="font-size:9px;color:#475569;word-break:break-all;">'+regLink+'</div>'+
+              '</div>'+
+              '<div style="flex:1;background:#eff6ff;border-radius:8px;padding:8px;">'+
+                '<div style="font-size:9px;font-weight:800;color:#1d4ed8;margin-bottom:3px;">🏫 رابط الأكاديميات المشاركة</div>'+
+                '<div style="font-size:9px;color:#475569;word-break:break-all;">'+acadLink+'</div>'+
+              '</div>'+
             '</div>'+
-          '</div>'+
-
-          // رابط 2: الأكاديميات المشاركة
-          '<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px 12px;margin-bottom:10px;">'+
-            '<div style="font-size:10px;font-weight:800;color:#1d4ed8;margin-bottom:4px;">🏫 رابط الأكاديميات المشاركة (دخول بالـ PIN)</div>'+
-            '<div style="font-size:10px;color:#475569;word-break:break-all;margin-bottom:8px;">'+acadLink+'</div>'+
-            '<div style="display:flex;gap:6px;">'+
-              '<button onclick="copyTournLink(\''+acadLink+'\')" style="flex:1;padding:7px;background:#1e3a5f;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📋 نسخ</button>'+
-              '<button onclick="sendAcadListWA(\''+acadLink+'\',\''+t['اسم البطولة']+'\')" style="flex:1;padding:7px;background:#25d366;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fab fa-whatsapp"></i> واتساب</button>'+
-            '</div>'+
+            '<button onclick="sendBothLinksWA(\''+regLink+'\',\''+acadLink+'\',\''+t['اسم البطولة']+'\')" style="width:100%;padding:10px;background:#25d366;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">'+
+              '<i class="fab fa-whatsapp"></i> إرسال الرابطين معاً عبر واتساب</button>'+
           '</div>'+
 
           // أزرار الإدارة
@@ -4196,6 +4192,20 @@ function sendTournWA(link, name){
 function sendAcadListWA(link, name){
   var msg = encodeURIComponent('🏫 *الأكاديميات المشاركة — '+name+'*\n\nلإدارة لاعبي أكاديميتك ادخل عبر الرابط التالي:\n'+link+'\n\n🔑 ستحتاج رمزك السري (PIN) عند الدخول\n\n⚽ أكاديمية الشمالي لكرة القدم');
   window.open('https://wa.me/?text='+msg,'_blank');
+}
+function sendBothLinksWA(regLink, acadLink, name){
+  var msg = '🏆 *'+name+'*\n\n'+
+    '━━━━━━━━━━━━━━━━\n'+
+    '📋 *رابط تسجيل الأكاديمية*\n'+
+    'للأكاديميات الجديدة — سجّل لاعبيك:\n'+
+    regLink+'\n\n'+
+    '━━━━━━━━━━━━━━━━\n'+
+    '🏫 *رابط الأكاديميات المشاركة*\n'+
+    'لإدارة لاعبيك (يحتاج رمز PIN):\n'+
+    acadLink+'\n'+
+    '━━━━━━━━━━━━━━━━\n'+
+    '⚽ أكاديمية الشمالي لكرة القدم';
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 
 function showCreateTournament(){
