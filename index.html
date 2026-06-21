@@ -165,7 +165,9 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   <div class="hdr-brand">🛡️ <span>أكاديمية الشمالي</span></div>
   <img src="https://www.vhv.rs/dpng/d/578-5785861_oman-vision-2040-hd-png-download.png" alt="رؤية عُمان 2040" style="height:32px;object-fit:contain;opacity:.9;mix-blend-mode:multiply;" onerror="this.style.display='none'">
   <div style="display:flex;align-items:center;gap:8px;">
-    <span class="badge">🇴🇲 عُمان</span>
+    <button id="backNavBtn" onclick="goBack()" style="display:none;align-items:center;gap:5px;background:#f1f5f9;border:1.5px solid #e2e8f0;color:#1e293b;cursor:pointer;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:800;font-family:Cairo,sans-serif;">
+      <i class="fas fa-arrow-right" style="font-size:12px;"></i> رجوع
+    </button>
     <button onclick="shareApp()" style="background:#16a34a;border:none;color:#fff;cursor:pointer;padding:7px 11px;border-radius:8px;font-size:15px;"><i class="fas fa-share-alt"></i></button>
     <button class="menu-btn" id="menuBtn" data-act="toggleSb"><i class="fas fa-bars"></i></button>
   </div>
@@ -1992,14 +1994,38 @@ var currentPage = 'reg';
 var isAdm = false;
 var isCoach = false;
 
+var _navHistory = [];
+var _homePages = ['reg','ren','schedule','team','suggest','reportreq','partners','about','calendar'];
+
 function go(page) {
+  if(currentPage && currentPage !== page) _navHistory.push(currentPage);
   currentPage = page;
   document.querySelectorAll('.sb-btn').forEach(function(b){
     b.classList.toggle('active', b.getAttribute('data-page') === page);
   });
   closeSb();
   window.scrollTo(0,0);
+  updateBackBtn();
   renderPage(page);
+}
+
+function goBack(){
+  if(!_navHistory.length) return;
+  var prev = _navHistory.pop();
+  currentPage = prev;
+  document.querySelectorAll('.sb-btn').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-page') === prev);
+  });
+  window.scrollTo(0,0);
+  updateBackBtn();
+  renderPage(prev);
+}
+
+function updateBackBtn(){
+  var btn = document.getElementById('backNavBtn');
+  if(!btn) return;
+  var show = _navHistory.length > 0;
+  btn.style.display = show ? 'flex' : 'none';
 }
 
 function toggleSb() {
