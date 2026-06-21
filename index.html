@@ -227,6 +227,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   </div>
   <hr class="sb-hr">
   <button class="sb-btn" data-pg="tournlogin" style="color:#f59e0b;" onclick="go('tournlogin')"><i class="fas fa-shield-alt"></i> بوابة البطولات</button>
+  <button class="sb-btn" style="color:#d4af37;" onclick="go('acad_list')"><i class="fas fa-users"></i> الأكاديميات المشاركة</button>
   <div id="tournMenu" style="display:none;">
     <button class="sb-btn" style="color:#f59e0b;" data-pg="tournaments" onclick="go('tournaments')"><i class="fas fa-list"></i> البطولات</button>
     <button class="sb-btn" style="color:#f59e0b;" data-pg="tournament_schedule" onclick="go('tournament_schedule')"><i class="fas fa-calendar-alt"></i> جدول المباريات</button>
@@ -2088,6 +2089,7 @@ function renderPage(page) {
     case 'tournament_schedule': if(!sessionStorage.getItem('tournAuth')){ go('tournlogin'); return; } renderScheduleAdmin(); break;
     case 'tourn_update': renderTournUpdate(); break;
     case 'parent_reg': renderParentReg(); break;
+    case 'acad_list': renderAcadList(); break;
     case 'acad_manage': renderAcadManage(); break;
     case 'acad_dashboard': renderAcadDashboard(); break;
     case 'groupmsg': renderGroupMsg(); break;
@@ -5976,6 +5978,82 @@ function submitParentReg(tid, acid, acadName){
     showL(false);
     window._submittingParent = false;
     alert('حدث خطأ، حاول مجدداً');
+  });
+}
+
+// =====================================================
+// صفحة قائمة الأكاديميات المشاركة — دخول بالـ PIN
+// =====================================================
+function renderAcadList(){
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
+
+  Promise.all([
+    apiGet('البطولات'),
+    apiGet('لاعبو البطولة'),
+    apiGet('الأكاديميات المسجلة')
+  ]).then(function(res){
+    var allTourneys = Array.isArray(res[0]) ? res[0] : [];
+    var allPlayers  = Array.isArray(res[1]) ? res[1] : [];
+    var allRegs     = Array.isArray(res[2]) ? res[2] : [];
+
+    // تجميع البطولات النشطة
+    var tourneys = allTourneys.filter(function(t){ return t['معرف البطولة']; });
+
+    if(!tourneys.length){
+      el.innerHTML='<div class="card"><div class="al al-warn">لا توجد بطولات مسجّلة</div></div>';
+      return;
+    }
+
+    var html =
+      '<div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:20px 16px;color:#fff;text-align:center;">'+
+        '<div style="font-size:32px;margin-bottom:6px;">🏫</div>'+
+        '<div style="font-size:17px;font-weight:900;">الأكاديميات المشاركة</div>'+
+        '<div style="font-size:11px;opacity:.6;margin-top:4px;">اختر أكاديميتك وادخل برمزك السري</div>'+
+      '</div>'+
+      '<div style="padding:16px;">';
+
+    tourneys.forEach(function(t){
+      var tid = t['معرف البطولة'];
+      var regs = allRegs.filter(function(r){ return r['معرف البطولة']===tid; });
+      if(!regs.length) return;
+
+      html +=
+        '<div style="margin-bottom:20px;">'+
+        '<div style="background:linear-gradient(135deg,#b81d22,#7a1015);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">'+
+          '<i class="fas fa-trophy" style="color:#d4af37;font-size:16px;"></i>'+
+          '<div>'+
+            '<div style="font-size:13px;font-weight:900;color:#fff;">'+t['اسم البطولة']+'</div>'+
+            '<div style="font-size:10px;color:rgba(255,255,255,.6);">'+(t['الفئة']?'فئة '+t['الفئة']+' · ':'')+regs.length+' أكاديمية</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">';
+
+      regs.forEach(function(r){
+        var playerCount = allPlayers.filter(function(p){
+          return p['معرف التسجيل']===r['معرف التسجيل'];
+        }).length;
+        html +=
+          '<div onclick="showPinModal(\''+r['معرف التسجيل']+'\',\''+r['اسم الأكاديمية'].replace(/'/g,'&#39;')+'\',\''+tid+'\')" '+
+          'style="background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1.5px solid #e2e8f0;cursor:pointer;" '+
+          'onmouseenter="this.style.borderColor=\'#b81d22\';this.style.boxShadow=\'0 4px 16px rgba(184,29,34,.15)\'" '+
+          'onmouseleave="this.style.borderColor=\'#e2e8f0\';this.style.boxShadow=\'0 2px 8px rgba(0,0,0,.06)\'">'+
+            (r['شعار الأكاديمية']
+              ? '<img src="'+r['شعار الأكاديمية']+'" style="width:48px;height:48px;object-fit:contain;border-radius:8px;background:#f8fafc;margin-bottom:8px;">'
+              : '<div style="font-size:30px;margin-bottom:8px;">🛡️</div>')+
+            '<div style="font-size:12px;font-weight:900;color:#0f172a;line-height:1.3;margin-bottom:4px;">'+r['اسم الأكاديمية']+'</div>'+
+            '<div style="font-size:10px;color:#64748b;">'+playerCount+' لاعب</div>'+
+            '<div style="margin-top:6px;background:#fff0f0;border-radius:20px;padding:3px 10px;display:inline-block;">'+
+              '<span style="font-size:9px;color:#b81d22;font-weight:700;">🔑 دخول</span>'+
+            '</div>'+
+          '</div>';
+      });
+
+      html += '</div></div>';
+    });
+
+    html += '</div>';
+    el.innerHTML = html;
   });
 }
 
