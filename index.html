@@ -4093,10 +4093,11 @@ function renderTournaments(){
             '🔗 '+regLink+
           '</div>'+
           '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+
-            '<button onclick="copyTournLink(\''+regLink+'\')" style="flex:1;padding:8px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📋 نسخ رابط التسجيل</button>'+
+            '<button onclick="copyTournLink(\''+regLink+'\')" style="flex:1;padding:8px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📋 نسخ الرابط</button>'+
             '<button onclick="sendTournWA(\''+regLink+'\',\''+t['اسم البطولة']+'\')" style="flex:1;padding:8px;background:#25d366;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📲 واتساب</button>'+
             '<button onclick="viewTournament(\''+id+'\')" style="flex:1;padding:8px;background:#1e3a5f;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">👁 اللاعبون</button>'+
             '<button onclick="window._viewTournId=\''+id+'\';go(\'tournament_public\')" style="flex:1;padding:8px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">🌐 عام</button>'+
+            '<button onclick="deleteTournament(\''+id+'\',\''+t['اسم البطولة']+'\')" style="flex:1;padding:8px;background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">🗑 حذف</button>'+
           '</div>'+
           '</div>';
       });
@@ -4155,6 +4156,7 @@ function showCreateTournament(){
 }
 
 function createTournament(){
+  if(window._creatingTourn) return;
   var name = document.getElementById('tn_name').value.trim();
   var cat  = document.getElementById('tn_cat').value;
   var teams= document.getElementById('tn_teams').value;
@@ -4163,6 +4165,9 @@ function createTournament(){
   var venue= document.getElementById('tn_venue').value.trim();
   var maxp = document.getElementById('tn_maxplayers').value || '20';
   if(!name){ alert('أدخل اسم البطولة'); return; }
+  window._creatingTourn = true;
+  var btn = document.querySelector('#tournCreateModal button');
+  if(btn){ btn.disabled=true; btn.textContent='جاري الإنشاء...'; }
   var id = 'T'+Date.now();
   showL(true);
   apiAppend('البطولات',{
@@ -4178,8 +4183,34 @@ function createTournament(){
     'التاريخ': new Date().toISOString()
   }).then(function(){
     showL(false);
+    window._creatingTourn = false;
     document.getElementById('tournCreateModal').remove();
+    apiClearCache('البطولات');
     setTimeout(function(){ renderTournaments(); }, 2000);
+  }).catch(function(){
+    showL(false);
+    window._creatingTourn = false;
+    alert('حدث خطأ');
+  });
+}
+
+function deleteTournament(tid, tname){
+  if(!confirm('هل تريد حذف بطولة "'+tname+'" نهائياً؟\nسيتم حذف جميع بيانات اللاعبين والمباريات المرتبطة بها.')) return;
+  showL(true);
+  apiAppend('حذف البطولات',{
+    'معرف البطولة': tid,
+    'اسم البطولة': tname,
+    'التاريخ': new Date().toISOString()
+  }).then(function(){
+    return fetch(CONFIG.GAS_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'delete', sheet:'البطولات', column:'معرف البطولة', value:tid})
+    });
+  }).then(function(){
+    showL(false);
+    apiClearCache('البطولات');
+    setTimeout(function(){ renderTournaments(); }, 1500);
   }).catch(function(){ showL(false); alert('حدث خطأ'); });
 }
 
