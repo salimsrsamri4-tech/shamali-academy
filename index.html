@@ -5700,19 +5700,26 @@ function renderTournamentPublic(){
   Promise.all([
     apiGet('البطولات'),
     apiGet('لاعبو البطولة'),
-    apiGet('المباريات')
+    apiGet('المباريات'),
+    apiGet('الأكاديميات المسجلة')
   ]).then(function(res){
     var t = (Array.isArray(res[0])?res[0]:[]).find(function(r){ return r['معرف البطولة']===tid; });
-    var players = Array.isArray(res[1]) ? res[1].filter(function(r){ return r['معرف البطولة']===tid; }) : [];
+    var players  = Array.isArray(res[1]) ? res[1].filter(function(r){ return r['معرف البطولة']===tid; }) : [];
     var matches  = Array.isArray(res[2]) ? res[2].filter(function(r){ return r['معرف البطولة']===tid; }) : [];
+    var acadRegs = Array.isArray(res[3]) ? res[3].filter(function(r){ return r['معرف البطولة']===tid; }) : [];
     if(!t){ el.innerHTML='<div class="card"><div class="al al-warn">البطولة غير موجودة</div></div>'; return; }
 
-    // تجميع الأكاديميات
+    // تجميع الأكاديميات مع regId
     var acadMap = {};
     players.forEach(function(p){
       var a = p['اسم الأكاديمية']||'';
-      if(!acadMap[a]) acadMap[a]={logo:p['شعار الأكاديمية']||'', count:0};
+      if(!acadMap[a]) acadMap[a]={logo:p['شعار الأكاديمية']||'', count:0, regId:p['معرف التسجيل']||''};
       acadMap[a].count++;
+    });
+    // إضافة regId من سجل الأكاديميات
+    acadRegs.forEach(function(r){
+      var a = r['اسم الأكاديمية']||'';
+      if(acadMap[a]) acadMap[a].regId = r['معرف التسجيل']||'';
     });
 
     var html =
@@ -5737,12 +5744,17 @@ function renderTournamentPublic(){
       '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;">';
     Object.keys(acadMap).forEach(function(a){
       var ac = acadMap[a];
+      var rid = ac.regId||'';
       html +=
-        '<div style="background:#fff;border-radius:12px;padding:12px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.06);border:1.5px solid #e2e8f0;">'+
+        '<div onclick="showPinModal(\''+rid+'\',\''+a.replace(/'/g,"&#39;")+'\',\''+tid+'\')" '+
+        'style="background:#fff;border-radius:12px;padding:12px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.06);border:1.5px solid #e2e8f0;cursor:pointer;transition:box-shadow .2s;" '+
+        'onmouseenter="this.style.boxShadow=\'0 4px 16px rgba(184,29,34,.15)\';this.style.borderColor=\'#b81d22\'" '+
+        'onmouseleave="this.style.boxShadow=\'0 2px 6px rgba(0,0,0,.06)\';this.style.borderColor=\'#e2e8f0\'">'+
         (ac.logo?'<img src="'+ac.logo+'" style="width:44px;height:44px;object-fit:contain;margin-bottom:6px;">':
          '<div style="font-size:28px;margin-bottom:6px;">🛡️</div>')+
         '<div style="font-size:12px;font-weight:800;color:#0f172a;line-height:1.3;">'+a+'</div>'+
         '<div style="font-size:10px;color:#64748b;margin-top:2px;">'+ac.count+' لاعب</div>'+
+        '<div style="font-size:9px;color:#b81d22;font-weight:700;margin-top:4px;">🔑 إدارة الأكاديمية</div>'+
         '</div>';
     });
     html += '</div>';
@@ -6079,6 +6091,52 @@ function showAcadManageDashboard(acad, tid, acid){
 
     html += '</div>';
     el.innerHTML = html;
+  });
+}
+
+function showPinModal(regId, acadName, tid){
+  var old = document.getElementById('pinModal');
+  if(old) old.remove();
+  var modal = document.createElement('div');
+  modal.id = 'pinModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML =
+    '<div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:340px;text-align:center;">'+
+      '<div style="font-size:36px;margin-bottom:8px;">🔑</div>'+
+      '<div style="font-size:16px;font-weight:900;color:#0f172a;margin-bottom:4px;">إدارة أكاديميتك</div>'+
+      '<div style="font-size:12px;color:#64748b;margin-bottom:16px;">'+acadName+'</div>'+
+      '<input id="pinModalInput" type="password" inputmode="numeric" maxlength="4" placeholder="أدخل الرمز السري ••••" '+
+        'style="width:100%;text-align:center;font-size:26px;letter-spacing:8px;padding:14px;border:2px solid #e2e8f0;border-radius:12px;outline:none;font-family:Cairo,sans-serif;box-sizing:border-box;margin-bottom:10px;" '+
+        'onkeydown="if(event.key===\'Enter\')confirmPinModal(\''+regId+'\',\''+tid+'\')">'+
+      '<div id="pinModalErr" style="color:#b81d22;font-size:11px;margin-bottom:10px;display:none;">❌ الرمز غير صحيح</div>'+
+      '<div style="display:flex;gap:8px;">'+
+        '<button onclick="document.getElementById(\'pinModal\').remove()" style="flex:1;background:#f1f5f9;color:#475569;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">إلغاء</button>'+
+        '<button onclick="confirmPinModal(\''+regId+'\',\''+tid+'\')" style="flex:2;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">دخول</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(modal);
+  setTimeout(function(){ var inp=document.getElementById('pinModalInput'); if(inp) inp.focus(); },100);
+}
+
+function confirmPinModal(regId, tid){
+  var pin = (document.getElementById('pinModalInput').value||'').trim();
+  var errEl = document.getElementById('pinModalErr');
+  if(!pin){ return; }
+  apiGet('الأكاديميات المسجلة',true).then(function(rows){
+    var acad = (Array.isArray(rows)?rows:[]).find(function(r){
+      return r['معرف التسجيل']===regId && r['معرف البطولة']===tid;
+    });
+    if(!acad||acad['رمز PIN']!==pin){
+      errEl.style.display='block';
+      document.getElementById('pinModalInput').value='';
+      document.getElementById('pinModalInput').focus();
+      return;
+    }
+    document.getElementById('pinModal').remove();
+    window._manageAcadId   = regId;
+    window._manageAcadData = acad;
+    window._tournamentId   = tid;
+    showAcadManageDashboard(acad, tid, regId);
   });
 }
 
