@@ -4468,7 +4468,7 @@ function previewLogo(input){
   reader.readAsDataURL(file);
 }
 
-// الانتقال من الخطوة 1 إلى 2: توليد الرابط فوراً + حفظ في الخلفية
+// الانتقال من الخطوة 1 إلى 2: حفظ مضمون ثم الانتقال
 function goRegStep2(){
   var acad  = document.getElementById('s1_acad').value.trim();
   var mgr   = document.getElementById('s1_mgr').value.trim();
@@ -4479,18 +4479,20 @@ function goRegStep2(){
   if(!_regData.logoB64){ if(!confirm('لم يتم رفع شعار الأكاديمية. هل تريد المتابعة بدون شعار؟')) return; }
   _regData.acad=acad; _regData.mgr=mgr; _regData.phone=phone; _regData.pin=pin;
 
-  // توليد المعرف والانتقال فوراً — الحفظ يصير في الخلفية
+  var btn = document.getElementById('s1_next_btn');
+  if(btn){ btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...'; }
+  showL(true);
+
   var regId = 'REG-'+Date.now();
   _regData.regId = regId;
   window._currentRegId = regId;
-  showRegStep2();
 
-  // حفظ في الخلفية (fire and forget)
   var t = _currentTournament||{};
   var tid = window._tournamentId;
   var logoUpload = _regData.logoB64
     ? uploadFileBlob(dataURLtoBlob(_regData.logoB64), 'logo_'+regId)
     : Promise.resolve('');
+
   logoUpload.then(function(logoId){
     _regData.logoId = logoId;
     return apiAppend('الأكاديميات المسجلة',{
@@ -4504,7 +4506,15 @@ function goRegStep2(){
       'شعار الأكاديمية': logoId?'https://drive.google.com/thumbnail?id='+logoId+'&sz=w200':'',
       'التاريخ': new Date().toISOString()
     });
-  }).catch(function(){});
+  }).then(function(){
+    showL(false);
+    apiClearCache('الأكاديميات المسجلة');
+    showRegStep2();
+  }).catch(function(){
+    showL(false);
+    if(btn){ btn.disabled=false; btn.innerHTML='التالي <i class="fas fa-arrow-left"></i>'; }
+    alert('حدث خطأ في الحفظ، تحقق من الاتصال وحاول مجدداً');
+  });
 }
 
 // الخطوة 2: رابط التسجيل — اختيار المسار
