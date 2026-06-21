@@ -6112,7 +6112,9 @@ function verifyManagePin(){
       return r['معرف التسجيل']===acid && r['معرف البطولة']===tid;
     });
     if(!acad){ errEl.style.display='block'; errEl.textContent='❌ لم يتم العثور على بيانات الأكاديمية'; el.querySelector('button').textContent='دخول'; return; }
-    if((acad['رمز PIN']||'')!==pin){ errEl.style.display='block'; errEl.textContent='❌ الرمز غير صحيح، حاول مجدداً'; el.querySelector('button').textContent='دخول'; return; }
+    var storedPin=(acad['رمز PIN']||'').toString().trim();
+    if(!storedPin){ errEl.style.display='block'; errEl.textContent='⚠️ هذه الأكاديمية لا تملك رمزاً — تواصل مع الإدارة'; el.querySelector('button').textContent='دخول'; return; }
+    if(storedPin!==pin){ errEl.style.display='block'; errEl.textContent='❌ الرمز غير صحيح، حاول مجدداً'; el.querySelector('button').textContent='دخول'; return; }
     // PIN صحيح — عرض لوحة الإدارة
     window._manageAcadData = acad;
     showAcadManageDashboard(acad, tid, acid);
@@ -6207,21 +6209,48 @@ function confirmPinModal(regId, tid){
   var pin = (document.getElementById('pinModalInput').value||'').trim();
   var errEl = document.getElementById('pinModalErr');
   if(!pin){ return; }
+  var btn = document.querySelector('#pinModal button:last-child');
+  if(btn){ btn.textContent='جاري التحقق...'; btn.disabled=true; }
+
   apiGet('الأكاديميات المسجلة',true).then(function(rows){
     var acad = (Array.isArray(rows)?rows:[]).find(function(r){
       return r['معرف التسجيل']===regId && r['معرف البطولة']===tid;
     });
-    if(!acad||acad['رمز PIN']!==pin){
+
+    if(btn){ btn.textContent='دخول'; btn.disabled=false; }
+
+    if(!acad){
       errEl.style.display='block';
+      errEl.textContent='❌ لم يتم العثور على بيانات الأكاديمية';
+      return;
+    }
+
+    var storedPin = (acad['رمز PIN']||'').toString().trim();
+
+    // إذا لم يُسجَّل رمز (تسجيل قديم قبل نظام PIN)
+    if(!storedPin){
+      errEl.style.display='block';
+      errEl.textContent='⚠️ هذه الأكاديمية لا تملك رمزاً — يرجى التواصل مع إدارة المنصة';
+      return;
+    }
+
+    if(storedPin !== pin){
+      errEl.style.display='block';
+      errEl.textContent='❌ الرمز غير صحيح، حاول مجدداً';
       document.getElementById('pinModalInput').value='';
       document.getElementById('pinModalInput').focus();
       return;
     }
+
     document.getElementById('pinModal').remove();
     window._manageAcadId   = regId;
     window._manageAcadData = acad;
     window._tournamentId   = tid;
     showAcadManageDashboard(acad, tid, regId);
+  }).catch(function(){
+    if(btn){ btn.textContent='دخول'; btn.disabled=false; }
+    errEl.style.display='block';
+    errEl.textContent='❌ خطأ في الاتصال، حاول مجدداً';
   });
 }
 
