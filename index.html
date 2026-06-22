@@ -6831,53 +6831,77 @@ function buildCardHTML(p, num, tname, safeId){
   var name   = p['اسم اللاعب']||'';
   var year   = p['سنة الميلاد']||'';
   var numStr = num < 10 ? '0'+num : ''+num;
+  var parts  = name.split(' ');
+  var half   = Math.ceil(parts.length/2);
+  var line1  = parts.slice(0,half).join(' ');
+  var line2  = parts.slice(half).join(' ');
 
-  return '<div class="player-card-item" data-acad-id="'+(safeId||'')+'" data-name="'+name+'" style="width:100%;max-width:380px;border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.15);font-family:Cairo,sans-serif;margin:0 auto;background:#fff;">'+
+  return '<div class="player-card-item" data-acad-id="'+(safeId||'')+'" data-name="'+name+'" style="width:100%;max-width:428px;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.18);font-family:Cairo,sans-serif;margin:0 auto;background:#fff;border:2px solid #d4af37;">'+
 
-    // شريط أحمر علوي — اسم البطولة
-    '<div style="background:#b81d22;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;">'+
-      '<div style="font-size:11px;font-weight:900;color:#fff;opacity:.95;">🏆 '+tname+'</div>'+
-      '<div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:700;">AL-SHAMALI</div>'+
+    // شريط أحمر علوي
+    '<div style="background:#b81d22;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;">'+
+      '<div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.65);letter-spacing:.5px;">AL-SHAMALI ACADEMY</div>'+
+      '<div style="font-size:12px;font-weight:900;color:#fff;direction:rtl;">🏆 '+tname+'</div>'+
     '</div>'+
+    '<div style="height:2px;background:#d4af37;"></div>'+
 
     // جسم البطاقة
-    '<div style="display:flex;height:180px;">'+
+    '<div style="display:flex;height:200px;">'+
 
-      // صورة اللاعب
-      '<div style="width:38%;position:relative;flex-shrink:0;background:#f1f5f9;">'+
-        (photo ? '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;object-position:top center;">'
-               : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:52px;color:#cbd5e1;">👤</div>')+
-        // رقم اللاعب
-        '<div style="position:absolute;bottom:0;left:0;right:0;background:#b81d22;text-align:center;padding:5px;font-size:14px;font-weight:900;color:#fff;">#'+numStr+'</div>'+
+      // منطقة الصورة
+      '<div style="width:40%;position:relative;flex-shrink:0;background:linear-gradient(180deg,#b81d22,#7a1015);">'+
+        (photo
+          ? '<img src="'+photo+'" style="width:100%;height:calc(100% - 36px);object-fit:cover;object-position:top center;display:block;">'
+          : '<div style="width:100%;height:calc(100% - 36px);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;">'+
+              '<div style="font-size:44px;opacity:.3;">👤</div>'+
+              '<div style="font-size:10px;color:rgba(255,255,255,.4);">صورة اللاعب</div>'+
+            '</div>')+
+        '<div style="height:36px;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;">'+
+          '<span style="font-size:18px;font-weight:900;color:#d4af37;letter-spacing:2px;"># '+numStr+'</span>'+
+        '</div>'+
       '</div>'+
 
-      // المعلومات
-      '<div style="flex:1;padding:14px 14px 10px;display:flex;flex-direction:column;justify-content:space-between;background:#fff;">'+
+      // خط ذهبي فاصل
+      '<div style="width:3px;background:#d4af37;flex-shrink:0;"></div>'+
 
-        // اسم الأكاديمية + شعارها
-        '<div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:2px solid #b81d22;">'+
-          (logo ? '<img src="'+logo+'" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;border-radius:4px;">'
-                : '<div style="width:28px;height:28px;background:#fee2e2;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">🏫</div>')+
-          '<div style="font-size:12px;font-weight:900;color:#b81d22;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+acad+'</div>'+
+      // منطقة المعلومات
+      '<div style="flex:1;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;background:#fff;position:relative;overflow:hidden;">'+
+
+        // رقم خلفي زخرفي
+        '<div style="position:absolute;left:-10px;bottom:-20px;font-size:110px;font-weight:900;color:#b81d22;opacity:.04;line-height:1;user-select:none;">'+numStr+'</div>'+
+
+        // اسم الأكاديمية
+        '<div>'+
+          '<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-bottom:6px;">'+
+            '<div style="font-size:13px;font-weight:900;color:#b81d22;">'+acad+'</div>'+
+            (logo?'<img src="'+logo+'" style="width:24px;height:24px;object-fit:contain;border-radius:4px;background:#fff1f2;padding:2px;">':'<div style="width:24px;height:24px;background:#fee2e2;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;">🏫</div>')+
+          '</div>'+
+          '<div style="height:2px;background:linear-gradient(to right,transparent,#b81d22);border-radius:2px;"></div>'+
         '</div>'+
 
         // اسم اللاعب
-        '<div style="font-size:16px;font-weight:900;color:#0f172a;line-height:1.4;flex:1;display:flex;align-items:center;">'+name+'</div>'+
+        '<div style="text-align:right;">'+
+          '<div style="font-size:18px;font-weight:900;color:#0f172a;line-height:1.35;">'+line1+'</div>'+
+          (line2?'<div style="font-size:18px;font-weight:900;color:#0f172a;line-height:1.35;">'+line2+'</div>':'')+
+        '</div>'+
 
         // مواليد
-        '<div style="font-size:12px;color:#475569;font-weight:700;">مواليد '+year+'</div>'+
+        '<div style="display:flex;justify-content:flex-end;">'+
+          '<div style="background:#fff1f2;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;color:#b81d22;direction:rtl;">📅 مواليد '+year+'</div>'+
+        '</div>'+
 
       '</div>'+
     '</div>'+
 
-    // شريط أبيض سفلي
-    '<div style="background:#0f172a;padding:6px 14px;display:flex;align-items:center;justify-content:space-between;">'+
-      '<div style="font-size:10px;color:#d4af37;font-weight:900;">⚽ أكاديمية الشمالي</div>'+
-      '<div style="display:flex;gap:3px;">'+
-        '<div style="width:8px;height:8px;background:#b81d22;border-radius:50%;"></div>'+
-        '<div style="width:8px;height:8px;background:#fff;border-radius:50%;"></div>'+
-        '<div style="width:8px;height:8px;background:#b81d22;border-radius:50%;"></div>'+
+    // شريط سفلي داكن
+    '<div style="height:2px;background:#d4af37;"></div>'+
+    '<div style="background:#0f172a;padding:7px 14px;display:flex;align-items:center;justify-content:space-between;">'+
+      '<div style="display:flex;gap:5px;align-items:center;">'+
+        '<div style="width:7px;height:7px;background:#b81d22;border-radius:50%;"></div>'+
+        '<div style="width:7px;height:7px;background:#fff;border-radius:50%;"></div>'+
+        '<div style="width:7px;height:7px;background:#b81d22;border-radius:50%;"></div>'+
       '</div>'+
+      '<div style="font-size:12px;font-weight:900;color:#d4af37;direction:rtl;">⚽ أكاديمية الشمالي</div>'+
     '</div>'+
 
   '</div>';
