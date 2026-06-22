@@ -4754,9 +4754,13 @@ function showRegStep3(){
   }
 
   html +=
+    (playerCount>0?
+      '<button onclick="submitTournReg()" id="saveRegBtn" style="width:100%;margin-bottom:10px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;box-shadow:0 4px 14px rgba(22,163,74,.35);">'+
+        '<i class="fas fa-save"></i> حفظ وإرسال التسجيل ('+playerCount+' لاعب)'+
+      '</button>':'')+
     '<div style="display:flex;gap:10px;">'+
       '<button onclick="showRegStep2()" style="flex:0 0 auto;padding:12px 16px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-arrow-right"></i> رجوع</button>'+
-      (playerCount>0?'<button onclick="showRegStep4()" style="flex:1;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">مراجعة وإرسال <i class="fas fa-arrow-left"></i></button>':'')+
+      (playerCount>0?'<button onclick="showRegStep4()" style="flex:1;background:#e0f2fe;color:#0369a1;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">مراجعة البطاقات <i class="fas fa-eye"></i></button>':'')+
     '</div>'+
     '</div>';
 
