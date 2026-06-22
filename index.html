@@ -4973,30 +4973,27 @@ function submitTournReg(){
   var regId = _regData.regId || window._currentRegId || ('REG-'+Date.now());
   window._currentRegId = regId;
 
-  // رفع الصور والوثائق
-  var uploads = _regData.players.map(function(p, i){
-    var tasks = [];
-    // رفع صورة اللاعب
-    if(p.photoB64){
-      var photoBlob = dataURLtoBlob(p.photoB64);
-      tasks.push(uploadFileBlob(photoBlob, 'photo_'+regId+'_'+i));
-    } else tasks.push(Promise.resolve(''));
-    // رفع الوثيقة
-    if(p.docB64){
-      var docBlob = dataURLtoBlob(p.docB64);
-      tasks.push(uploadFileBlob(docBlob, 'doc_'+regId+'_'+i));
-    } else tasks.push(Promise.resolve(''));
-    return Promise.all(tasks);
-  });
-
-  // رفع شعار الأكاديمية
-  var logoUpload = _regData.logoB64
-    ? uploadFileBlob(dataURLtoBlob(_regData.logoB64), 'logo_'+regId)
+  // ضغط صور اللاعبين أولاً (base64 مصغّرة للتخزين في الشيت)
+  var compressPhotos = Promise.all(_regData.players.map(function(p){
+    return p.photoB64 ? compressImageB64(p.photoB64, 120, 160, 0.7) : Promise.resolve('');
+  }));
+  var compressLogo = _regData.logoB64
+    ? compressImageB64(_regData.logoB64, 80, 80, 0.75)
     : Promise.resolve('');
 
-  Promise.all([Promise.all(uploads), logoUpload]).then(function(res){
-    var fileIds = res[0];
-    var logoId  = res[1];
+  // رفع الوثائق فقط إلى Drive (للأرشيف)
+  var uploads = _regData.players.map(function(p, i){
+    if(p.docB64){
+      var docBlob = dataURLtoBlob(p.docB64);
+      return uploadFileBlob(docBlob, 'doc_'+regId+'_'+i);
+    }
+    return Promise.resolve('');
+  });
+
+  Promise.all([compressPhotos, compressLogo, Promise.all(uploads)]).then(function(res){
+    var photoB64s = res[0];
+    var logoB64   = res[1];
+    var docIds    = res[2];
     var rows = _regData.players.map(function(p, i){
       return {
         'معرف التسجيل': regId,
@@ -5006,11 +5003,11 @@ function submitTournReg(){
         'اسم الأكاديمية': _regData.acad,
         'مسؤول الأكاديمية': _regData.mgr,
         'واتساب المسؤول': _regData.phone,
-        'شعار الأكاديمية': logoId ? 'https://drive.google.com/thumbnail?id='+logoId+'&sz=w200' : '',
+        'شعار الأكاديمية': logoB64 || '',
         'اسم اللاعب': p.name,
         'سنة الميلاد': p.year,
-        'صورة اللاعب': fileIds[i][0] ? 'https://drive.google.com/thumbnail?id='+fileIds[i][0]+'&sz=w400' : '',
-        'وثيقة الهوية': fileIds[i][1] ? 'https://drive.google.com/file/d/'+fileIds[i][1]+'/view' : '',
+        'صورة اللاعب': photoB64s[i] || '',
+        'وثيقة الهوية': docIds[i] ? 'https://drive.google.com/file/d/'+docIds[i]+'/view' : '',
         'رقم اللاعب': i+1,
         'الحالة': 'مسجّل',
         'التاريخ': new Date().toISOString()
@@ -5089,6 +5086,23 @@ function sendParentLinkWA(link, tname){
 function sendManageLinkWA(link, pin, tname, acad){
   var msg = '🛡️ *رابط إدارة أكاديميتك*\n\n🏆 البطولة: '+tname+'\n🏫 الأكاديمية: '+acad+'\n\n🔗 رابط الإدارة:\n'+link+'\n\n🔑 رمزك السري: *'+pin+'*\n\n⚠️ لا تشارك هذا الرابط مع أحد — احتفظ به لنفسك';
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+function compressImageB64(b64, maxW, maxH, quality){
+  return new Promise(function(resolve){
+    var img = new Image();
+    img.onload = function(){
+      var w = img.width, h = img.height;
+      var scale = Math.min(maxW/w, maxH/h, 1);
+      var cw = Math.round(w*scale), ch = Math.round(h*scale);
+      var c = document.createElement('canvas');
+      c.width = cw; c.height = ch;
+      c.getContext('2d').drawImage(img, 0, 0, cw, ch);
+      resolve(c.toDataURL('image/jpeg', quality||0.7));
+    };
+    img.onerror = function(){ resolve(b64); };
+    img.src = b64;
+  });
 }
 
 function dataURLtoBlob(dataURL){
