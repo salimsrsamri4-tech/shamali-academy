@@ -4127,8 +4127,10 @@ function renderTournaments(){
       '<div style="font-size:20px;font-weight:900;">إدارة البطولات</div>'+
       '<div style="font-size:11px;opacity:.7;margin-top:4px;">إنشاء وإدارة البطولات الكروية</div></div>'+
       '<div style="padding:16px;">'+
-      '<button onclick="showCreateTournament()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:16px;">'+
-      '<i class="fas fa-plus"></i> إنشاء بطولة جديدة</button>';
+      '<button onclick="showCreateTournament()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:8px;">'+
+      '<i class="fas fa-plus"></i> إنشاء بطولة جديدة</button>'+
+      '<button onclick="testGasConnection()" style="width:100%;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:12px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:16px;">'+
+      '<i class="fas fa-wifi"></i> اختبار الاتصال بجوجل شيت</button>';
 
     if(!tournaments.length){
       html += '<div style="text-align:center;padding:32px;color:#64748b;">لا توجد بطولات بعد</div>';
@@ -4209,6 +4211,85 @@ function sendBothLinksWA(regLink, acadLink, name){
     '━━━━━━━━━━━━━━━━\n'+
     '⚽ أكاديمية الشمالي لكرة القدم';
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+function testGasConnection(){
+  var out = document.createElement('div');
+  out.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  out.innerHTML = '<div style="background:#fff;border-radius:16px;width:100%;max-width:420px;overflow:hidden;">'+
+    '<div style="background:#1e3a5f;padding:14px 18px;color:#fff;font-size:14px;font-weight:900;">🔌 اختبار الاتصال</div>'+
+    '<div style="padding:16px;" id="gasTestBody"><div style="text-align:center;padding:20px;color:#64748b;">جاري الاختبار...</div></div>'+
+    '<div style="padding:12px 16px;border-top:1px solid #e2e8f0;text-align:center;">'+
+      '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:#f1f5f9;color:#475569;border:none;border-radius:8px;padding:9px 24px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">إغلاق</button>'+
+    '</div></div>';
+  document.body.appendChild(out);
+
+  var results = [];
+  var body = document.getElementById('gasTestBody');
+
+  function show(){
+    body.innerHTML = results.map(function(r){
+      return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;">'+
+        '<div style="font-size:18px;flex-shrink:0;">'+(r.ok?'✅':'❌')+'</div>'+
+        '<div><div style="font-size:13px;font-weight:700;color:'+(r.ok?'#16a34a':'#b81d22')+';">'+r.title+'</div>'+
+        '<div style="font-size:11px;color:#64748b;margin-top:2px;">'+r.detail+'</div></div></div>';
+    }).join('')+
+    (results.length<3?'<div style="text-align:center;padding:12px;color:#64748b;font-size:12px;">جاري المزيد من الاختبارات...</div>':'');
+  }
+
+  // 1. اختبار قراءة البطولات
+  fetch(CONFIG.GAS_URL+'?sheet=البطولات&nocache='+Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      results.push({ok:true, title:'قراءة البيانات ✓', detail:'تم الاتصال بـ Google Sheets بنجاح — '+(Array.isArray(d)?d.length:0)+' بطولة'});
+      show();
+    }).catch(function(e){
+      results.push({ok:false, title:'فشل قراءة البيانات', detail:'تحقق من أن GAS_URL صحيح ومفعّل: '+e.message});
+      show();
+    });
+
+  // 2. اختبار الكتابة — صف تجريبي
+  setTimeout(function(){
+    fetch(CONFIG.GAS_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'append', sheet:'_test_connection', data:[{test:'ping', time:new Date().toISOString()}]})
+    }).then(function(){
+      results.push({ok:true, title:'إرسال البيانات ✓', detail:'الإرسال إلى GAS يعمل (no-cors — لا يمكن التحقق من الاستقبال الفعلي)'});
+      show();
+    }).catch(function(e){
+      results.push({ok:false, title:'فشل إرسال البيانات', detail:e.message});
+      show();
+    });
+  }, 1000);
+
+  // 3. اختبار رابط الرفع
+  setTimeout(function(){
+    fetch(CONFIG.UPLOAD_URL, {method:'POST', body: JSON.stringify({ping:true})})
+      .then(function(r){ return r.json(); })
+      .then(function(){
+        results.push({ok:true, title:'رفع الملفات ✓', detail:'UPLOAD_URL يستجيب بشكل صحيح'});
+        show();
+      }).catch(function(){
+        results.push({ok:null, title:'رفع الملفات — غير محدد', detail:'تعذّر التحقق من UPLOAD_URL (قد يكون طبيعياً)'});
+        show();
+      });
+  }, 2000);
+
+  // تشخيص إضافي: عرض الأعمدة الموجودة في الأكاديميات المسجلة
+  setTimeout(function(){
+    fetch(CONFIG.GAS_URL+'?sheet=الأكاديميات المسجلة&nocache='+Date.now())
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var count = Array.isArray(d)?d.length:0;
+        var cols = count>0?Object.keys(d[0]).join(' | '):'(فارغ)';
+        results.push({ok:count>=0, title:'شيت الأكاديميات: '+(count>0?count+' سجل':'فارغ أو غير موجود'), detail:'الأعمدة: '+cols.substring(0,120)});
+        show();
+      }).catch(function(){
+        results.push({ok:false, title:'شيت "الأكاديميات المسجلة" غير موجود!', detail:'أضف التبويب في جوجل شيت بالاسم الدقيق: الأكاديميات المسجلة'});
+        show();
+      });
+  }, 1500);
 }
 
 function showCreateTournament(){
