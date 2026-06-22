@@ -6190,6 +6190,7 @@ function showAcadManageDashboard(acad, tid, acid){
     var players = (Array.isArray(rows)?rows:[]).filter(function(r){
       return r['معرف التسجيل']===acid && r['معرف البطولة']===tid;
     });
+    window._managePlayers = players;
 
     var maxP = parseInt((window._manageAcadData||{})['الحد الأقصى للاعبين']||'20');
     var locked = isRegLocked(window._manageAcadData||{});
@@ -6228,11 +6229,17 @@ function showAcadManageDashboard(acad, tid, acid){
         (!locked?'<button onclick="resumeAndContinue(\''+acid+'\')" style="width:100%;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">▶️ استكمال التسجيل وإرسال اللاعبين</button>':'')+'</div>';
     }
 
-    // زر إضافة لاعب جديد
+    // أزرار الإجراءات
+    html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">';
     if(!locked && players.length < maxP){
-      html += '<button onclick="showAddPlayerModal(\''+acid+'\',\''+tid+'\')" style="width:100%;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:12px;">'+
+      html += '<button onclick="showAddPlayerModal(\''+acid+'\',\''+tid+'\')" style="width:100%;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
         '<i class="fas fa-plus"></i> إضافة لاعب جديد / بديل</button>';
     }
+    if(players.length > 0){
+      html += '<button onclick="downloadMyCards()" style="width:100%;background:linear-gradient(135deg,#d4af37,#b8960c);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
+        '<i class="fas fa-id-card"></i> تحميل بطاقات لاعبيّ</button>';
+    }
+    html += '</div>';
 
     html += '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:10px;">لاعبو الأكاديمية</div>';
 
@@ -6755,6 +6762,37 @@ function buildCardHTML(p, num, tname, safeId){
       '</div>'+
     '</div>'+
   '</div>';
+}
+
+function downloadMyCards(){
+  var players = window._managePlayers || [];
+  var acad    = (window._manageAcadData||{})['اسم الأكاديمية'] || 'الأكاديمية';
+  var tname   = (window._manageAcadData||{})['اسم البطولة']   || window._cardsTname || '';
+  if(!players.length){ alert('لا يوجد لاعبون لتحميل بطاقاتهم'); return; }
+
+  showL(true);
+  var W=856, H=540, GAP=20, PAD=20;
+  var totalH = players.length*(H+GAP)+PAD*2;
+  var canvas = document.createElement('canvas');
+  canvas.width=W+PAD*2; canvas.height=totalH;
+  var ctx=canvas.getContext('2d');
+  ctx.fillStyle='#f1f5f9';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  var pending=players.length;
+  players.forEach(function(p,i){
+    var y=PAD+i*(H+GAP);
+    drawCardOnCanvas(ctx,p,i+1,tname,PAD,y,W,H,function(){
+      pending--;
+      if(pending===0){
+        showL(false);
+        var a=document.createElement('a');
+        a.download='بطاقات-'+acad+'.png';
+        a.href=canvas.toDataURL('image/png');
+        a.click();
+      }
+    });
+  });
 }
 
 function downloadAcadCards(safeId, acadName){
