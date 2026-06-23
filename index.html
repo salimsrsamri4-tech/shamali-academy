@@ -4192,11 +4192,11 @@ function copyTournLink(link){
 
 function sendTournWA(link, name){
   var msg = encodeURIComponent('🏆 دعوة تسجيل في بطولة *'+name+'*\n\nللتسجيل وإدخال بيانات اللاعبين:\n'+link+'\n\n⚽ أكاديمية الشمالي لكرة القدم');
-  window.open('https://wa.me/?text='+msg,'_blank');
+  window.open('https://api.whatsapp.com/send?text='+msg,'_blank');
 }
 function sendAcadListWA(link, name){
   var msg = encodeURIComponent('🏫 *الأكاديميات المشاركة — '+name+'*\n\nلإدارة لاعبي أكاديميتك ادخل عبر الرابط التالي:\n'+link+'\n\n🔑 ستحتاج رمزك السري (PIN) عند الدخول\n\n⚽ أكاديمية الشمالي لكرة القدم');
-  window.open('https://wa.me/?text='+msg,'_blank');
+  window.open('https://api.whatsapp.com/send?text='+msg,'_blank');
 }
 function sendBothLinksWA(regLink, acadLink, name){
   var msg = '🏆 *'+name+'*\n\n'+
@@ -4210,7 +4210,7 @@ function sendBothLinksWA(regLink, acadLink, name){
     acadLink+'\n'+
     '━━━━━━━━━━━━━━━━\n'+
     '⚽ أكاديمية الشمالي لكرة القدم';
-  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+  window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(msg),'_blank');
 }
 
 function testGasConnection(){
@@ -5114,11 +5114,11 @@ function copyParentLink(link){
 }
 function sendParentLinkWA(link, tname){
   var msg = '🏆 *'+tname+'*\n\nعزيزي ولي الأمر،\nيرجى تسجيل بيانات نجلك في البطولة عبر الرابط التالي:\n\n'+link+'\n\n📋 المطلوب: الاسم الثلاثي + سنة الميلاد + صورة بالزي + وثيقة الهوية';
-  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+  window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(msg),'_blank');
 }
 function sendManageLinkWA(link, pin, tname, acad){
   var msg = '🛡️ *رابط إدارة أكاديميتك*\n\n🏆 البطولة: '+tname+'\n🏫 الأكاديمية: '+acad+'\n\n🔗 رابط الإدارة:\n'+link+'\n\n🔑 رمزك السري: *'+pin+'*\n\n⚠️ لا تشارك هذا الرابط مع أحد — احتفظ به لنفسك';
-  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+  window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(msg),'_blank');
 }
 
 function compressImageB64(b64, maxW, maxH, quality){
@@ -7247,7 +7247,7 @@ function captureCardsAsImage(players, tname, filename, mode){
               // واتساب: تحميل ثم إرشاد
               var a = document.createElement('a'); a.download=filename+'.png';
               a.href=URL.createObjectURL(blob); a.click();
-              setTimeout(function(){ window.open('https://wa.me/?text='+encodeURIComponent('بطاقات اللاعبين: '+tname),'_blank'); },800);
+              setTimeout(function(){ window.open('https://api.whatsapp.com/send?text='+encodeURIComponent('بطاقات اللاعبين: '+tname),'_blank'); },800);
             }
           },'image/png');
           return;
