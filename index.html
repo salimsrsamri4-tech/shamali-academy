@@ -5013,9 +5013,12 @@ function submitTournReg(){
         'التاريخ': new Date().toISOString()
       };
     });
-    // حفظ الصور في localStorage للعرض الفوري بدون قيود Drive
-    photoB64s.forEach(function(b64, i){
-      if(b64) try{ localStorage.setItem('pphoto_'+regId+'_'+i, b64); }catch(e){}
+    // حفظ الصور في localStorage بمفتاح فريد لكل لاعب (الاسم+معرف التسجيل)
+    _regData.players.forEach(function(p, i){
+      var b64 = photoB64s[i]; if(!b64) return;
+      var fakeP = {'معرف اللاعب':'', 'اسم اللاعب':p.name, 'معرف التسجيل':regId};
+      _savePlayerPhoto(fakeP, b64);
+      try{ localStorage.setItem('pphoto_'+regId+'_'+i, b64); }catch(e){} // توافق قديم
     });
     if(logoB64) try{ localStorage.setItem('plogo_'+regId, logoB64); }catch(e){}
 
@@ -5026,23 +5029,28 @@ function submitTournReg(){
   }).catch(function(e){ showL(false); console.error(e); alert('حدث خطأ، حاول مجدداً'); });
 }
 
-// استرجاع صورة اللاعب: localStorage أولاً ثم الشيت
+// مفتاح localStorage فريد لكل لاعب بالاسم
+function _pkey(p){ return 'pphoto_'+(p['معرف اللاعب']||((p['اسم اللاعب']||'').replace(/\s+/g,'_')+'_'+(p['معرف التسجيل']||''))); }
+
 function getPlayerPhoto(p){
-  var rid  = p['معرف التسجيل']||'';
-  var rnum = parseInt(p['رقم اللاعب']||1) - 1;
-  var cached = '';
-  try{ cached = localStorage.getItem('pphoto_'+rid+'_'+rnum)||''; }catch(e){}
-  if(cached) return cached;
-  var sheet = p['صورة اللاعب']||'';
-  return (sheet && sheet.startsWith('data:')) ? sheet : '';
+  var v=''; try{ v=localStorage.getItem(_pkey(p))||''; }catch(e){}
+  if(v) return v;
+  // توافق مع المفتاح القديم
+  var rid=p['معرف التسجيل']||'', rnum=parseInt(p['رقم اللاعب']||1)-1;
+  try{ v=localStorage.getItem('pphoto_'+rid+'_'+rnum)||''; }catch(e){}
+  if(v) return v;
+  var sheet=p['صورة اللاعب']||'';
+  return (sheet&&sheet.startsWith('data:'))?sheet:'';
 }
 function getAcadLogo(p){
-  var rid = p['معرف التسجيل']||'';
-  var cached = '';
-  try{ cached = localStorage.getItem('plogo_'+rid)||''; }catch(e){}
-  if(cached) return cached;
-  var sheet = p['شعار الأكاديمية']||'';
-  return (sheet && sheet.startsWith('data:')) ? sheet : '';
+  var rid=p['معرف التسجيل']||'', v='';
+  try{ v=localStorage.getItem('plogo_'+rid)||''; }catch(e){}
+  if(v) return v;
+  var sheet=p['شعار الأكاديمية']||'';
+  return (sheet&&sheet.startsWith('data:'))?sheet:'';
+}
+function _savePlayerPhoto(p, b64){
+  try{ localStorage.setItem(_pkey(p), b64); }catch(e){}
 }
 
 function showCardsPage(){
@@ -6380,8 +6388,14 @@ function showAcadManageDashboard(acad, tid, acid){
         '<i class="fas fa-plus"></i> إضافة لاعب جديد / بديل</button>';
     }
     if(players.length > 0){
-      html += '<button onclick="downloadMyCards()" style="width:100%;background:linear-gradient(135deg,#d4af37,#b8960c);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
-        '<i class="fas fa-id-card"></i> تحميل بطاقات لاعبيّ</button>';
+      html += '<button onclick="downloadMyCards()" style="width:100%;background:linear-gradient(135deg,#d4af37,#b8960c);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:8px;">'+
+        '<i class="fas fa-download"></i> تحميل البطاقات (PNG)</button>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
+        '<button onclick="shareMyCards()" style="background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
+          '<i class="fab fa-whatsapp"></i> مشاركة واتساب</button>'+
+        '<button onclick="printMyCards()" style="background:linear-gradient(135deg,#334155,#1e293b);color:#fff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
+          '<i class="fas fa-file-pdf"></i> طباعة / PDF</button>'+
+      '</div>';
     }
     html += '</div>';
 
@@ -6673,10 +6687,8 @@ function saveEditManagePlayer(pid, acid, tid){
   }).then(function(){
     if(idx >= 0){
       players[idx]['معرف اللاعب'] = newPid;
-      // حفظ الصورة الجديدة في localStorage بالـ ID الجديد
-      var newPhoto = window._editPhotoB64 || (players[idx]||{})['صورة اللاعب']||'';
-      var newRnum  = parseInt((players[idx]||{})['رقم اللاعب']||1) - 1;
-      if(newPhoto) try{ localStorage.setItem('pphoto_'+acid+'_'+newRnum, newPhoto); }catch(e){}
+      var newPhoto = window._editPhotoB64||(players[idx]||{})['صورة اللاعب']||'';
+      if(newPhoto) _savePlayerPhoto(players[idx], newPhoto);
     }
     apiClearCache('لاعبو البطولة');
     apiClearCache('حذف اللاعبين');
@@ -6722,7 +6734,12 @@ function showAcadManageDashboardFromCache(){
 
   html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">';
   if(!locked && players.length < maxP) html += '<button onclick="showAddPlayerModal(\''+acid+'\',\''+tid+'\')" style="width:100%;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-plus"></i> إضافة لاعب جديد / بديل</button>';
-  if(players.length>0) html += '<button onclick="downloadMyCards()" style="width:100%;background:linear-gradient(135deg,#d4af37,#b8960c);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-id-card"></i> تحميل بطاقات لاعبيّ</button>';
+  if(players.length>0) html +=
+    '<button onclick="downloadMyCards()" style="width:100%;background:linear-gradient(135deg,#d4af37,#b8960c);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:8px;"><i class="fas fa-download"></i> تحميل البطاقات (PNG)</button>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0;">'+
+      '<button onclick="shareMyCards()" style="background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fab fa-whatsapp"></i> مشاركة واتساب</button>'+
+      '<button onclick="printMyCards()" style="background:linear-gradient(135deg,#334155,#1e293b);color:#fff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-file-pdf"></i> طباعة / PDF</button>'+
+    '</div>';
   html += '</div>';
 
   html += '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:10px;">لاعبو الأكاديمية</div>';
@@ -7167,7 +7184,27 @@ function downloadMyCards(){
   var acad    = (window._manageAcadData||{})['اسم الأكاديمية'] || 'الأكاديمية';
   var tname   = (window._manageAcadData||{})['اسم البطولة']   || window._cardsTname || '';
   if(!players.length){ alert('لا يوجد لاعبون لتحميل بطاقاتهم'); return; }
-  captureCardsAsImage(players, tname, 'بطاقات-'+acad);
+  captureCardsAsImage(players, tname, 'بطاقات-'+acad, 'download');
+}
+function shareMyCards(){
+  var players = window._managePlayers || [];
+  var acad    = (window._manageAcadData||{})['اسم الأكاديمية'] || 'الأكاديمية';
+  var tname   = (window._manageAcadData||{})['اسم البطولة']   || window._cardsTname || '';
+  if(!players.length){ alert('لا يوجد لاعبون'); return; }
+  captureCardsAsImage(players, tname, 'بطاقات-'+acad, 'share');
+}
+function printMyCards(){
+  var players = window._managePlayers || [];
+  var tname   = (window._manageAcadData||{})['اسم البطولة'] || window._cardsTname || '';
+  if(!players.length){ alert('لا يوجد لاعبون'); return; }
+  var html = '<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">'+
+    '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">'+
+    '<style>body{margin:0;padding:16px;background:#f1f5f9;font-family:Cairo,sans-serif;}'+
+    '.card{break-inside:avoid;margin-bottom:16px;page-break-inside:avoid;}'+
+    '@media print{body{padding:0;}}</style></head><body>';
+  players.forEach(function(p,i){ html += '<div class="card">'+buildCardHTML(p,i+1,tname,'')+'</div>'; });
+  html += '<script>window.onload=function(){window.print();}<\/script></body></html>';
+  var w = window.open('','_blank'); w.document.write(html); w.document.close();
 }
 
 function downloadAcadCards(safeId, acadName){
@@ -7178,9 +7215,8 @@ function downloadAcadCards(safeId, acadName){
   captureCardsAsImage(players, tname, 'بطاقات-'+acadName);
 }
 
-function captureCardsAsImage(players, tname, filename){
+function captureCardsAsImage(players, tname, filename, mode){
   loadHtml2Canvas(function(){
-    // بناء حاوية مؤقتة خارج الشاشة
     var wrap = document.createElement('div');
     wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:428px;background:#f1f5f9;padding:16px;display:flex;flex-direction:column;gap:14px;z-index:-1;';
     players.forEach(function(p, i){
@@ -7201,6 +7237,22 @@ function captureCardsAsImage(players, tname, filename){
       }).then(function(canvas){
         showL(false);
         document.body.removeChild(wrap);
+
+        if(mode === 'share'){
+          canvas.toBlob(function(blob){
+            var file = new File([blob], filename+'.png', {type:'image/png'});
+            if(navigator.canShare && navigator.canShare({files:[file]})){
+              navigator.share({files:[file], title: tname, text: 'بطاقات اللاعبين — '+tname});
+            } else {
+              // واتساب: تحميل ثم إرشاد
+              var a = document.createElement('a'); a.download=filename+'.png';
+              a.href=URL.createObjectURL(blob); a.click();
+              setTimeout(function(){ window.open('https://wa.me/?text='+encodeURIComponent('بطاقات اللاعبين: '+tname),'_blank'); },800);
+            }
+          },'image/png');
+          return;
+        }
+
         var a = document.createElement('a');
         a.download = filename + '.png';
         a.href = canvas.toDataURL('image/png');
