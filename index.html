@@ -6380,7 +6380,11 @@ function showAcadManageDashboard(acad, tid, acid){
               '<div style="font-size:11px;color:#64748b;margin-top:2px;">مواليد '+p['سنة الميلاد']+'</div>'+
               '<div style="display:inline-block;margin-top:4px;background:'+statusBg+';color:'+statusColor+';font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">'+status+'</div>'+
             '</div>'+
-            (!locked?'<button onclick="deleteManagePlayer(\''+p['معرف اللاعب']+'\',\''+p['اسم اللاعب']+'\',\''+acid+'\',\''+tid+'\')" style="background:#fff0f0;color:#b81d22;border:1.5px solid #fecaca;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;flex-shrink:0;"><i class="fas fa-trash"></i> حذف</button>':'')+
+            (!locked?
+              '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">'+
+                '<button onclick="editManagePlayer(\''+p['معرف اللاعب']+'\',\''+acid+'\',\''+tid+'\')" style="background:#e0f2fe;color:#0369a1;border:1.5px solid #bae6fd;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-edit"></i> تعديل</button>'+
+                '<button onclick="deleteManagePlayer(\''+p['معرف اللاعب']+'\',\''+p['اسم اللاعب']+'\',\''+acid+'\',\''+tid+'\')" style="background:#fff0f0;color:#b81d22;border:1.5px solid #fecaca;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-trash"></i> حذف</button>'+
+              '</div>':'')+
           '</div>';
       });
     }
@@ -6540,6 +6544,117 @@ function deleteManagePlayer(pid, pname, acid, tid){
   });
 }
 
+function editManagePlayer(pid, acid, tid){
+  var players = window._managePlayers || [];
+  var p = players.find(function(x){ return (x['معرف اللاعب']||'') === pid; });
+  if(!p){ alert('لم يُعثر على اللاعب'); return; }
+
+  var old = document.getElementById('editManageModal');
+  if(old) old.remove();
+
+  var years = '';
+  for(var y=2005;y<=2020;y++) years += '<option value="'+y+'"'+(p['سنة الميلاد']==y?' selected':'')+'>'+y+'</option>';
+
+  var modal = document.createElement('div');
+  modal.id = 'editManageModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML =
+    '<div style="background:#fff;border-radius:18px;width:100%;max-width:400px;overflow:hidden;font-family:Cairo,sans-serif;">'+
+      '<div style="background:linear-gradient(135deg,#0369a1,#0284c7);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">'+
+        '<button onclick="document.getElementById(\'editManageModal\').remove()" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:16px;cursor:pointer;line-height:28px;text-align:center;">×</button>'+
+        '<div style="font-size:14px;font-weight:900;color:#fff;">تعديل بيانات اللاعب</div>'+
+      '</div>'+
+      '<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">'+
+
+        // معاينة الصورة الحالية
+        '<div style="text-align:center;" id="editPhotoWrap">'+
+          (p['صورة اللاعب'] && p['صورة اللاعب'].startsWith('data:')
+            ? '<img src="'+p['صورة اللاعب']+'" style="width:80px;height:80px;object-fit:cover;border-radius:50%;border:3px solid #0369a1;margin-bottom:6px;">'
+            : '<div style="width:80px;height:80px;background:#f1f5f9;border-radius:50%;border:3px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 6px;">👤</div>')+
+          '<label style="font-size:12px;color:#0369a1;font-weight:700;cursor:pointer;" onclick="document.getElementById(\'editPhotoFile\').click()"><i class="fas fa-camera"></i> تغيير الصورة</label>'+
+          '<input type="file" id="editPhotoFile" accept="image/*" style="display:none;" onchange="previewEditPhoto(this)">'+
+        '</div>'+
+
+        '<div>'+
+          '<label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:4px;">الاسم الثلاثي</label>'+
+          '<input id="editPName" class="inp" value="'+p['اسم اللاعب']+'" style="width:100%;box-sizing:border-box;">'+
+        '</div>'+
+        '<div>'+
+          '<label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:4px;">سنة الميلاد</label>'+
+          '<select id="editPYear" class="inp" style="width:100%;box-sizing:border-box;">'+years+'</select>'+
+        '</div>'+
+
+        '<button onclick="saveEditManagePlayer(\''+pid+'\',\''+acid+'\',\''+tid+'\')" style="width:100%;background:linear-gradient(135deg,#0369a1,#0284c7);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;">حفظ التعديلات</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(modal);
+  window._editPhotoB64 = p['صورة اللاعب']||'';
+}
+
+function previewEditPhoto(input){
+  var file = input.files[0]; if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    compressImageB64(e.target.result, 120, 160, 0.75).then(function(b64){
+      window._editPhotoB64 = b64;
+      document.getElementById('editPhotoWrap').innerHTML =
+        '<img src="'+b64+'" style="width:80px;height:80px;object-fit:cover;border-radius:50%;border:3px solid #0369a1;margin-bottom:6px;">'+
+        '<label style="font-size:12px;color:#0369a1;font-weight:700;cursor:pointer;" onclick="document.getElementById(\'editPhotoFile\').click()"><i class="fas fa-camera"></i> تغيير الصورة</label>'+
+        '<input type="file" id="editPhotoFile" accept="image/*" style="display:none;" onchange="previewEditPhoto(this)">';
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveEditManagePlayer(pid, acid, tid){
+  var name = (document.getElementById('editPName')||{}).value||'';
+  var year = (document.getElementById('editPYear')||{}).value||'';
+  name = name.trim();
+  if(!name||!year){ alert('يرجى إدخال الاسم وسنة الميلاد'); return; }
+
+  // تحديث المصفوفة المحلية فوراً
+  var players = window._managePlayers || [];
+  var idx = players.findIndex(function(x){ return (x['معرف اللاعب']||'') === pid; });
+  if(idx >= 0){
+    players[idx]['اسم اللاعب'] = name;
+    players[idx]['سنة الميلاد'] = year;
+    if(window._editPhotoB64) players[idx]['صورة اللاعب'] = window._editPhotoB64;
+  }
+  document.getElementById('editManageModal').remove();
+  showAcadManageDashboardFromCache();
+
+  // حذف القديم وإضافة الجديد في الخلفية
+  var newPid = 'PID-'+Date.now();
+  var p = players[idx] || {};
+  apiAppend('حذف اللاعبين',{
+    'معرف اللاعب': pid, 'اسم اللاعب': p['اسم اللاعب']||'',
+    'معرف الأكاديمية': acid, 'معرف البطولة': tid, 'التاريخ': new Date().toISOString()
+  }).then(function(){
+    return apiAppend('لاعبو البطولة',{
+      'معرف اللاعب': newPid,
+      'معرف التسجيل': acid,
+      'معرف البطولة': tid,
+      'اسم البطولة': p['اسم البطولة']||'',
+      'الفئة': p['الفئة']||'',
+      'اسم الأكاديمية': p['اسم الأكاديمية']||'',
+      'مسؤول الأكاديمية': p['مسؤول الأكاديمية']||'',
+      'واتساب المسؤول': p['واتساب المسؤول']||'',
+      'شعار الأكاديمية': p['شعار الأكاديمية']||'',
+      'اسم اللاعب': name,
+      'سنة الميلاد': year,
+      'صورة اللاعب': window._editPhotoB64 || p['صورة اللاعب']||'',
+      'وثيقة الهوية': p['وثيقة الهوية']||'',
+      'رقم اللاعب': p['رقم اللاعب']||'',
+      'الحالة': 'معلق',
+      'التاريخ': new Date().toISOString()
+    });
+  }).then(function(){
+    if(idx >= 0) players[idx]['معرف اللاعب'] = newPid;
+    apiClearCache('لاعبو البطولة');
+    apiClearCache('حذف اللاعبين');
+  });
+}
+
 function showAcadManageDashboardFromCache(){
   var acad = window._manageAcadData || {};
   var tid  = window._tournamentId  || '';
@@ -6599,7 +6714,11 @@ function showAcadManageDashboardFromCache(){
           '<div style="font-size:11px;color:#64748b;margin-top:2px;">مواليد '+p['سنة الميلاد']+'</div>'+
           '<div style="display:inline-block;margin-top:4px;background:'+sb+';color:'+sc+';font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">'+status+'</div>'+
         '</div>'+
-        (!locked?'<button onclick="deleteManagePlayer(\''+p['معرف اللاعب']+'\',\''+p['اسم اللاعب']+'\',\''+acid+'\',\''+tid+'\')" style="background:#fff0f0;color:#b81d22;border:1.5px solid #fecaca;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;flex-shrink:0;"><i class="fas fa-trash"></i> حذف</button>':'')+
+        (!locked?
+          '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">'+
+            '<button onclick="editManagePlayer(\''+p['معرف اللاعب']+'\',\''+acid+'\',\''+tid+'\')" style="background:#e0f2fe;color:#0369a1;border:1.5px solid #bae6fd;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-edit"></i> تعديل</button>'+
+            '<button onclick="deleteManagePlayer(\''+p['معرف اللاعب']+'\',\''+p['اسم اللاعب']+'\',\''+acid+'\',\''+tid+'\')" style="background:#fff0f0;color:#b81d22;border:1.5px solid #fecaca;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-trash"></i> حذف</button>'+
+          '</div>':'')+
       '</div>';
     });
   }
