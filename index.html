@@ -5024,7 +5024,7 @@ function showRegStep4(){
       '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;" id="s3_cards">';
 
   _regData.players.forEach(function(p,i){
-    html += buildCardHTML(p, i+1, false);
+    html += buildCardHTML(p, i+1, (_currentTournament||{})['اسم البطولة']||'', '');
   });
 
   html +=
@@ -5040,44 +5040,6 @@ function showRegStep4(){
     '</div>';
 
   el.innerHTML = html;
-}
-
-function buildCardHTML(p, num, large){
-  var t = _currentTournament||{};
-  var sz = large ? 'width:100%;max-width:280px;' : 'width:100%;';
-  return '<div style="'+sz+'background:linear-gradient(160deg,#0f172a 0%,#1e3a5f 50%,#0f172a 100%);border-radius:12px;overflow:hidden;position:relative;border:2px solid rgba(212,175,55,.35);">'+
-    // شريط أعلى
-    '<div style="background:linear-gradient(90deg,#b81d22,#7a1015);padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">'+
-      '<div style="font-size:9px;color:rgba(255,255,255,.85);font-weight:900;">⚽ '+(t['اسم البطولة']||'بطولة الشمالي')+'</div>'+
-      '<div style="font-size:10px;color:#d4af37;font-weight:900;">#'+num+'</div>'+
-    '</div>'+
-    // صورة اللاعب
-    '<div style="text-align:center;padding:10px 10px 0;position:relative;">'+
-      '<div style="display:flex;align-items:flex-start;justify-content:space-between;">'+
-        // شعار الأكاديمية
-        '<div style="width:36px;height:36px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,.1);border:1.5px solid rgba(212,175,55,.3);flex-shrink:0;">'+
-          (_regData.logoB64?'<img src="'+_regData.logoB64+'" style="width:100%;height:100%;object-fit:contain;">':
-           '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px;">🛡️</div>')+
-        '</div>'+
-        // صورة اللاعب
-        '<div style="flex:1;display:flex;justify-content:center;">'+
-          '<div style="width:68px;height:68px;border-radius:50%;overflow:hidden;border:3px solid #d4af37;background:#1e3a5f;">'+
-            (p.photoB64?'<img src="'+p.photoB64+'" style="width:100%;height:100%;object-fit:cover;">':
-             '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;">👤</div>')+
-          '</div>'+
-        '</div>'+
-        '<div style="width:36px;"></div>'+
-      '</div>'+
-    '</div>'+
-    // بيانات اللاعب
-    '<div style="padding:8px 10px 10px;text-align:center;">'+
-      '<div style="font-size:12px;font-weight:900;color:#fff;margin-bottom:2px;line-height:1.3;">'+p.name+'</div>'+
-      '<div style="font-size:10px;color:rgba(212,175,55,.9);font-weight:700;">'+p.year+'</div>'+
-      '<div style="font-size:9px;color:rgba(255,255,255,.6);margin-top:3px;font-weight:600;">'+_regData.acad+'</div>'+
-    '</div>'+
-    // شريط ذهبي سفلي
-    '<div style="height:3px;background:linear-gradient(90deg,transparent,#d4af37,transparent);"></div>'+
-  '</div>';
 }
 
 function submitTournReg(){
@@ -5148,9 +5110,10 @@ function submitTournReg(){
 function _pkey(p){ return 'pphoto_'+(p['معرف اللاعب']||((p['اسم اللاعب']||'').replace(/\s+/g,'_')+'_'+(p['معرف التسجيل']||''))); }
 
 function getPlayerPhoto(p){
+  // بيانات التسجيل المحلية (خطوة 3/4)
+  if(p.photoB64) return p.photoB64;
   var v=''; try{ v=localStorage.getItem(_pkey(p))||''; }catch(e){}
   if(v) return v;
-  // توافق مع المفتاح القديم
   var rid=p['معرف التسجيل']||'', rnum=parseInt(p['رقم اللاعب']||1)-1;
   try{ v=localStorage.getItem('pphoto_'+rid+'_'+rnum)||''; }catch(e){}
   if(v) return v;
@@ -5209,7 +5172,7 @@ function showCardsPage(){
     '<div id="cards_grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;">';
 
   _regData.players.forEach(function(p,i){
-    html += buildCardHTML(p, i+1, false);
+    html += buildCardHTML(p, i+1, (_currentTournament||{})['اسم البطولة']||'', '');
   });
 
   html +=
@@ -7205,10 +7168,10 @@ function renderPlayerCards(){
 
 function buildCardHTML(p, num, tname, safeId){
   var photo  = getPlayerPhoto(p);
-  var logo   = getAcadLogo(p);
-  var acad   = p['اسم الأكاديمية']||'';
-  var name   = p['اسم اللاعب']||'';
-  var year   = p['سنة الميلاد']||'';
+  var logo   = getAcadLogo(p) || (window._regData && window._regData.logoB64) || '';
+  var acad   = p['اسم الأكاديمية'] || (window._regData && window._regData.acad) || '';
+  var name   = p['اسم اللاعب']     || p.name  || '';
+  var year   = p['سنة الميلاد']    || p.year  || '';
   var numStr = num < 10 ? '0'+num : ''+num;
   var parts  = name.split(' ');
   var half   = Math.ceil(parts.length/2);
