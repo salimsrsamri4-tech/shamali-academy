@@ -29,11 +29,13 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
 .sidebar.open{right:0;}
 #overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:998;}
 #overlay.show{display:block;}
-.sb-hd{padding:0;border-bottom:2px solid rgba(212,175,55,.3);position:relative;}
-.sb-hd-logo{background:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:center;gap:12px;}
-.sb-hd-logo img{width:62px;height:62px;object-fit:contain;}
-.sb-hd-info{background:linear-gradient(135deg,#1e0505,#3d0a0a);padding:10px 14px;text-align:center;}
-.sb-close{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.15);border:none;color:#333;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;z-index:2;}
+.sb-hd{padding:0;border-bottom:3px solid #b81d22;position:relative;}
+.sb-hd-logo{background:#fff;padding:18px 16px 18px 44px;display:flex;align-items:center;gap:14px;min-height:90px;}
+.sb-hd-logo img{width:70px;height:70px;object-fit:contain;flex-shrink:0;}
+.sb-hd-names{display:flex;flex-direction:column;gap:2px;}
+.sb-hd-ar{font-size:16px;font-weight:900;color:#b81d22;font-family:'Cairo',sans-serif;line-height:1.2;}
+.sb-hd-en{font-size:11px;font-weight:700;color:#555;letter-spacing:.5px;font-family:'Cairo',sans-serif;}
+.sb-close{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.08);border:none;color:#555;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;z-index:2;line-height:26px;text-align:center;}
 .sb-title{font-size:13px;font-weight:900;color:#d4af37;margin:0;}
 .sb-sub{font-size:10px;color:rgba(255,255,255,.5);margin-top:2px;}
 .sb-sec{font-size:9px;color:#d4af37;letter-spacing:1.5px;padding:14px 14px 6px;font-weight:900;text-transform:uppercase;border-top:1px solid rgba(212,175,55,.25);margin-top:4px;display:flex;align-items:center;gap:6px;}
@@ -184,12 +186,11 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   <div class="sb-hd">
     <button class="sb-close" id="sbClose" data-act="closeSb">✕</button>
     <div class="sb-hd-logo">
-      <img src="logo.png" alt="أكاديمية الشمالي" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-      <div style="display:none;font-size:42px;">🦅</div>
-    </div>
-    <div class="sb-hd-info">
-      <div class="sb-title">أكاديمية الشمالي</div>
-      <div class="sb-sub">كرة القدم · سلطنة عُمان</div>
+      <img src="logo.png" alt="أكاديمية الشمالي" onerror="this.style.display='none';">
+      <div class="sb-hd-names">
+        <div class="sb-hd-ar">أكاديمية الشمالي</div>
+        <div class="sb-hd-en">AL-SHAMALI ACADEMY</div>
+      </div>
     </div>
   </div>
   <div class="sb-sec">خدمات ولي الأمر</div>
