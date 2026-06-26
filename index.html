@@ -6488,6 +6488,14 @@ function showAcadManageDashboard(acad, tid, acid){
     }
     html += '</div>';
 
+    // زر رسالة للبطولة
+    var _tname2 = (window._manageAcadData||{})['اسم البطولة'] || '';
+    var _aname2 = acad['اسم الأكاديمية'] || '';
+    html +=
+      '<button onclick="window._acadFbTid=\''+tid+'\';window._acadFbTname=\''+_tname2.replace(/'/g,"&#39;")+'\';window._acadFbAcid=\''+acid+'\';window._acadFbAname=\''+_aname2.replace(/'/g,"&#39;")+'\';go(\'acad_feedback\')" '+
+      'style="width:100%;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:#1e3a5f;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;">'+
+      '<i class="fas fa-envelope" style="color:#b81d22;"></i> إرسال اقتراح / شكوى / ملاحظة للبطولة</button>';
+
     html += '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:10px;">لاعبو الأكاديمية</div>';
 
     if(!players.length && !hasDraft){
