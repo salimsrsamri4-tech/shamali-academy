@@ -2088,6 +2088,8 @@ function renderPage(page) {
     case 'tournament_public': renderTournamentPublic(); break;
     case 'tournament_schedule': if(!sessionStorage.getItem('tournAuth')){ go('tournlogin'); return; } renderScheduleAdmin(); break;
     case 'tourn_update': renderTournUpdate(); break;
+    case 'tourn_suggest': renderTournSuggest(); break;
+    case 'tourn_suggestions': if(!sessionStorage.getItem('tournAuth')){ go('tournlogin'); return; } renderTournSuggestions(); break;
     case 'parent_reg': renderParentReg(); break;
     case 'acad_list': renderAcadList(); break;
     case 'acad_manage': renderAcadManage(); break;
@@ -4172,6 +4174,7 @@ function renderTournaments(){
           '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;">'+
             '<button onclick="viewTournament(\''+id+'\')" style="flex:1;padding:8px;background:#1e3a5f;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">👁 اللاعبون</button>'+
             '<button onclick="window._viewTournId=\''+id+'\';go(\'tournament_public\')" style="flex:1;padding:8px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">🌐 عام</button>'+
+            '<button onclick="window._tournSugTid=\''+id+'\';window._tournSugTname=\''+t['اسم البطولة']+'\';go(\'tourn_suggestions\')" style="flex:1;padding:8px;background:#0e7490;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">💬 الشكاوى</button>'+
             '<button onclick="deleteTournament(\''+id+'\',\''+t['اسم البطولة']+'\')" style="flex:1;padding:8px;background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">🗑 حذف</button>'+
           '</div>'+
           '<button onclick="window._cardsTid=\''+id+'\';window._cardsTname=\''+t['اسم البطولة']+'\';go(\'player_cards\')" style="width:100%;padding:9px;background:linear-gradient(135deg,#d4af37,#b8960c);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;">'+
@@ -6028,6 +6031,12 @@ function renderTournamentPublic(){
     });
     html += '</div>';
 
+    // زر اقتراح أو شكوى
+    html +=
+      '<button onclick="window._tournSugTid=\''+tid+'\';window._tournSugTname=\''+t['اسم البطولة'].replace(/'/g,"&#39;")+'\';window._tournSugAcid=\'\';window._tournSugAcad=\'\';go(\'tourn_suggest\')" '+
+      'style="width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:#475569;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:8px;">'+
+      '💬 إرسال اقتراح أو شكوى</button>';
+
     // جدول الترتيب إذا وُجد
     if(matches.length) html += buildStandingsHTML(tid, matches);
 
@@ -7063,6 +7072,12 @@ function loadAcadDashboard(){
       });
     }
 
+    // زر اقتراح أو شكوى
+    html +=
+      '<button onclick="window._tournSugTid=\''+tid+'\';window._tournSugTname=\''+myReg['اسم البطولة'].replace(/'/g,"&#39;")+'\';window._tournSugAcid=\''+acid+'\';window._tournSugAcad=\''+acadName.replace(/'/g,"&#39;")+'\';go(\'tourn_suggest\')" '+
+      'style="width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:#475569;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;">'+
+      '💬 إرسال اقتراح أو شكوى للإدارة</button>';
+
     // رابط ولي الأمر للمشاركة
     var parentLink = window.location.origin+window.location.pathname+'?tournament='+tid+'&acad='+acid;
     html +=
@@ -7079,6 +7094,127 @@ function loadAcadDashboard(){
     if(container) container.innerHTML = html;
     else el.innerHTML = html;
   }).catch(function(){ showL(false); alert('حدث خطأ'); });
+}
+
+// =====================================================
+// اقتراحات وشكاوى البطولة
+// =====================================================
+function renderTournSuggest(){
+  var el = document.getElementById('content');
+  var tid    = window._tournSugTid   || '';
+  var tname  = window._tournSugTname || 'البطولة';
+  var acid   = window._tournSugAcid  || '';
+  var acad   = window._tournSugAcad  || '';
+  window._tournSugType = 'اقتراح';
+
+  function sugBtn(label, icon, type){
+    return '<button onclick="window._tournSugType=\''+type+'\';document.querySelectorAll(\'.tsug-type-btn\').forEach(function(b){b.style.background=\'#f1f5f9\';b.style.color=\'#475569\'});this.style.background=\'#1e3a5f\';this.style.color=\'#fff\';" '+
+      'class="tsug-type-btn" style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;background:#f1f5f9;color:#475569;">'+icon+' '+label+'</button>';
+  }
+
+  el.innerHTML =
+    '<div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:22px 16px;text-align:center;color:#fff;">'+
+      '<div style="font-size:32px;margin-bottom:6px;">💬</div>'+
+      '<div style="font-size:17px;font-weight:900;">اقتراح أو شكوى</div>'+
+      '<div style="font-size:11px;opacity:.6;margin-top:3px;">'+tname+'</div>'+
+    '</div>'+
+    '<div style="padding:16px;">'+
+      '<div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:14px;">'+
+        '<div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:8px;">نوع الرسالة</div>'+
+        '<div style="display:flex;gap:6px;margin-bottom:14px;">'+
+          sugBtn('اقتراح','💡','اقتراح')+
+          sugBtn('شكوى','⚠️','شكوى')+
+          sugBtn('ملاحظة','📝','ملاحظة')+
+          sugBtn('شكر','🏅','شكر وتقدير')+
+        '</div>'+
+        '<label class="lbl">الاسم (اختياري)</label>'+
+        '<input class="inp" id="tsugName" placeholder="اسمك أو اسم الأكاديمية" value="'+acad+'" style="margin-bottom:10px;">'+
+        '<label class="lbl">نص الرسالة *</label>'+
+        '<textarea class="inp" id="tsugText" rows="4" placeholder="اكتب اقتراحك أو شكواك هنا..." style="resize:none;margin-bottom:12px;"></textarea>'+
+        '<button onclick="submitTournSuggest(\''+tid+'\',\''+tname+'\')" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;"><i class="fas fa-paper-plane"></i> إرسال</button>'+
+        '<div id="tsugMsg" style="display:none;margin-top:10px;"></div>'+
+      '</div>'+
+    '</div>';
+
+  // تفعيل زر "اقتراح" افتراضياً
+  setTimeout(function(){
+    var btns = document.querySelectorAll('.tsug-type-btn');
+    if(btns[0]){ btns[0].style.background='#1e3a5f'; btns[0].style.color='#fff'; }
+  }, 50);
+}
+
+function submitTournSuggest(tid, tname){
+  var text = (document.getElementById('tsugText')||{}).value||'';
+  text = text.trim();
+  if(!text){ alert('يرجى كتابة نص الرسالة'); return; }
+  var type = window._tournSugType || 'اقتراح';
+  var name = ((document.getElementById('tsugName')||{}).value||'').trim() || 'مجهول';
+  var row = {
+    'التاريخ': new Date().toLocaleString('ar-SA'),
+    'النوع': type,
+    'اسم ولي الأمر': name,
+    'اسم اللاعب': '-',
+    'الرسالة': text,
+    'الحالة': 'جديد',
+    'معرف البطولة': tid,
+    'اسم البطولة': tname
+  };
+  var btn = document.querySelector('#content button[onclick*="submitTournSuggest"]');
+  if(btn){ btn.disabled=true; btn.textContent='جارٍ الإرسال...'; }
+  apiAppend('المقترحات والملاحظات', row).then(function(){
+    var msg = document.getElementById('tsugMsg');
+    if(msg){
+      msg.style.display='block';
+      msg.innerHTML='<div style="background:#ecfdf5;border:1.5px solid #16a34a;border-radius:10px;padding:14px;color:#15803d;font-weight:800;font-size:13px;">'+
+        '✅ تم إرسال رسالتك بنجاح!<br><span style="font-size:11px;font-weight:600;color:#64748b;">شكراً لتواصلك معنا 🦅</span></div>';
+    }
+    if(btn) btn.style.display='none';
+  }).catch(function(e){
+    if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane"></i> إرسال'; }
+    var msg = document.getElementById('tsugMsg');
+    if(msg){
+      msg.style.display='block';
+      msg.innerHTML='<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:12px;color:#b91c1c;font-size:12px;font-weight:700;">❌ تعذّر الإرسال: '+(e&&e.message?e.message:'تحقق من الاتصال')+'</div>';
+    }
+  });
+}
+
+function renderTournSuggestions(){
+  var el = document.getElementById('content');
+  var tid   = window._tournSugTid   || '';
+  var tname = window._tournSugTname || 'البطولة';
+  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ التحميل...</div>';
+  apiGet('المقترحات والملاحظات', true).then(function(rows){
+    var all = Array.isArray(rows) ? rows : [];
+    var list = tid ? all.filter(function(r){ return r['معرف البطولة']===tid; }) : all;
+    var typeColor = {'اقتراح':'#16a34a','ملاحظة':'#1d4ed8','شكوى':'#b81d22','شكر وتقدير':'#d4af37'};
+    var typeIcon  = {'اقتراح':'💡','ملاحظة':'📝','شكوى':'⚠️','شكر وتقدير':'🏅'};
+    var html =
+      '<div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:22px 16px;text-align:center;color:#fff;">'+
+        '<div style="font-size:32px;margin-bottom:6px;">📬</div>'+
+        '<div style="font-size:17px;font-weight:900;">اقتراحات وشكاوى</div>'+
+        '<div style="font-size:11px;opacity:.6;margin-top:3px;">'+tname+' · '+list.length+' رسالة</div>'+
+      '</div>'+
+      '<div style="padding:14px;">';
+    if(!list.length){
+      html += '<div style="text-align:center;padding:32px;color:#64748b;background:#fff;border-radius:14px;"><div style="font-size:36px;margin-bottom:8px;">📭</div>لا توجد رسائل بعد</div>';
+    } else {
+      list.slice().reverse().forEach(function(r){
+        var type = r['النوع']||'اقتراح';
+        html +=
+          '<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-right:4px solid '+(typeColor[type]||'#64748b')+';margin-bottom:10px;">'+
+            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'+
+              '<span style="font-size:13px;">'+(typeIcon[type]||'💬')+' <strong>'+r['اسم ولي الأمر']+'</strong></span>'+
+              '<span style="background:'+(typeColor[type]||'#64748b')+'22;color:'+(typeColor[type]||'#64748b')+';border-radius:20px;padding:2px 10px;font-size:10px;font-weight:800;">'+type+'</span>'+
+            '</div>'+
+            '<div style="font-size:12px;color:#334155;line-height:1.6;margin-bottom:6px;">'+r['الرسالة']+'</div>'+
+            '<div style="font-size:10px;color:#94a3b8;">'+r['التاريخ']+'</div>'+
+          '</div>';
+      });
+    }
+    html += '</div>';
+    el.innerHTML = html;
+  }).catch(function(){ el.innerHTML='<div class="al al-err">حدث خطأ في التحميل</div>'; });
 }
 
 // =====================================================
