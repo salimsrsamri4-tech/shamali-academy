@@ -6829,6 +6829,14 @@ function showAcadManageDashboardFromCache(){
     '</div>';
   html += '</div>';
 
+  // زر اقتراح أو شكوى
+  var _tname = (window._manageAcadData||{})['اسم البطولة'] || '';
+  var _aname = (window._manageAcadData||{})['اسم الأكاديمية'] || '';
+  html +=
+    '<button onclick="window._tournSugTid=\''+tid+'\';window._tournSugTname=\''+_tname.replace(/'/g,"&#39;")+'\';window._tournSugAcid=\''+acid+'\';window._tournSugAcad=\''+_aname.replace(/'/g,"&#39;")+'\';go(\'tourn_suggest\')" '+
+    'style="width:100%;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:#475569;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;">'+
+    '💬 إرسال اقتراح أو شكوى للإدارة</button>';
+
   html += '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:10px;">لاعبو الأكاديمية</div>';
 
   if(!players.length){
