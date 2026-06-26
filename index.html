@@ -2090,6 +2090,8 @@ function renderPage(page) {
     case 'tourn_update': renderTournUpdate(); break;
     case 'tourn_suggest': renderTournSuggest(); break;
     case 'tourn_suggestions': if(!sessionStorage.getItem('tournAuth')){ go('tournlogin'); return; } renderTournSuggestions(); break;
+    case 'acad_feedback': renderAcadFeedback(); break;
+    case 'acad_feedback_admin': if(!sessionStorage.getItem('tournAuth')){ go('tournlogin'); return; } renderAcadFeedbackAdmin(); break;
     case 'parent_reg': renderParentReg(); break;
     case 'acad_list': renderAcadList(); break;
     case 'acad_manage': renderAcadManage(); break;
@@ -4174,7 +4176,7 @@ function renderTournaments(){
           '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;">'+
             '<button onclick="viewTournament(\''+id+'\')" style="flex:1;padding:8px;background:#1e3a5f;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">👁 اللاعبون</button>'+
             '<button onclick="window._viewTournId=\''+id+'\';go(\'tournament_public\')" style="flex:1;padding:8px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">🌐 عام</button>'+
-            '<button onclick="window._tournSugTid=\''+id+'\';window._tournSugTname=\''+t['اسم البطولة']+'\';go(\'tourn_suggestions\')" style="flex:1;padding:8px;background:#0e7490;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">💬 الشكاوى</button>'+
+            '<button onclick="window._acadFbTid=\''+id+'\';window._acadFbTname=\''+t['اسم البطولة']+'\';go(\'acad_feedback_admin\')" style="flex:1;padding:8px;background:#0e7490;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📬 رسائل الأكاديميات</button>'+
             '<button onclick="deleteTournament(\''+id+'\',\''+t['اسم البطولة']+'\')" style="flex:1;padding:8px;background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">🗑 حذف</button>'+
           '</div>'+
           '<button onclick="window._cardsTid=\''+id+'\';window._cardsTname=\''+t['اسم البطولة']+'\';go(\'player_cards\')" style="width:100%;padding:9px;background:linear-gradient(135deg,#d4af37,#b8960c);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;">'+
@@ -6829,13 +6831,13 @@ function showAcadManageDashboardFromCache(){
     '</div>';
   html += '</div>';
 
-  // زر اقتراح أو شكوى
+  // زر رسالة للبطولة (النظام الجديد المستقل)
   var _tname = (window._manageAcadData||{})['اسم البطولة'] || '';
   var _aname = (window._manageAcadData||{})['اسم الأكاديمية'] || '';
   html +=
-    '<button onclick="window._tournSugTid=\''+tid+'\';window._tournSugTname=\''+_tname.replace(/'/g,"&#39;")+'\';window._tournSugAcid=\''+acid+'\';window._tournSugAcad=\''+_aname.replace(/'/g,"&#39;")+'\';go(\'tourn_suggest\')" '+
-    'style="width:100%;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:#475569;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;">'+
-    '💬 إرسال اقتراح أو شكوى للإدارة</button>';
+    '<button onclick="window._acadFbTid=\''+tid+'\';window._acadFbTname=\''+_tname.replace(/'/g,"&#39;")+'\';window._acadFbAcid=\''+acid+'\';window._acadFbAname=\''+_aname.replace(/'/g,"&#39;")+'\';go(\'acad_feedback\')" '+
+    'style="width:100%;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:#1e3a5f;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;">'+
+    '<i class="fas fa-envelope" style="color:#b81d22;"></i> إرسال اقتراح / شكوى / ملاحظة للبطولة</button>';
 
   html += '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:10px;">لاعبو الأكاديمية</div>';
 
@@ -7102,6 +7104,172 @@ function loadAcadDashboard(){
     if(container) container.innerHTML = html;
     else el.innerHTML = html;
   }).catch(function(){ showL(false); alert('حدث خطأ'); });
+}
+
+// =====================================================
+// شكاوى واقتراحات الأكاديميات للبطولة (نظام مستقل)
+// =====================================================
+function renderAcadFeedback(){
+  var el = document.getElementById('content');
+  var tid   = window._acadFbTid   || '';
+  var tname = window._acadFbTname || 'البطولة';
+  var acid  = window._acadFbAcid  || '';
+  var aname = window._acadFbAname || '';
+  window._acadFbType = 'اقتراح';
+
+  function typeBtn(label, icon, type){
+    var active = type === 'اقتراح';
+    return '<button onclick="'+
+      'window._acadFbType=\''+type+'\';'+
+      'document.querySelectorAll(\'.afb-type-btn\').forEach(function(b){b.style.background=\'#f1f5f9\';b.style.color=\'#64748b\';});'+
+      'this.style.background=\'#1e3a5f\';this.style.color=\'#fff\';" '+
+      'class="afb-type-btn" style="flex:1;padding:9px 4px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;'+
+      (active?'background:#1e3a5f;color:#fff;':'background:#f1f5f9;color:#64748b;')+'">'+
+      icon+' '+label+'</button>';
+  }
+
+  el.innerHTML =
+    '<div style="background:linear-gradient(135deg,#1e3a5f,#b81d22);padding:24px 16px 18px;text-align:center;color:#fff;">'+
+      '<div style="font-size:36px;margin-bottom:8px;">📣</div>'+
+      '<div style="font-size:18px;font-weight:900;">رسالة للبطولة</div>'+
+      '<div style="font-size:12px;opacity:.7;margin-top:4px;">'+tname+'</div>'+
+      (aname?'<div style="margin-top:6px;background:rgba(255,255,255,.12);border-radius:20px;padding:4px 14px;display:inline-block;font-size:11px;font-weight:700;">🏫 '+aname+'</div>':'')+
+    '</div>'+
+    '<div style="padding:16px;">'+
+
+    '<div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:12px;">'+
+      '<div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:10px;">نوع الرسالة</div>'+
+      '<div style="display:flex;gap:6px;margin-bottom:16px;">'+
+        typeBtn('اقتراح','💡','اقتراح')+
+        typeBtn('شكوى','⚠️','شكوى')+
+        typeBtn('ملاحظة','📝','ملاحظة')+
+        typeBtn('شكر','🏅','شكر وتقدير')+
+      '</div>'+
+
+      '<label class="lbl">اسم الأكاديمية</label>'+
+      '<input class="inp" id="afbAcad" value="'+aname+'" placeholder="اسم الأكاديمية" style="margin-bottom:10px;">'+
+
+      '<label class="lbl">اسم المسؤول</label>'+
+      '<input class="inp" id="afbName" placeholder="اسم مسؤول الأكاديمية" style="margin-bottom:10px;">'+
+
+      '<label class="lbl">نص الرسالة *</label>'+
+      '<textarea class="inp" id="afbText" rows="5" placeholder="اكتب اقتراحك أو شكواك بالتفصيل..." style="resize:none;margin-bottom:14px;"></textarea>'+
+
+      '<button onclick="submitAcadFeedback(\''+tid+'\',\''+tname+'\')" '+
+      'style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
+      '<i class="fas fa-paper-plane"></i> إرسال للبطولة</button>'+
+      '<div id="afbMsg" style="display:none;margin-top:12px;"></div>'+
+    '</div>'+
+    '</div>';
+}
+
+function submitAcadFeedback(tid, tname){
+  var text  = ((document.getElementById('afbText')||{}).value||'').trim();
+  var aname = ((document.getElementById('afbAcad')||{}).value||'').trim() || 'غير محدد';
+  var rname = ((document.getElementById('afbName')||{}).value||'').trim() || 'غير محدد';
+  if(!text){ alert('يرجى كتابة نص الرسالة'); return; }
+  var type = window._acadFbType || 'اقتراح';
+  var row = {
+    'التاريخ'       : new Date().toLocaleString('ar-SA'),
+    'النوع'         : type,
+    'اسم الأكاديمية': aname,
+    'اسم المسؤول'   : rname,
+    'الرسالة'       : text,
+    'الحالة'        : 'جديد',
+    'معرف البطولة'  : tid,
+    'اسم البطولة'   : tname
+  };
+  var btn = document.querySelector('#content button[onclick*="submitAcadFeedback"]');
+  if(btn){ btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...'; }
+  apiAppend('شكاوى البطولة', row).then(function(){
+    var msg = document.getElementById('afbMsg');
+    if(msg){
+      msg.style.display = 'block';
+      msg.innerHTML =
+        '<div style="background:#ecfdf5;border:1.5px solid #16a34a;border-radius:12px;padding:16px;text-align:center;">'+
+          '<div style="font-size:28px;margin-bottom:6px;">✅</div>'+
+          '<div style="font-size:14px;font-weight:900;color:#15803d;">تم إرسال رسالتك بنجاح!</div>'+
+          '<div style="font-size:11px;color:#64748b;margin-top:4px;">ستتم مراجعتها من قبل إدارة البطولة</div>'+
+        '</div>';
+    }
+    if(btn) btn.style.display='none';
+  }).catch(function(e){
+    if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane"></i> إرسال للبطولة'; }
+    var msg = document.getElementById('afbMsg');
+    if(msg){
+      msg.style.display='block';
+      msg.innerHTML='<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:12px;color:#b91c1c;font-size:12px;font-weight:700;">'+
+        '❌ تعذّر الإرسال — '+(e&&e.message?e.message:'تحقق من الاتصال بالإنترنت')+'<br>'+
+        '<span style="font-size:10px;color:#64748b;">تأكد من إنشاء ورقة "شكاوى البطولة" في Google Sheets</span></div>';
+    }
+  });
+}
+
+function renderAcadFeedbackAdmin(){
+  var el    = document.getElementById('content');
+  var tid   = window._acadFbTid   || '';
+  var tname = window._acadFbTname || 'جميع البطولات';
+  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ التحميل...</div>';
+
+  apiGet('شكاوى البطولة', true).then(function(rows){
+    var all  = Array.isArray(rows) ? rows : [];
+    var list = tid ? all.filter(function(r){ return r['معرف البطولة']===tid; }) : all;
+    var typeColor = {'اقتراح':'#1d4ed8','ملاحظة':'#0e7490','شكوى':'#b81d22','شكر وتقدير':'#d4af37'};
+    var typeIcon  = {'اقتراح':'💡','ملاحظة':'📝','شكوى':'⚠️','شكر وتقدير':'🏅'};
+
+    // إحصائيات سريعة
+    var counts = {};
+    list.forEach(function(r){ var t=r['النوع']||'اقتراح'; counts[t]=(counts[t]||0)+1; });
+
+    var html =
+      '<div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:24px 16px;text-align:center;color:#fff;">'+
+        '<div style="font-size:36px;margin-bottom:6px;">📬</div>'+
+        '<div style="font-size:18px;font-weight:900;">رسائل الأكاديميات</div>'+
+        '<div style="font-size:11px;opacity:.6;margin-top:4px;">'+tname+' · '+list.length+' رسالة</div>'+
+      '</div>'+
+      '<div style="padding:14px;">';
+
+    // شرائط إحصائية
+    if(list.length){
+      html += '<div style="display:flex;gap:6px;margin-bottom:14px;">';
+      ['اقتراح','شكوى','ملاحظة','شكر وتقدير'].forEach(function(t){
+        if(!counts[t]) return;
+        html += '<div style="flex:1;background:#fff;border-radius:10px;padding:8px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);border-top:3px solid '+(typeColor[t]||'#64748b')+';min-width:0;">'+
+          '<div style="font-size:11px;">'+(typeIcon[t]||'💬')+'</div>'+
+          '<div style="font-size:16px;font-weight:900;color:'+(typeColor[t]||'#64748b')+';">'+counts[t]+'</div>'+
+          '<div style="font-size:9px;color:#94a3b8;">'+t+'</div>'+
+          '</div>';
+      });
+      html += '</div>';
+    }
+
+    if(!list.length){
+      html += '<div style="background:#fff;border-radius:14px;padding:36px;text-align:center;color:#94a3b8;">'+
+        '<div style="font-size:40px;margin-bottom:10px;">📭</div>'+
+        '<div style="font-size:14px;font-weight:700;">لا توجد رسائل من الأكاديميات بعد</div></div>';
+    } else {
+      list.slice().reverse().forEach(function(r){
+        var type = r['النوع']||'اقتراح';
+        var col  = typeColor[type]||'#64748b';
+        html +=
+          '<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-right:4px solid '+col+';">'+
+            '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">'+
+              '<div>'+
+                '<div style="font-size:13px;font-weight:900;color:#0f172a;">🏫 '+r['اسم الأكاديمية']+'</div>'+
+                '<div style="font-size:11px;color:#64748b;margin-top:1px;">'+r['اسم المسؤول']+'</div>'+
+              '</div>'+
+              '<span style="background:'+col+'22;color:'+col+';border-radius:20px;padding:3px 10px;font-size:10px;font-weight:800;white-space:nowrap;">'+(typeIcon[type]||'')+'  '+type+'</span>'+
+            '</div>'+
+            '<div style="font-size:12px;color:#334155;line-height:1.7;background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:6px;">'+r['الرسالة']+'</div>'+
+            '<div style="font-size:10px;color:#94a3b8;">🕐 '+r['التاريخ']+'</div>'+
+          '</div>';
+      });
+    }
+    html += '</div>';
+    el.innerHTML = html;
+  }).catch(function(){
+    el.innerHTML = '<div class="al al-err" style="margin:16px;">حدث خطأ في التحميل</div>';
+  });
 }
 
 // =====================================================
