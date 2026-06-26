@@ -29,10 +29,13 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
 .sidebar.open{right:0;}
 #overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:998;}
 #overlay.show{display:block;}
-.sb-hd{padding:16px 14px;border-bottom:1px solid rgba(212,175,55,.2);text-align:center;position:relative;}
-.sb-close{position:absolute;top:10px;left:10px;background:rgba(212,175,55,.15);border:none;color:#d4af37;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;}
-.sb-title{font-size:13px;font-weight:900;color:#d4af37;margin-top:5px;}
-.sb-sub{font-size:10px;color:rgba(255,255,255,.4);}
+.sb-hd{padding:0;border-bottom:2px solid rgba(212,175,55,.3);position:relative;}
+.sb-hd-logo{background:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:center;gap:12px;}
+.sb-hd-logo img{width:62px;height:62px;object-fit:contain;}
+.sb-hd-info{background:linear-gradient(135deg,#1e0505,#3d0a0a);padding:10px 14px;text-align:center;}
+.sb-close{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.15);border:none;color:#333;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;z-index:2;}
+.sb-title{font-size:13px;font-weight:900;color:#d4af37;margin:0;}
+.sb-sub{font-size:10px;color:rgba(255,255,255,.5);margin-top:2px;}
 .sb-sec{font-size:9px;color:#d4af37;letter-spacing:1.5px;padding:14px 14px 6px;font-weight:900;text-transform:uppercase;border-top:1px solid rgba(212,175,55,.25);margin-top:4px;display:flex;align-items:center;gap:6px;}
 .sb-sec::after{content:'';flex:1;height:1px;background:linear-gradient(to left,rgba(212,175,55,.3),transparent);}
 .sb-btn{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;color:rgba(255,255,255,.85);font-size:13px;font-weight:700;border:none;background:none;width:100%;text-align:right;font-family:'Cairo',sans-serif;border-right:3px solid transparent;border-bottom:1px solid rgba(255,255,255,.06);}
@@ -180,9 +183,14 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
 <nav class="sidebar" id="sidebar">
   <div class="sb-hd">
     <button class="sb-close" id="sbClose" data-act="closeSb">✕</button>
-    <div style="font-size:28px;">🦅</div>
-    <div class="sb-title">أكاديمية الشمالي</div>
-    <div class="sb-sub">كرة القدم · سلطنة عُمان</div>
+    <div class="sb-hd-logo">
+      <img src="logo.png" alt="أكاديمية الشمالي" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+      <div style="display:none;font-size:42px;">🦅</div>
+    </div>
+    <div class="sb-hd-info">
+      <div class="sb-title">أكاديمية الشمالي</div>
+      <div class="sb-sub">كرة القدم · سلطنة عُمان</div>
+    </div>
   </div>
   <div class="sb-sec">خدمات ولي الأمر</div>
   <button class="sb-btn active" data-page="reg" data-pg="reg"><i class="fas fa-user-plus"></i> تسجيل لاعب جديد</button>
