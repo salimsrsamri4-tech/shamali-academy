@@ -8084,6 +8084,24 @@ window.addEventListener('load', function(){
   setTimeout(checkTournNotifications, 2000);
 });
 
+// تسجيل Service Worker للعمل بدون إنترنت
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').then(function(reg){
+      // تحقق من وجود تحديث جديد
+      reg.addEventListener('updatefound', function(){
+        var newWorker = reg.installing;
+        newWorker.addEventListener('statechange', function(){
+          if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
+            // يوجد تحديث جديد — أعد التحميل تلقائياً
+            window.location.reload();
+          }
+        });
+      });
+    }).catch(function(){ /* sw غير متاح في localhost */ });
+  });
+}
+
 </script>
 </body>
 </html>
