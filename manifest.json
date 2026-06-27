@@ -1,42 +1,51 @@
 {
   "name": "أكاديمية الشمالي لكرة القدم",
-  "short_name": "الشمالي FC",
-  "description": "البوابة الإلكترونية لأكاديمية الشمالي لكرة القدم",
-  "start_url": "/shamali-academy/",
+  "short_name": "الشمالي",
+  "description": "البوابة الرسمية لأكاديمية الشمالي لكرة القدم — تسجيل اللاعبين، إدارة البطولات، ومتابعة الطاقم التدريبي",
+  "start_url": "/shamali-academy/index.html",
   "scope": "/shamali-academy/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#ffffff",
+  "background_color": "#0f172a",
   "theme_color": "#b81d22",
   "lang": "ar",
   "dir": "rtl",
+  "categories": ["sports", "education"],
   "icons": [
     {
-      "src": "logo.png",
+      "src": "logo.jpg",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/jpeg",
+      "purpose": "any"
     },
     {
-      "src": "logo.png",
+      "src": "logo.jpg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["sports", "education"],
+  "screenshots": [
+    {
+      "src": "screenshot_full.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "الصفحة الرئيسية"
+    }
+  ],
   "shortcuts": [
     {
       "name": "تسجيل لاعب",
       "short_name": "تسجيل",
-      "url": "/shamali-academy/#reg",
+      "url": "/shamali-academy/index.html#reg",
       "description": "تسجيل لاعب جديد في الأكاديمية"
     },
     {
-      "name": "الطاقم التدريبي",
-      "short_name": "المدربون",
-      "url": "/shamali-academy/#cch",
-      "description": "عرض الطاقم التدريبي"
+      "name": "بوابة البطولات",
+      "short_name": "البطولات",
+      "url": "/shamali-academy/index.html#tourn",
+      "description": "إدارة البطولات والأكاديميات المشاركة"
     }
   ]
 }
