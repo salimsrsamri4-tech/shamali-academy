@@ -5070,7 +5070,7 @@ function submitTournReg(){
 
   // ضغط صور اللاعبين أولاً (base64 مصغّرة للتخزين في الشيت)
   var compressPhotos = Promise.all(_regData.players.map(function(p){
-    return p.photoB64 ? compressImageB64(p.photoB64, 120, 160, 0.7) : Promise.resolve('');
+    return p.photoB64 ? compressImageB64(p.photoB64, 80, 100, 0.6) : Promise.resolve('');
   }));
   var compressLogo = _regData.logoB64
     ? compressImageB64(_regData.logoB64, 80, 80, 0.75)
