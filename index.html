@@ -381,7 +381,39 @@ var CONFIG = {
 
 // ===== API (يدعم Apps Script و SheetDB) =====
 var _apiCache = {};
-var _CACHE_TTL = 10 * 60 * 1000; // 5 دقائق
+var _CACHE_TTL = 10 * 60 * 1000;
+var _API_TIMEOUT = 12000;  // 12 ثانية
+var _API_RETRIES = 2;       // محاولتان إضافيتان
+
+// fetch مع timeout
+function _fetchWithTimeout(url, options, timeout){
+  return new Promise(function(resolve, reject){
+    var timer = setTimeout(function(){ reject(new Error('timeout')); }, timeout || _API_TIMEOUT);
+    fetch(url, options || {}).then(function(r){
+      clearTimeout(timer); resolve(r);
+    }).catch(function(e){ clearTimeout(timer); reject(e); });
+  });
+}
+
+// fetch مع retry تلقائي
+function _fetchWithRetry(url, options, retries, timeout){
+  retries = retries !== undefined ? retries : _API_RETRIES;
+  return _fetchWithTimeout(url, options, timeout).catch(function(err){
+    if(retries <= 0) throw err;
+    return new Promise(function(res){ setTimeout(res, 1500); })
+      .then(function(){ return _fetchWithRetry(url, options, retries-1, timeout); });
+  });
+}
+
+// رسائل الخطأ بالعربي
+function _apiErrorMsg(err){
+  var msg = (err && err.message) || '';
+  if(msg === 'timeout' || msg.indexOf('timeout') > -1)
+    return 'انتهت مدة الانتظار — تحقق من الاتصال بالإنترنت وأعد المحاولة';
+  if(msg.indexOf('Failed to fetch') > -1 || msg.indexOf('NetworkError') > -1)
+    return 'لا يوجد اتصال بالإنترنت';
+  return 'حدث خطأ في الاتصال — حاول مجدداً';
+}
 
 function apiGet(sheetName, forceRefresh) {
   var now = Date.now();
@@ -392,9 +424,13 @@ function apiGet(sheetName, forceRefresh) {
   var url = CONFIG.GAS_URL
     ? CONFIG.GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheetName) + '&limit=500'
     : CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName) + '&limit=500';
-  return fetch(url).then(function(r){ return r.json(); }).then(function(data){
+  return _fetchWithRetry(url).then(function(r){ return r.json(); }).then(function(data){
     _apiCache[sheetName] = { data: data, ts: Date.now() };
     return data;
+  }).catch(function(err){
+    // إرجاع cache قديم إن وُجد (أفضل من لا شيء)
+    if(cached) return cached.data;
+    throw new Error(_apiErrorMsg(err));
   });
 }
 
@@ -412,7 +448,7 @@ function apiAppend(sheetName, dataObj) {
     url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
     body = JSON.stringify({data: Array.isArray(dataObj)?dataObj:[dataObj]});
   }
-  return fetch(url, {
+  return _fetchWithRetry(url, {
     method: 'POST',
     mode: 'no-cors',
     headers: {'Content-Type':'text/plain'},
@@ -420,6 +456,8 @@ function apiAppend(sheetName, dataObj) {
   }).then(function(){
     apiClearCache(sheetName);
     return {status:'ok'};
+  }).catch(function(err){
+    throw new Error(_apiErrorMsg(err));
   });
 }
 
