@@ -237,10 +237,11 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
     <button class="sb-btn danger" id="logoutBtn" data-act="logout"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
   <hr class="sb-hr">
-  <button class="sb-btn" data-pg="tournlogin" style="color:#f59e0b;" onclick="go('tournlogin')"><i class="fas fa-shield-alt"></i> بوابة البطولات</button>
+  <button class="sb-btn" data-pg="tournlogin" style="color:#f59e0b;" onclick="go('tournlogin')"><i class="fas fa-shield-alt"></i> بوابة البطولات <span id="tournNotifBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
   <button class="sb-btn" style="color:#d4af37;" onclick="go('acad_list')"><i class="fas fa-users"></i> الأكاديميات المشاركة</button>
   <div id="tournMenu" style="display:none;">
     <button class="sb-btn" style="color:#f59e0b;" data-pg="tournaments" onclick="go('tournaments')"><i class="fas fa-list"></i> البطولات</button>
+    <button class="sb-btn" style="color:#f59e0b;" onclick="go('tourn_notifications')"><i class="fas fa-bell"></i> الإشعارات <span id="tournNotifBadge2" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
     <button class="sb-btn" style="color:#f59e0b;" data-pg="tournament_schedule" onclick="go('tournament_schedule')"><i class="fas fa-calendar-alt"></i> جدول المباريات</button>
     <button class="sb-btn danger" id="tournLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
@@ -2103,6 +2104,7 @@ function renderPage(page) {
     case 'tourn_suggestions': if(!sessionStorage.getItem('tournAuth')){ go('tournlogin'); return; } renderTournSuggestions(); break;
     case 'acad_feedback': renderAcadFeedback(); break;
     case 'acad_feedback_admin': if(!sessionStorage.getItem('tournAuth')){ go('tournlogin'); return; } renderAcadFeedbackAdmin(); break;
+    case 'tourn_notifications': if(!sessionStorage.getItem('tournAuth')){ go('tournlogin'); return; } renderTournNotifications(); break;
     case 'parent_reg': renderParentReg(); break;
     case 'acad_list': renderAcadList(); break;
     case 'acad_manage': renderAcadManage(); break;
@@ -7855,6 +7857,119 @@ function reviewRequest(rid, action){
     setTimeout(function(){ loadAcadDashboard(); }, 1500);
   }).catch(function(){ showL(false); alert('حدث خطأ'); });
 }
+
+// =====================================================
+// نظام الإشعارات الداخلية
+// =====================================================
+function checkTournNotifications(){
+  apiGet('الأكاديميات المسجلة').then(function(rows){
+    var all  = Array.isArray(rows) ? rows : [];
+    var last = '';
+    try{ last = localStorage.getItem('lastTournCheck') || ''; }catch(e){}
+
+    var newCount = 0;
+    all.forEach(function(r){
+      var d = r['التاريخ'] || r['تاريخ التسجيل'] || '';
+      if(!d) return;
+      if(!last || d > last) newCount++;
+    });
+
+    ['tournNotifBadge','tournNotifBadge2'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(!el) return;
+      if(newCount > 0){
+        el.style.display = 'inline-block';
+        el.textContent   = newCount > 99 ? '99+' : newCount;
+      } else {
+        el.style.display = 'none';
+      }
+    });
+  }).catch(function(){});
+}
+
+function renderTournNotifications(){
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ التحميل...</div>';
+
+  // تحديث وقت آخر زيارة
+  try{ localStorage.setItem('lastTournCheck', new Date().toISOString()); }catch(e){}
+  // إخفاء الشارة فوراً
+  ['tournNotifBadge','tournNotifBadge2'].forEach(function(id){
+    var b = document.getElementById(id);
+    if(b) b.style.display = 'none';
+  });
+
+  Promise.all([
+    apiGet('الأكاديميات المسجلة', true),
+    apiGet('لاعبو البطولة', true),
+    apiGet('شكاوى البطولة', true)
+  ]).then(function(res){
+    var acadRows    = Array.isArray(res[0]) ? res[0] : [];
+    var playerRows  = Array.isArray(res[1]) ? res[1] : [];
+    var feedbackRows= Array.isArray(res[2]) ? res[2] : [];
+
+    // آخر 20 تسجيل فقط (الأحدث أولاً)
+    var recents = acadRows.slice(-20).reverse();
+    var newPlayers = playerRows.slice(-20).reverse();
+    var newFeedback = feedbackRows.slice(-10).reverse();
+
+    var html =
+      '<div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:20px 16px;color:#fff;text-align:center;">'+
+        '<div style="font-size:32px;margin-bottom:6px;">🔔</div>'+
+        '<div style="font-size:18px;font-weight:900;">الإشعارات</div>'+
+        '<div style="font-size:11px;opacity:.6;margin-top:4px;">آخر الأنشطة على البطولات</div>'+
+      '</div>'+
+      '<div style="padding:14px;">';
+
+    // ====== تسجيلات الأكاديميات ======
+    html += '<div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:8px;display:flex;align-items:center;gap:6px;">'+
+      '<span style="background:#1e3a5f;color:#fff;border-radius:20px;padding:2px 10px;font-size:10px;">'+recents.length+'</span> تسجيلات الأكاديميات</div>';
+
+    if(!recents.length){
+      html += '<div style="background:#f8fafc;border-radius:12px;padding:20px;text-align:center;color:#94a3b8;font-size:12px;margin-bottom:14px;">لا توجد تسجيلات بعد</div>';
+    } else {
+      recents.forEach(function(r){
+        html +=
+          '<div style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,.06);border-right:4px solid #1e3a5f;display:flex;align-items:center;gap:10px;">'+
+            '<div style="width:38px;height:38px;background:#e0f2fe;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🏫</div>'+
+            '<div style="flex:1;min-width:0;">'+
+              '<div style="font-size:13px;font-weight:900;color:#0f172a;">'+(r['اسم الأكاديمية']||'أكاديمية')+'</div>'+
+              '<div style="font-size:10px;color:#64748b;margin-top:2px;">'+(r['اسم البطولة']||'')+'</div>'+
+            '</div>'+
+            '<div style="font-size:9px;color:#94a3b8;text-align:left;flex-shrink:0;">'+(r['التاريخ']||r['تاريخ التسجيل']||'')+'</div>'+
+          '</div>';
+      });
+    }
+
+    // ====== رسائل الأكاديميات ======
+    if(newFeedback.length){
+      html += '<div style="font-size:13px;font-weight:900;color:#0f172a;margin:14px 0 8px;display:flex;align-items:center;gap:6px;">'+
+        '<span style="background:#b81d22;color:#fff;border-radius:20px;padding:2px 10px;font-size:10px;">'+newFeedback.length+'</span> رسائل من الأكاديميات</div>';
+      newFeedback.forEach(function(r){
+        var typeIcon = {'اقتراح':'💡','شكوى':'⚠️','ملاحظة':'📝','شكر وتقدير':'🏅'}[r['النوع']]||'💬';
+        html +=
+          '<div style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,.06);border-right:4px solid #b81d22;display:flex;align-items:center;gap:10px;">'+
+            '<div style="width:38px;height:38px;background:#fff0f0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">'+typeIcon+'</div>'+
+            '<div style="flex:1;min-width:0;">'+
+              '<div style="font-size:12px;font-weight:900;color:#0f172a;">'+(r['اسم الأكاديمية']||'')+'</div>'+
+              '<div style="font-size:11px;color:#64748b;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(r['الرسالة']||'')+'</div>'+
+            '</div>'+
+            '<span style="font-size:9px;color:#b81d22;font-weight:700;flex-shrink:0;">'+(r['النوع']||'')+'</span>'+
+          '</div>';
+      });
+    }
+
+    html += '</div>';
+    el.innerHTML = html;
+  }).catch(function(){
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:#b81d22;">حدث خطأ في التحميل</div>';
+  });
+}
+
+// تشغيل فحص الإشعارات عند فتح الصفحة
+window.addEventListener('load', function(){
+  setTimeout(checkTournNotifications, 2000);
+});
 
 </script>
 </body>
