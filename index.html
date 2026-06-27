@@ -6388,6 +6388,43 @@ function renderAcadManage(){
     '</div></div>';
 }
 
+function _pinLockKey(acid){ return 'pinLock_'+acid; }
+function _pinAttemptsKey(acid){ return 'pinAttempts_'+acid; }
+var _MAX_PIN_ATTEMPTS = 3;
+var _PIN_LOCK_MINUTES = 5;
+
+function _isPinLocked(acid){
+  try{
+    var lockData = JSON.parse(localStorage.getItem(_pinLockKey(acid))||'null');
+    if(!lockData) return null;
+    var remaining = Math.ceil((lockData.until - Date.now()) / 60000);
+    if(remaining > 0) return remaining;
+    localStorage.removeItem(_pinLockKey(acid));
+    localStorage.removeItem(_pinAttemptsKey(acid));
+  }catch(e){}
+  return null;
+}
+
+function _pinFailed(acid){
+  try{
+    var attempts = parseInt(localStorage.getItem(_pinAttemptsKey(acid))||'0') + 1;
+    localStorage.setItem(_pinAttemptsKey(acid), attempts);
+    if(attempts >= _MAX_PIN_ATTEMPTS){
+      localStorage.setItem(_pinLockKey(acid), JSON.stringify({ until: Date.now() + _PIN_LOCK_MINUTES*60000 }));
+      localStorage.removeItem(_pinAttemptsKey(acid));
+      return 0; // مقفول
+    }
+    return _MAX_PIN_ATTEMPTS - attempts; // محاولات متبقية
+  }catch(e){ return 2; }
+}
+
+function _pinSuccess(acid){
+  try{
+    localStorage.removeItem(_pinLockKey(acid));
+    localStorage.removeItem(_pinAttemptsKey(acid));
+  }catch(e){}
+}
+
 function verifyManagePin(){
   var el   = document.getElementById('content');
   var tid  = window._tournamentId;
@@ -6395,21 +6432,59 @@ function verifyManagePin(){
   var pin  = (document.getElementById('manage_pin').value||'').trim();
   if(!pin){ return; }
 
-  var errEl = document.getElementById('manage_pin_err');
-  el.querySelector('button').textContent = 'جاري التحقق...';
+  var errEl  = document.getElementById('manage_pin_err');
+  var pinInp = document.getElementById('manage_pin');
+  var btn    = el.querySelector('button[onclick="verifyManagePin()"]');
+
+  // فحص الحظر المؤقت
+  var locked = _isPinLocked(acid);
+  if(locked){
+    errEl.style.display='block';
+    errEl.textContent='🔒 تم تجاوز عدد المحاولات — انتظر '+locked+' دقيقة';
+    return;
+  }
+
+  if(btn) btn.textContent = 'جاري التحقق...';
 
   apiGet('الأكاديميات المسجلة',true).then(function(rows){
     var acad = (Array.isArray(rows)?rows:[]).find(function(r){
       return r['معرف التسجيل']===acid && r['معرف البطولة']===tid;
     });
-    if(!acad){ errEl.style.display='block'; errEl.textContent='❌ لم يتم العثور على بيانات الأكاديمية'; el.querySelector('button').textContent='دخول'; return; }
+    if(!acad){
+      errEl.style.display='block';
+      errEl.textContent='❌ لم يتم العثور على بيانات الأكاديمية';
+      if(btn) btn.innerHTML='<i class="fas fa-unlock"></i> دخول';
+      return;
+    }
     var storedPin=(acad['رمز PIN']||'').toString().trim();
-    if(!storedPin){ errEl.style.display='block'; errEl.textContent='⚠️ هذه الأكاديمية لا تملك رمزاً — تواصل مع الإدارة'; el.querySelector('button').textContent='دخول'; return; }
-    if(storedPin!==pin){ errEl.style.display='block'; errEl.textContent='❌ الرمز غير صحيح، حاول مجدداً'; el.querySelector('button').textContent='دخول'; return; }
-    // PIN صحيح — عرض لوحة الإدارة
+    if(!storedPin){
+      errEl.style.display='block';
+      errEl.textContent='⚠️ هذه الأكاديمية لا تملك رمزاً — تواصل مع الإدارة';
+      if(btn) btn.innerHTML='<i class="fas fa-unlock"></i> دخول';
+      return;
+    }
+    if(storedPin !== pin){
+      var remaining = _pinFailed(acid);
+      errEl.style.display='block';
+      if(remaining === 0){
+        errEl.textContent='🔒 تم تجاوز عدد المحاولات — محظور لمدة '+_PIN_LOCK_MINUTES+' دقائق';
+        pinInp.disabled = true;
+        if(btn){ btn.disabled=true; btn.innerHTML='🔒 محظور مؤقتاً'; }
+      } else {
+        errEl.textContent='❌ الرمز غير صحيح — تبقى '+remaining+' محاولة';
+        if(btn) btn.innerHTML='<i class="fas fa-unlock"></i> دخول';
+      }
+      return;
+    }
+    // PIN صحيح
+    _pinSuccess(acid);
     window._manageAcadData = acad;
     showAcadManageDashboard(acad, tid, acid);
-  }).catch(function(){ errEl.style.display='block'; errEl.textContent='❌ خطأ في الاتصال، حاول مجدداً'; el.querySelector('button').textContent='دخول'; });
+  }).catch(function(){
+    errEl.style.display='block';
+    errEl.textContent='❌ خطأ في الاتصال، حاول مجدداً';
+    if(btn) btn.innerHTML='<i class="fas fa-unlock"></i> دخول';
+  });
 }
 
 function showAcadManageDashboard(acad, tid, acid){
