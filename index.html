@@ -3275,6 +3275,7 @@ function renderFinance(){
       '</div>'+
       '<div style="display:flex;align-items:center;gap:8px;">'+
         '<div style="font-size:13px;font-weight:900;color:'+(isIn?'#10b981':'#ef4444')+'">'+(isIn?'+':'-')+fmt(r.amount)+'</div>'+
+        '<button onclick="finEdit(\''+r.id+'\')" style="background:#f1f5f9;border:none;border-radius:6px;padding:4px 7px;color:#64748b;font-size:11px;cursor:pointer;">✏️</button>'+
         '<button onclick="finDelete(\''+r.id+'\')" style="background:none;border:none;color:#cbd5e1;font-size:12px;cursor:pointer;padding:4px;">✕</button>'+
       '</div>'+
     '</div>';
@@ -3485,6 +3486,60 @@ function finDelete(id){
   if(!confirm('حذف هذه الحركة؟')) return;
   var recs = _finRecords().filter(function(r){ return r.id!==id; });
   _finSave(recs);
+  renderFinance();
+}
+
+function finEdit(id){
+  var recs = _finRecords();
+  var r = recs.find(function(x){ return x.id===id; });
+  if(!r) return;
+  var isIn = r.type==='income';
+  var inCats  = ['رسوم اشتراكات','رعاة','رسوم بطولة','مبيعات أدوات','أخرى'];
+  var outCats = ['راتب مدرب','راتب مصور','راتب إداري','راتب مصمم','حجز ملعب','معدات ورياضية','مصاريف تشغيلية','أخرى'];
+  var cats = isIn ? inCats : outCats;
+  var old = document.getElementById('finEditModal'); if(old) old.remove();
+  var modal = document.createElement('div');
+  modal.id = 'finEditModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML =
+    '<div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;font-family:Cairo,sans-serif;direction:rtl;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">'+
+        '<div style="font-size:15px;font-weight:900;color:'+(isIn?'#10b981':'#ef4444')+'">✏️ تعديل '+(isIn?'إيراد':'مصروف')+'</div>'+
+        '<button onclick="document.getElementById(\'finEditModal\').remove()" style="background:#f1f5f9;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>'+
+      '</div>'+
+      '<div class="mb"><label class="lbl">التصنيف</label>'+
+        '<select id="feditCat" class="inp">'+cats.map(function(c){ return '<option'+(c===r.cat?' selected':'')+'>'+c+'</option>'; }).join('')+'</select></div>'+
+      '<div class="mb"><label class="lbl">المبلغ (ر.ع)</label>'+
+        '<input id="feditAmt" type="number" step="0.001" min="0" class="inp" value="'+r.amount+'"></div>'+
+      '<div class="mb"><label class="lbl">التاريخ</label>'+
+        '<input id="feditDate" type="date" class="inp" value="'+(r.date||'')+'"></div>'+
+      '<div class="mb"><label class="lbl">ملاحظة</label>'+
+        '<input id="feditNote" type="text" class="inp" value="'+(r.note||'')+'"></div>'+
+      '<div id="feditErr" style="color:#ef4444;font-size:12px;margin-bottom:10px;display:none;"></div>'+
+      '<button onclick="finSaveEdit(\''+id+'\')" style="width:100%;background:linear-gradient(135deg,'+(isIn?'#10b981,#059669':'#ef4444,#dc2626')+');color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">حفظ التعديل ✅</button>'+
+    '</div>';
+  document.body.appendChild(modal);
+}
+
+function finSaveEdit(id){
+  var cat  = (document.getElementById('feditCat')||{}).value||'';
+  var amtV = (document.getElementById('feditAmt')||{}).value||'';
+  var date = (document.getElementById('feditDate')||{}).value||'';
+  var note = (document.getElementById('feditNote')||{}).value||'';
+  var amt  = parseFloat(amtV);
+  var err  = document.getElementById('feditErr');
+  if(!cat||isNaN(amt)||amt<=0){ err.style.display=''; err.textContent='يرجى تعبئة التصنيف والمبلغ'; return; }
+  if(!date){ err.style.display=''; err.textContent='يرجى اختيار التاريخ'; return; }
+  var recs = _finRecords();
+  var idx  = recs.findIndex(function(r){ return r.id===id; });
+  if(idx<0) return;
+  recs[idx].cat    = cat;
+  recs[idx].amount = amt;
+  recs[idx].date   = date;
+  recs[idx].note   = note;
+  _finSave(recs);
+  window._finFilterMonth = date.substring(0,7);
+  var old = document.getElementById('finEditModal'); if(old) old.remove();
   renderFinance();
 }
 
