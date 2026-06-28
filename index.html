@@ -3656,13 +3656,15 @@ function showSuccess(id, data) {
     '<div style="font-size:18px;font-weight:900;color:#16a34a;margin-bottom:4px;">تم التسجيل بنجاح!</div>'+
     '<div style="font-size:12px;color:#64748b;margin-bottom:20px;">احتفظ بهذه البطاقة · '+id+'</div>'+
     '<div style="display:flex;justify-content:center;margin-bottom:20px;">'+cardHtml+'</div>'+
-    '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">'+
-    '<button onclick="printCard()" style="background:linear-gradient(135deg,#3b0a0a,#b81d22);color:#fff;border:none;border-radius:10px;padding:12px 22px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;gap:7px;">'+
-      '<i class="fas fa-print"></i> طباعة البطاقة</button>'+
-    '<button onclick="downloadCardPDF()" style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8);color:#fff;border:none;border-radius:10px;padding:12px 22px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;gap:7px;">'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:340px;margin:0 auto;">'+
+    '<button onclick="printCard()" style="background:linear-gradient(135deg,#3b0a0a,#b81d22);color:#fff;border:none;border-radius:12px;padding:13px 10px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;">'+
+      '<i class="fas fa-print"></i> طباعة</button>'+
+    '<button onclick="downloadCardPDF()" style="background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:12px;padding:13px 10px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;">'+
       '<i class="fas fa-file-pdf"></i> تنزيل PDF</button>'+
-    '<button data-pg="reg" style="background:#f1f5f9;color:#475569;border:none;border-radius:10px;padding:12px 22px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">'+
-      '<i class="fas fa-user-plus"></i> تسجيل لاعب آخر</button>'+
+    '<button onclick="shareCardPDF()" style="background:linear-gradient(135deg,#128c7e,#25d366);color:#fff;border:none;border-radius:12px;padding:13px 10px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;">'+
+      '<i class="fab fa-whatsapp"></i> مشاركة PDF</button>'+
+    '<button data-pg="reg" style="background:#f1f5f9;color:#475569;border:none;border-radius:12px;padding:13px 10px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;">'+
+      '<i class="fas fa-user-plus"></i> لاعب آخر</button>'+
     '</div></div>';
 
   // توليد QR بعد رسم البطاقة
@@ -3771,6 +3773,30 @@ function downloadCardPDF() {
   }).catch(function(){
     if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-file-pdf"></i> تنزيل PDF'; }
     alert('تعذّر إنشاء PDF، جرّب زر الطباعة بدلاً منه');
+  });
+}
+
+function shareCardPDF() {
+  var card = document.getElementById('playerIdCard');
+  if(!card){ alert('لا توجد بطاقة للمشاركة'); return; }
+  var btn = event && event.target ? event.target.closest('button') : null;
+  if(btn){ btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جارٍ التحضير...'; }
+  html2canvas(card, {scale:4, useCORS:true, allowTaint:true, backgroundColor:'#ffffff'}).then(function(canvas){
+    canvas.toBlob(function(blob){
+      var file = new File([blob], 'بطاقة-لاعب.png', {type:'image/png'});
+      if(btn){ btn.disabled=false; btn.innerHTML='<i class="fab fa-whatsapp"></i> مشاركة PDF'; }
+      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({title:'بطاقة لاعب - أكاديمية الشمالي', files:[file]});
+      } else {
+        // fallback: تنزيل الصورة
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'بطاقة-لاعب.png';
+        a.click();
+      }
+    }, 'image/png');
+  }).catch(function(){
+    if(btn){ btn.disabled=false; btn.innerHTML='<i class="fab fa-whatsapp"></i> مشاركة PDF'; }
   });
 }
 
