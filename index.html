@@ -3613,8 +3613,8 @@ function showSuccess(id, data) {
     '">'+
     // Header
     '<div style="background:#fff;padding:14px 16px 10px;text-align:center;position:relative;">'+
-      '<div style="font-size:9px;color:#b81d22;font-weight:900;letter-spacing:2px;margin-bottom:3px;">SHAMALI FOOTBALL ACADEMY</div>'+
-      '<div style="font-size:17px;font-weight:900;color:#0f172a;margin-bottom:2px;">🦅 أكاديمية الشمالي</div>'+
+      '<img src="logo.jpg" style="width:60px;height:60px;object-fit:contain;margin-bottom:4px;display:block;margin-left:auto;margin-right:auto;" onerror="this.style.display=\'none\'">'+
+      '<div style="font-size:17px;font-weight:900;color:#0f172a;margin-bottom:2px;">أكاديمية الشمالي</div>'+
       '<div style="font-size:9px;color:#94a3b8;">بطاقة لاعب · '+season+'</div>'+
       '<div style="height:3px;background:linear-gradient(90deg,transparent,#b81d22,transparent);margin:10px 0 0;"></div>'+
     '</div>'+
@@ -3638,15 +3638,14 @@ function showSuccess(id, data) {
       idRow('⚽','الموسم', season)+
     '</div>'+
     // Footer
-    '<div style="background:#0f172a;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">'+
-      '<div style="display:flex;align-items:center;gap:6px;flex:1;">'+
-        '<div style="width:16px;height:2px;background:#d4af37;"></div>'+
-        '<div style="font-size:7px;color:rgba(255,255,255,.5);font-weight:700;letter-spacing:1px;">SHAMALI FC · 🇴🇲 OMAN</div>'+
-        '<div style="width:16px;height:2px;background:#d4af37;"></div>'+
+    '<div style="background:linear-gradient(135deg,#b81d22,#7a1015);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">'+
+      '<div style="flex:1;">'+
+        '<div style="font-size:11px;font-weight:900;color:#fff;">أكاديمية الشمالي</div>'+
+        '<div style="font-size:8px;color:rgba(255,255,255,.6);margin-top:2px;">🇴🇲 سلطنة عُمان · '+season+'</div>'+
       '</div>'+
       '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;">'+
         '<div id="regCardQR" style="background:#fff;padding:3px;border-radius:5px;border:2px solid #d4af37;"></div>'+
-        '<div style="font-size:7px;color:rgba(212,175,55,.8);font-weight:700;">امسح للتحقق</div>'+
+        '<div style="font-size:7px;color:rgba(255,255,255,.8);font-weight:700;">امسح للتحقق</div>'+
       '</div>'+
     '</div>'+
     '</div>';
