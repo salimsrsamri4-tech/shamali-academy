@@ -6445,84 +6445,212 @@ function renderParentPlayer(){
   var pid = window._parentSelectedId;
   var children = window._parentChildren || [];
   var p = children.find(function(c){ return c.id === pid; });
-  if(!p){ go('parent_home'); return; }
+  if(!p){ renderParentHome(); return; }
 
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
 
   Promise.all([
     apiGet('تجديدات الاشتراكات'),
-    apiGet('سجل الحضور اليومي')
+    apiGet('سجل الحضور اليومي'),
+    apiGet('تقويم الأكاديمية'),
+    apiGet('تقييمات اللاعبين'),
+    apiGet('المقترحات والملاحظات')
   ]).then(function(res){
-    var renewals = Array.isArray(res[0]) ? res[0] : [];
-    var attAll   = Array.isArray(res[1]) ? res[1] : [];
+    var renewals  = Array.isArray(res[0]) ? res[0] : [];
+    var attAll    = Array.isArray(res[1]) ? res[1] : [];
+    var calendar  = Array.isArray(res[2]) ? res[2] : [];
+    var evals     = Array.isArray(res[3]) ? res[3] : [];
+    var suggests  = Array.isArray(res[4]) ? res[4] : [];
 
-    // حالة الاشتراك
-    var curMonth = MONTHS[new Date().getMonth()]+' '+new Date().getFullYear();
+    var now = new Date();
+    var curMonthIdx = now.getMonth();
+    var curYear = now.getFullYear();
+    var curMonth = MONTHS[curMonthIdx]+' '+curYear;
+
+    // ── الاشتراك ──
     var myRenewals = renewals.filter(function(r){ return r['رقم الملف']===pid; });
     var lastRen = myRenewals.length ? myRenewals[myRenewals.length-1] : null;
     var isActive = lastRen && lastRen['الشهر']===curMonth;
-    var subStatus = isActive
-      ? '<span style="background:#f0fdf4;color:#16a34a;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:800;">✅ نشط · '+curMonth+'</span>'
-      : '<span style="background:#fef2f2;color:#dc2626;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:800;">⚠️ غير مجدد هذا الشهر</span>';
 
-    // الحضور هذا الشهر
-    var myAtt = attAll.filter(function(r){
-      var d = r['التاريخ']||''; var rid = r['رقم الملف']||r['ID']||'';
-      return rid===pid && d.startsWith(new Date().getFullYear()+'-'+(String(new Date().getMonth()+1).padStart(2,'0')));
-    });
-    var present = myAtt.filter(function(r){ return (r['الحالة']||r['status']||'')==='حاضر'; }).length;
-    var total   = myAtt.length;
+    // ── الحضور الشهري (آخر 4 أشهر) ──
+    function monthAttendance(mIdx, yr){
+      var prefix = yr+'-'+String(mIdx+1).padStart(2,'0');
+      var rows = attAll.filter(function(r){
+        return (r['رقم الملف']||r['ID']||'')===pid && (r['التاريخ']||'').startsWith(prefix);
+      });
+      return {present: rows.filter(function(r){return (r['الحالة']||'')==='حاضر';}).length, total: rows.length};
+    }
+    var attMonths = [];
+    for(var i=3;i>=0;i--){
+      var mi = ((curMonthIdx - i) % 12 + 12) % 12;
+      var yi = curYear - (curMonthIdx - i < 0 ? 1 : 0);
+      var att = monthAttendance(mi, yi);
+      attMonths.push({label: MONTHS[mi].substring(0,3), present: att.present, total: att.total});
+    }
+    var curAtt = attMonths[3];
 
+    // ── الإنجازات ──
+    var badges = [];
+    if(curAtt.total > 0 && curAtt.present === curAtt.total) badges.push({icon:'🌟', label:'حضور مثالي'});
+    if(curAtt.present >= 6) badges.push({icon:'🔥', label:'منتظم هذا الشهر'});
+    if(isActive) badges.push({icon:'✅', label:'اشتراك نشط'});
+    var evalMe = evals.filter(function(r){ return (r['رقم الملف']||r['ID']||r['معرف اللاعب']||'')===pid; });
+    if(evalMe.length) badges.push({icon:'⭐', label:'لديه تقييم'});
+    var bday = p.birthDate ? new Date(p.birthDate) : null;
+    if(bday){
+      var daysToB = Math.round((new Date(curYear, bday.getMonth(), bday.getDate()) - now) / 86400000);
+      if(daysToB >= 0 && daysToB <= 30) badges.push({icon:'🎂', label:'عيد ميلاد خلال '+(daysToB||'اليوم')+' يوم'});
+    }
+
+    // ── الأحداث القادمة ──
+    var upcoming = calendar.filter(function(r){
+      var d = r['التاريخ']||'';
+      return d >= now.toISOString().substring(0,10);
+    }).sort(function(a,b){ return (a['التاريخ']||'').localeCompare(b['التاريخ']||''); }).slice(0,3);
+
+    // ── آخر تقييم ──
+    var lastEval = evalMe.length ? evalMe[evalMe.length-1] : null;
+
+    // ── رسائل الأكاديمية (المقترحات المُجاب عليها لهذا الرقم) ──
+    var myMessages = suggests.filter(function(r){
+      return (r['الهاتف']||'').replace(/\s/g,'') === (p.phone||'').replace(/\s/g,'') && r['الرد'];
+    }).slice(-3).reverse();
+
+    // ── بناء الواجهة ──
     var initials = (p.playerName||'').trim().split(' ').map(function(w){return w[0];}).slice(0,2).join('');
     var photoHtml = p.photoB64
       ? '<img src="'+p.photoB64+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #d4af37;">'
       : '<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#b81d22,#7a1015);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fff;border:3px solid #d4af37;">'+initials+'</div>';
 
     var html =
-      // هيدر
-      '<div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:16px;">'+
+      '<div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:16px 16px 20px;">'+
         '<button onclick="renderParentHome()" style="background:rgba(255,255,255,.1);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:14px;">← رجوع</button>'+
         '<div style="display:flex;align-items:center;gap:14px;">'+
-          '<div>'+photoHtml+'</div>'+
+          photoHtml+
           '<div>'+
             '<div style="font-size:18px;font-weight:900;color:#fff;">'+p.playerName+'</div>'+
-            '<div style="font-size:12px;color:#d4af37;margin-top:3px;">'+p.id+'</div>'+
+            '<div style="font-size:11px;color:#d4af37;margin-top:2px;">'+p.id+' · أكاديمية الشمالي</div>'+
+            '<div style="margin-top:6px;">'+(isActive
+              ? '<span style="background:#16a34a;color:#fff;font-size:10px;font-weight:800;border-radius:6px;padding:2px 8px;">✅ اشتراك نشط</span>'
+              : '<span style="background:#dc2626;color:#fff;font-size:10px;font-weight:800;border-radius:6px;padding:2px 8px;">⚠️ غير مجدد</span>'
+            )+'</div>'+
           '</div>'+
         '</div>'+
       '</div>'+
-      '<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">'+
+      '<div style="padding:14px;display:flex;flex-direction:column;gap:12px;">';
 
-      // بطاقات الإحصاء
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+
-        '<div style="background:#fff;border-radius:14px;padding:14px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.06);">'+
-          '<div style="font-size:28px;font-weight:900;color:#0f172a;">'+present+'<span style="font-size:14px;color:#94a3b8;">/'+total+'</span></div>'+
-          '<div style="font-size:10px;color:#64748b;font-weight:700;">الحضور هذا الشهر</div>'+
-        '</div>'+
-        '<div style="background:#fff;border-radius:14px;padding:14px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.06);">'+
-          '<div style="font-size:28px;font-weight:900;color:#0f172a;">'+myRenewals.length+'</div>'+
-          '<div style="font-size:10px;color:#64748b;font-weight:700;">إجمالي التجديدات</div>'+
-        '</div>'+
+    // 1. إحصاء سريع
+    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">'+
+      _pStat(curAtt.present+'/'+curAtt.total,'حضور الشهر','#0f172a')+
+      _pStat(myRenewals.length,'تجديدات','#0f172a')+
+      _pStat(evalMe.length,'تقييمات','#0f172a')+
+      '</div>';
+
+    // 2. الإنجازات
+    if(badges.length){
+      html += '<div style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);">'+
+        '<div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:10px;">🏅 الإنجازات والشارات</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+      badges.forEach(function(b){
+        html += '<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:6px 12px;font-size:11px;font-weight:700;color:#0f172a;">'+b.icon+' '+b.label+'</div>';
+      });
+      html += '</div></div>';
+    }
+
+    // 3. تقدم الحضور (آخر 4 أشهر)
+    html += '<div style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);">'+
+      '<div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:12px;">📊 الحضور - آخر 4 أشهر</div>'+
+      '<div style="display:flex;align-items:flex-end;gap:8px;height:70px;">';
+    attMonths.forEach(function(m){
+      var pct = m.total ? Math.round(m.present/m.total*100) : 0;
+      var color = pct>=80?'#16a34a':pct>=50?'#f59e0b':'#dc2626';
+      html += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">'+
+        '<div style="font-size:9px;font-weight:800;color:'+color+';">'+pct+'%</div>'+
+        '<div style="width:100%;background:'+color+';border-radius:4px 4px 0 0;height:'+Math.max(pct*0.5,4)+'px;"></div>'+
+        '<div style="font-size:9px;color:#94a3b8;font-weight:700;">'+m.label+'</div>'+
+        '</div>';
+    });
+    html += '</div></div>';
+
+    // 4. حالة الاشتراك + سجل المدفوعات
+    html += '<div style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);">'+
+      '<div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:10px;">💳 سجل المدفوعات</div>';
+    if(myRenewals.length){
+      myRenewals.slice().reverse().slice(0,5).forEach(function(r){
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f1f5f9;">'+
+          '<div style="font-size:12px;font-weight:700;color:#0f172a;">'+r['الشهر']+'</div>'+
+          '<div style="display:flex;align-items:center;gap:8px;">'+
+            '<span style="font-size:10px;color:#64748b;">'+( r['الدفع']||'نقداً')+'</span>'+
+            '<span style="background:#f0fdf4;color:#16a34a;font-size:10px;font-weight:800;border-radius:6px;padding:1px 7px;">✓ مدفوع</span>'+
+          '</div>'+
+          '</div>';
+      });
+      if(!isActive) html += '<button onclick="go(\'ren\')" style="margin-top:10px;width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">تجديد الاشتراك الآن ←</button>';
+    } else {
+      html += '<div style="font-size:12px;color:#94a3b8;text-align:center;padding:10px;">لا توجد مدفوعات مسجلة</div>';
+    }
+    html += '</div>';
+
+    // 5. آخر تقييم من المدرب
+    if(lastEval){
+      html += '<div style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);">'+
+        '<div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:10px;">⭐ آخر تقييم من المدرب</div>'+
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
+      ['المهارة','الجسم','الالتزام'].forEach(function(k){
+        var v = parseInt(lastEval[k])||0;
+        html += '<div style="text-align:center;background:#f8fafc;border-radius:10px;padding:8px;">'+
+          '<div style="font-size:18px;font-weight:900;color:#b81d22;">'+v+'<span style="font-size:10px;color:#94a3b8;">/10</span></div>'+
+          '<div style="font-size:9px;color:#64748b;font-weight:700;">'+k+'</div>'+
+          '</div>';
+      });
+      html += '</div>';
+      if(lastEval['الملاحظات']) html += '<div style="margin-top:10px;font-size:11px;color:#475569;background:#f8fafc;border-radius:8px;padding:8px;">"'+lastEval['الملاحظات']+'"</div>';
+      html += '</div>';
+    }
+
+    // 6. الأحداث القادمة
+    if(upcoming.length){
+      html += '<div style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);">'+
+        '<div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:10px;">📅 الأحداث القادمة</div>';
+      upcoming.forEach(function(ev){
+        var typeColor = ev['النوع']==='مباراة'?'#b81d22':ev['النوع']==='إجازة'?'#f59e0b':'#0f172a';
+        html += '<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;">'+
+          '<div style="background:#f8fafc;border-radius:8px;padding:6px 8px;text-align:center;min-width:42px;">'+
+            '<div style="font-size:9px;color:#94a3b8;">'+(ev['التاريخ']||'').substring(5,7)+'/'+  (ev['التاريخ']||'').substring(0,4)+'</div>'+
+            '<div style="font-size:14px;font-weight:900;color:#0f172a;">'+(ev['التاريخ']||'').substring(8,10)+'</div>'+
+          '</div>'+
+          '<div>'+
+            '<div style="font-size:12px;font-weight:800;color:#0f172a;">'+ev['العنوان']+'</div>'+
+            '<div style="font-size:10px;color:'+typeColor+';font-weight:700;">'+ev['النوع']+'</div>'+
+          '</div>'+
+          '</div>';
+      });
+      html += '</div>';
+    }
+
+    // 7. رسائل من الأكاديمية
+    if(myMessages.length){
+      html += '<div style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);">'+
+        '<div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:10px;">📨 ردود الإدارة</div>';
+      myMessages.forEach(function(m){
+        html += '<div style="background:#f0fdf4;border-right:3px solid #16a34a;border-radius:8px;padding:10px;margin-bottom:8px;">'+
+          '<div style="font-size:10px;color:#64748b;margin-bottom:3px;">'+m['النوع']+'</div>'+
+          '<div style="font-size:11px;font-weight:700;color:#0f172a;">'+m['الرد']+'</div>'+
+          '</div>';
+      });
+      html += '</div>';
+    }
+
+    // 8. طلب إجازة + تواصل
+    html +=
+      '<div style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);">'+
+        '<div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:10px;">📝 طلب إجازة</div>'+
+        '<input type="date" id="absDate" class="inp" style="margin-bottom:8px;" min="'+now.toISOString().substring(0,10)+'">'+
+        '<input type="text" id="absReason" class="inp" placeholder="سبب الغياب..." style="margin-bottom:10px;">'+
+        '<button onclick="submitAbsenceReq(\''+pid+'\',\''+p.playerName+'\',\''+p.phone+'\')" style="width:100%;background:linear-gradient(135deg,#0f172a,#1e3a5f);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">إرسال طلب الإجازة</button>'+
       '</div>'+
 
-      // حالة الاشتراك
-      '<div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);">'+
-        '<div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:8px;">💳 حالة الاشتراك</div>'+
-        subStatus+
-        (lastRen?'<div style="font-size:10px;color:#94a3b8;margin-top:6px;">آخر تجديد: '+lastRen['الشهر']+'</div>':'')+
-        (!isActive?'<button onclick="go(\'ren\')" style="margin-top:10px;width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">تجديد الاشتراك الآن ←</button>':'')+
-      '</div>'+
-
-      // بيانات اللاعب
-      '<div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);">'+
-        '<div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:10px;">📋 بيانات اللاعب</div>'+
-        idRow('🗓️','تاريخ الميلاد', p.birthDate||p.birthYear||'—')+
-        idRow('🌍','الجنسية', p.nationality||'—')+
-        idRow('❤️','الحالة الصحية', p.health||'لا يوجد')+
-        idRow('👨‍👦','ولي الأمر', p.parentName||'—')+
-      '</div>'+
-
-      // أزرار
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+
         '<button onclick="showPlayerCardModal(\''+pid+'\')" style="background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:12px;padding:13px;font-size:12px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">🪪 بطاقة اللاعب</button>'+
         '<button onclick="go(\'suggest\')" style="background:linear-gradient(135deg,#0f172a,#1e3a5f);color:#fff;border:none;border-radius:12px;padding:13px;font-size:12px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">💬 تواصل مع الإدارة</button>'+
@@ -6532,8 +6660,37 @@ function renderParentPlayer(){
 
     el.innerHTML = html;
   }).catch(function(){
-    el.innerHTML = '<div class="card"><div class="al al-err">تعذّر تحميل البيانات</div></div>';
+    el.innerHTML = '<div class="card"><div class="al al-err">تعذّر تحميل البيانات. تحقق من الإنترنت.</div></div>';
   });
+}
+
+function _pStat(val, label, color){
+  return '<div style="background:#fff;border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.06);">'+
+    '<div style="font-size:20px;font-weight:900;color:'+color+';">'+val+'</div>'+
+    '<div style="font-size:9px;color:#64748b;font-weight:700;margin-top:2px;">'+label+'</div>'+
+    '</div>';
+}
+
+function submitAbsenceReq(pid, pname, phone){
+  var date = (document.getElementById('absDate')||{}).value;
+  var reason = (document.getElementById('absReason')||{}).value.trim();
+  if(!date){ alert('اختر التاريخ'); return; }
+  if(!reason){ alert('أدخل سبب الغياب'); return; }
+  showL(true);
+  apiAppend('المقترحات والملاحظات',{
+    'التاريخ': new Date().toISOString(),
+    'رقم الملف': pid,
+    'الاسم': pname,
+    'الهاتف': phone,
+    'النوع': 'طلب إجازة',
+    'الرسالة': 'تاريخ الغياب: '+date+' — السبب: '+reason,
+    'الحالة': 'معلّق'
+  }).then(function(){
+    showL(false);
+    alert('✅ تم إرسال طلب الإجازة للإدارة');
+    document.getElementById('absDate').value='';
+    document.getElementById('absReason').value='';
+  }).catch(function(){ showL(false); alert('خطأ في الإرسال'); });
 }
 
 function renderParentReg(){
