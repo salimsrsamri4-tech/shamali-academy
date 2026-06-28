@@ -231,7 +231,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
     <button class="sb-btn gold" data-page="suggestions" data-pg="suggestions"><i class="fas fa-inbox"></i> صندوق المقترحات</button>
     <button class="sb-btn gold" data-page="birthdays" data-pg="birthdays"><i class="fas fa-birthday-cake"></i> أعياد الميلاد</button>
     <button class="sb-btn gold" data-page="groupmsg" data-pg="groupmsg"><i class="fas fa-paper-plane"></i> إشعار جماعي</button>
-    <button class="sb-btn gold" data-page="substrack" data-pg="substrack"><i class="fas fa-bell"></i> متابعة الاشتراكات</button>
+    <button class="sb-btn gold" data-page="substrack" data-pg="substrack"><i class="fas fa-bell"></i> متابعة الاشتراكات <span id="subsBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
     <button class="sb-btn gold" data-page="calendaradmin" data-pg="calendaradmin"><i class="fas fa-calendar-plus"></i> إدارة التقويم</button>
     <button class="sb-btn gold" data-page="reportreqs" data-pg="reportreqs"><i class="fas fa-file-export"></i> طلبات التقارير <span id="reqBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
     <button class="sb-btn danger" id="logoutBtn" data-act="logout"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
@@ -2165,6 +2165,7 @@ function checkAdm() {
     document.getElementById('admMenu').style.display = 'block';
     go('dashboard');
     loadReqBadge();
+    loadSubsBadge();
   } else {
     document.getElementById('admErr').style.display = 'block';
   }
@@ -2836,6 +2837,18 @@ function loadReqBadge(){
   }).catch(function(){});
 }
 
+function loadSubsBadge(){
+  Promise.all([getPlayers(), apiGet('تجديدات الاشتراكات')]).then(function(res){
+    var players=res[0]; var renewals=Array.isArray(res[1])?res[1]:[];
+    var curMonth=MONTHS[new Date().getMonth()]+' '+new Date().getFullYear();
+    var renewed={};
+    renewals.forEach(function(r){ if(r['رقم الملف']&&r['الشهر']===curMonth) renewed[r['رقم الملف']]=true; });
+    var n=players.filter(function(p){return !renewed[p.id];}).length;
+    var b=document.getElementById('subsBadge');
+    if(b){b.textContent=n;b.style.display=n?'inline':'none';}
+  }).catch(function(){});
+}
+
 // ===== FORWARD TO COACH =====
 var _fwdData = {};
 
@@ -3102,42 +3115,80 @@ function renderSubsTrack(){
   Promise.all([getPlayers(), apiGet('تجديدات الاشتراكات')]).then(function(res){
     var players=res[0];
     var renewals=Array.isArray(res[1])?res[1]:[];
-    var curMonth=MONTHS[new Date().getMonth()]+' '+new Date().getFullYear();
-    var renewed={};
+    var now=new Date();
+    var curMonthIdx=now.getMonth();
+    var curYear=now.getFullYear();
+    var curMonth=MONTHS[curMonthIdx]+' '+curYear;
+
+    // آخر شهر مدفوع لكل لاعب
+    var lastPaid={};
     renewals.forEach(function(r){
-      var id=r['رقم الملف']||'';
-      var month=r['الشهر']||'';
-      if(id&&month===curMonth) renewed[id]=true;
+      var id=r['رقم الملف']||''; var m=r['الشهر']||'';
+      if(!id||!m) return;
+      var parts=m.split(' '); if(parts.length<2) return;
+      var mIdx=MONTHS.indexOf(parts[0]); var yr=parseInt(parts[1]);
+      if(isNaN(mIdx)||isNaN(yr)) return;
+      var score=yr*12+mIdx;
+      if(!lastPaid[id]||score>lastPaid[id].score) lastPaid[id]={score:score,label:m};
     });
-    var notRenewed=players.filter(function(p){return !renewed[p.id];});
-    var didRenew=players.filter(function(p){return renewed[p.id];});
+
+    // تصنيف اللاعبين
+    var curScore=curYear*12+curMonthIdx;
+    var expired=[]; var renewed=[];
+    players.forEach(function(p){
+      var lp=lastPaid[p.id];
+      if(lp&&lp.score>=curScore){ renewed.push(p); }
+      else{ var late=lp?curScore-lp.score:null; expired.push({p:p,late:late,lastLabel:lp?lp.label:null}); }
+    });
+    // ترتيب: الأكثر تأخراً أولاً
+    expired.sort(function(a,b){ return (b.late||999)-(a.late||999); });
+
     var html='<div class="card">'+
       '<div class="sec-title"><i class="fas fa-bell"></i> متابعة الاشتراكات · '+curMonth+'</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">'+
       '<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:14px;text-align:center;">'+
-      '<div style="font-size:28px;font-weight:900;color:#dc2626;">'+notRenewed.length+'</div>'+
-      '<div style="font-size:11px;color:#dc2626;font-weight:700;">لم يجدّدوا</div></div>'+
+      '<div style="font-size:28px;font-weight:900;color:#dc2626;">'+expired.length+'</div>'+
+      '<div style="font-size:11px;color:#dc2626;font-weight:700;">غير مجدّد</div></div>'+
       '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:14px;text-align:center;">'+
-      '<div style="font-size:28px;font-weight:900;color:#16a34a;">'+didRenew.length+'</div>'+
-      '<div style="font-size:11px;color:#16a34a;font-weight:700;">جدّدوا</div></div></div>';
+      '<div style="font-size:28px;font-weight:900;color:#16a34a;">'+renewed.length+'</div>'+
+      '<div style="font-size:11px;color:#16a34a;font-weight:700;">مجدّد ✅</div></div></div>';
 
-    if(notRenewed.length){
-      html+='<div style="margin-bottom:12px;"><div style="font-weight:800;font-size:13px;color:#dc2626;margin-bottom:8px;">⚠️ لم يجدّدوا هذا الشهر</div>';
-      notRenewed.forEach(function(p){
-        html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f1f5f9;">'+
-          '<div><div style="font-weight:700;font-size:13px;">'+p.playerName+'</div>'+
-          '<div style="font-size:10px;color:#64748b;">'+p.id+(p.phone?' · '+p.phone:'')+'</div></div>'+
-          '<button onclick="remindParent(\''+p.phone+'\',\''+p.playerName+'\')" style="background:#25d366;color:#fff;border:none;border-radius:7px;padding:6px 10px;cursor:pointer;font-size:11px;font-weight:700;font-family:Cairo,sans-serif;">📲 تذكير</button>'+
+    if(expired.length){
+      html+='<div style="font-weight:800;font-size:13px;color:#dc2626;margin-bottom:10px;">⚠️ لم يجدّدوا هذا الشهر</div>';
+      expired.forEach(function(item){
+        var p=item.p;
+        var lateTag='';
+        if(item.late===null) lateTag='<span style="background:#fef2f2;color:#dc2626;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:800;">لم يدفع قط</span>';
+        else if(item.late===1) lateTag='<span style="background:#fff7ed;color:#ea580c;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:800;">متأخر شهر</span>';
+        else lateTag='<span style="background:#fef2f2;color:#dc2626;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:800;">متأخر '+item.late+' أشهر</span>';
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;">'+
+          '<div>'+
+          '<div style="font-weight:700;font-size:13px;">'+p.playerName+'</div>'+
+          '<div style="font-size:10px;color:#64748b;margin:2px 0;">'+p.id+(p.phone?' · '+p.phone:'')+'</div>'+
+          lateTag+
+          (item.lastLabel?'<div style="font-size:9px;color:#94a3b8;margin-top:3px;">آخر دفعة: '+item.lastLabel+'</div>':'')+
+          '</div>'+
+          '<button onclick="remindParent(\''+p.phone+'\',\''+p.playerName+'\')" style="background:#25d366;color:#fff;border:none;border-radius:7px;padding:6px 10px;cursor:pointer;font-size:11px;font-weight:700;font-family:Cairo,sans-serif;flex-shrink:0;">📲 تذكير</button>'+
           '</div>';
       });
-      html+='</div>';
-      html+='<button class="btn-sub" style="background:#25d366;" onclick="remindAll()">📲 تذكير الجميع دفعة واحدة</button>';
+      html+='<button class="btn-sub" style="background:#25d366;margin-top:12px;" onclick="remindAll()">📲 تذكير الجميع دفعة واحدة</button>';
     } else {
       html+='<div class="al al-ok" style="text-align:center;font-size:14px;font-weight:800;">✅ جميع اللاعبين جدّدوا اشتراكاتهم هذا الشهر!</div>';
     }
+
+    if(renewed.length){
+      html+='<details style="margin-top:14px;"><summary style="font-size:12px;font-weight:800;color:#16a34a;cursor:pointer;">✅ المجدّدون هذا الشهر ('+renewed.length+')</summary><div style="margin-top:8px;">';
+      renewed.forEach(function(p){
+        html+='<div style="font-size:12px;padding:5px 0;border-bottom:1px solid #f1f5f9;color:#334155;">'+p.playerName+' <span style="font-size:10px;color:#94a3b8;">'+p.id+'</span></div>';
+      });
+      html+='</div></details>';
+    }
     html+='</div>';
     document.getElementById('content').innerHTML=html;
-    window._notRenewed=notRenewed;
+    window._notRenewed=expired.map(function(e){return e.p;});
+    // تحديث badge
+    var b=document.getElementById('subsBadge');
+    if(b){b.textContent=expired.length;b.style.display=expired.length?'inline':'none';}
   });
 }
 function remindParent(phone,name){
