@@ -237,6 +237,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
     <button class="sb-btn gold" data-page="calendaradmin" data-pg="calendaradmin"><i class="fas fa-calendar-plus"></i> إدارة التقويم</button>
     <button class="sb-btn gold" data-page="reportreqs" data-pg="reportreqs"><i class="fas fa-file-export"></i> طلبات التقارير <span id="reqBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
     <button class="sb-btn gold" data-page="admintools" data-pg="admintools"><i class="fas fa-tools"></i> أدوات الإدارة</button>
+    <button class="sb-btn" data-page="finance" data-pg="finance" style="color:#10b981;border-top:1px solid rgba(16,185,129,.2);"><i class="fas fa-lock"></i> النظام المالي الخاص 🔐</button>
     <button class="sb-btn danger" id="logoutBtn" data-act="logout"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
   <hr class="sb-hr">
@@ -2234,6 +2235,7 @@ function renderPage(page) {
     case 'groupmsg': renderGroupMsg(); break;
     case 'substrack': renderSubsTrack(); break;
     case 'admintools': renderAdminTools(); break;
+    case 'finance': renderFinance(); break;
     default:
       if(page && page.indexOf('verify_') === 0){ renderVerify(page.replace('verify_','')); break; }
       renderReg();
@@ -3154,6 +3156,339 @@ function _downloadCSV(rows, filename){
   a.href = URL.createObjectURL(blob);
   a.download = filename+'.csv';
   a.click();
+}
+
+// ===== PRIVATE FINANCIAL SYSTEM =====
+var _finUnlocked = false;
+var _finAttempts = 0;
+var _finLockUntil = 0;
+
+function _finHash(pin){ var h=0; for(var i=0;i<pin.length;i++){h=((h<<5)-h)+pin.charCodeAt(i);h|=0;} return h.toString(); }
+
+function _finRecords(){ try{ return JSON.parse(localStorage.getItem('shamali_fin')||'[]'); } catch(e){ return []; } }
+function _finSave(arr){ localStorage.setItem('shamali_fin', JSON.stringify(arr)); }
+
+function renderFinance(){
+  var el = document.getElementById('content');
+  var now = new Date();
+
+  // check lock
+  if(!_finUnlocked){
+    var storedPin = localStorage.getItem('shamali_fin_pin');
+    var lockUntil = parseInt(localStorage.getItem('shamali_fin_lock')||'0');
+    var attempts  = parseInt(localStorage.getItem('shamali_fin_att')||'0');
+    var locked = Date.now() < lockUntil;
+
+    el.innerHTML =
+      '<div style="min-height:100vh;background:linear-gradient(160deg,#0f172a,#064e3b);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">'+
+        '<div style="font-size:56px;margin-bottom:8px;">🔐</div>'+
+        '<div style="font-size:20px;font-weight:900;color:#10b981;margin-bottom:4px;">النظام المالي الخاص</div>'+
+        '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:28px;">محمي — للمدير فقط</div>'+
+        '<div style="background:rgba(255,255,255,.07);border:1px solid rgba(16,185,129,.3);border-radius:18px;padding:28px 24px;width:100%;max-width:340px;">'+
+          (locked
+            ? '<div style="text-align:center;color:#f87171;font-size:13px;font-weight:700;padding:20px 0;">🔒 محظور مؤقتاً<br><span style="font-size:11px;opacity:.7;">حاول بعد 5 دقائق</span></div>'
+            : (!storedPin
+              ? '<div style="font-size:13px;color:#10b981;font-weight:700;margin-bottom:14px;text-align:center;">أنشئ رمز PIN خاص بك</div>'+
+                '<div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:16px;text-align:center;">سيُستخدم للدخول إلى النظام المالي فقط</div>'+
+                '<input id="finPin1" type="password" inputmode="numeric" maxlength="6" placeholder="أدخل رمز PIN (4-6 أرقام)" class="adm-inp" style="margin-bottom:12px;">'+
+                '<input id="finPin2" type="password" inputmode="numeric" maxlength="6" placeholder="أعد الرمز للتأكيد" class="adm-inp" style="margin-bottom:16px;">'+
+                '<div id="finPinErr" style="color:#f87171;font-size:12px;margin-bottom:12px;display:none;text-align:center;"></div>'+
+                '<button onclick="finSetPin()" style="width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">إنشاء الرمز ✅</button>'
+              : '<div style="font-size:13px;color:rgba(255,255,255,.7);font-weight:700;margin-bottom:18px;text-align:center;">أدخل رمز PIN</div>'+
+                '<input id="finPinIn" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" class="adm-inp" style="font-size:24px;letter-spacing:8px;text-align:center;margin-bottom:16px;" onkeydown="if(event.key===\'Enter\')finLogin()">'+
+                '<div id="finPinErr" style="color:#f87171;font-size:12px;margin-bottom:12px;display:none;text-align:center;"></div>'+
+                '<button onclick="finLogin()" style="width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">دخول 🔓</button>'+
+                '<div style="text-align:center;margin-top:14px;"><button onclick="finResetPin()" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:11px;cursor:pointer;font-family:Cairo,sans-serif;">نسيت الرمز؟</button></div>'
+            )
+          )+
+        '</div>'+
+      '</div>';
+    return;
+  }
+
+  // === DASHBOARD ===
+  var records = _finRecords();
+  var curMonthKey = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  var filterMonth = window._finFilterMonth || curMonthKey;
+
+  var monthRec = records.filter(function(r){ return r.date && r.date.startsWith(filterMonth); });
+  var totalIn  = monthRec.filter(function(r){ return r.type==='income'; }).reduce(function(s,r){ return s+r.amount; },0);
+  var totalOut = monthRec.filter(function(r){ return r.type==='expense'; }).reduce(function(s,r){ return s+r.amount; },0);
+  var net = totalIn - totalOut;
+
+  // build month options for last 12 months
+  var monthOpts = '';
+  for(var i=0;i<12;i++){
+    var d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    var k = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    var lbl = MONTHS[d.getMonth()]+' '+d.getFullYear();
+    monthOpts += '<option value="'+k+'"'+(k===filterMonth?' selected':'')+'>'+lbl+'</option>';
+  }
+
+  // group expenses by category for this month
+  var expCats = {};
+  monthRec.filter(function(r){ return r.type==='expense'; }).forEach(function(r){
+    expCats[r.cat] = (expCats[r.cat]||0) + r.amount;
+  });
+  var inCats = {};
+  monthRec.filter(function(r){ return r.type==='income'; }).forEach(function(r){
+    inCats[r.cat] = (inCats[r.cat]||0) + r.amount;
+  });
+
+  function fmt(n){ return n.toLocaleString('ar-OM', {minimumFractionDigits:3, maximumFractionDigits:3})+' ر.ع'; }
+
+  var expCatRows = Object.keys(expCats).map(function(k){
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f1f5f9;">'+
+      '<span style="font-size:12px;font-weight:700;color:#ef4444;">'+fmt(expCats[k])+'</span>'+
+      '<span style="font-size:12px;color:#475569;">'+k+'</span></div>';
+  }).join('') || '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:12px;">لا توجد مصروفات هذا الشهر</div>';
+
+  var inCatRows = Object.keys(inCats).map(function(k){
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f1f5f9;">'+
+      '<span style="font-size:12px;font-weight:700;color:#10b981;">'+fmt(inCats[k])+'</span>'+
+      '<span style="font-size:12px;color:#475569;">'+k+'</span></div>';
+  }).join('') || '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:12px;">لا توجد إيرادات هذا الشهر</div>';
+
+  // last 6 months for chart
+  var chartLabels = [], chartIn = [], chartOut = [];
+  for(var j=5;j>=0;j--){
+    var cd = new Date(now.getFullYear(), now.getMonth()-j, 1);
+    var ck = cd.getFullYear()+'-'+String(cd.getMonth()+1).padStart(2,'0');
+    chartLabels.push(MONTHS[cd.getMonth()].substring(0,3));
+    var cRecs = records.filter(function(r){ return r.date && r.date.startsWith(ck); });
+    chartIn.push(cRecs.filter(function(r){ return r.type==='income'; }).reduce(function(s,r){ return s+r.amount; },0));
+    chartOut.push(cRecs.filter(function(r){ return r.type==='expense'; }).reduce(function(s,r){ return s+r.amount; },0));
+  }
+
+  // recent transactions
+  var recentRecs = records.filter(function(r){ return r.date && r.date.startsWith(filterMonth); })
+    .sort(function(a,b){ return b.date>a.date?1:-1; });
+  var recentHtml = recentRecs.slice(0,20).map(function(r){
+    var isIn = r.type==='income';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f8fafc;">'+
+      '<div style="display:flex;align-items:center;gap:10px;">'+
+        '<div style="width:36px;height:36px;border-radius:50%;background:'+(isIn?'#dcfce7':'#fee2e2')+';display:flex;align-items:center;justify-content:center;font-size:16px;">'+(isIn?'💰':'💸')+'</div>'+
+        '<div>'+
+          '<div style="font-size:12px;font-weight:700;color:#0f172a;">'+r.cat+'</div>'+
+          '<div style="font-size:10px;color:#94a3b8;">'+(r.note||'')+'&nbsp;·&nbsp;'+(r.date||'').substring(0,10)+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:8px;">'+
+        '<div style="font-size:13px;font-weight:900;color:'+(isIn?'#10b981':'#ef4444')+'">'+(isIn?'+':'-')+fmt(r.amount)+'</div>'+
+        '<button onclick="finDelete(\''+r.id+'\')" style="background:none;border:none;color:#cbd5e1;font-size:12px;cursor:pointer;padding:4px;">✕</button>'+
+      '</div>'+
+    '</div>';
+  }).join('') || '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px;">لا توجد حركات هذا الشهر</div>';
+
+  el.innerHTML =
+    // هيدر
+    '<div style="background:linear-gradient(135deg,#064e3b,#0f172a);padding:24px 16px 20px;text-align:center;position:relative;">'+
+      '<button onclick="finLock()" style="position:absolute;top:12px;left:12px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:Cairo,sans-serif;">🔒 قفل</button>'+
+      '<div style="font-size:36px;margin-bottom:6px;">💼</div>'+
+      '<div style="font-size:18px;font-weight:900;color:#10b981;">النظام المالي الخاص</div>'+
+      '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;">للمدير فقط — سري</div>'+
+    '</div>'+
+
+    '<div style="padding:16px;display:flex;flex-direction:column;gap:14px;">'+
+
+    // فلتر الشهر
+    '<div style="background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.06);">'+
+      '<label style="font-size:11px;font-weight:700;color:#64748b;">الشهر</label>'+
+      '<select id="finMonthSel" onchange="window._finFilterMonth=this.value;renderFinance();" class="inp" style="margin-top:4px;">'+monthOpts+'</select>'+
+    '</div>'+
+
+    // ملخص (3 بطاقات)
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">'+
+      _finCard('💰','إيرادات',fmt(totalIn),'#10b981')+
+      _finCard('💸','مصروفات',fmt(totalOut),'#ef4444')+
+      _finCard(net>=0?'✅':'⚠️','الصافي',fmt(Math.abs(net)),net>=0?'#059669':'#dc2626')+
+    '</div>'+
+
+    // أزرار إضافة
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+
+      '<button onclick="finAddModal(\'income\')" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:12px;padding:14px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="fas fa-plus-circle"></i> إيراد جديد</button>'+
+      '<button onclick="finAddModal(\'expense\')" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;border-radius:12px;padding:14px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="fas fa-minus-circle"></i> مصروف جديد</button>'+
+    '</div>'+
+
+    // رسم بياني
+    '<div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);">'+
+      '<div style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:12px;"><i class="fas fa-chart-bar" style="color:#10b981;"></i> آخر 6 أشهر</div>'+
+      '<canvas id="finChart" height="180"></canvas>'+
+    '</div>'+
+
+    // تفاصيل الإيرادات
+    '<div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);">'+
+      '<div style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:10px;border-bottom:2px solid #f0fdf4;padding-bottom:8px;"><i class="fas fa-arrow-up" style="color:#10b981;"></i> تفاصيل الإيرادات</div>'+
+      inCatRows+
+      '<div style="margin-top:8px;text-align:left;font-size:13px;font-weight:900;color:#10b981;">الإجمالي: '+fmt(totalIn)+'</div>'+
+    '</div>'+
+
+    // تفاصيل المصروفات
+    '<div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);">'+
+      '<div style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:10px;border-bottom:2px solid #fff0f0;padding-bottom:8px;"><i class="fas fa-arrow-down" style="color:#ef4444;"></i> تفاصيل المصروفات</div>'+
+      expCatRows+
+      '<div style="margin-top:8px;text-align:left;font-size:13px;font-weight:900;color:#ef4444;">الإجمالي: '+fmt(totalOut)+'</div>'+
+    '</div>'+
+
+    // الحركات الأخيرة
+    '<div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);">'+
+      '<div style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:10px;border-bottom:2px solid #f1f5f9;padding-bottom:8px;display:flex;justify-content:space-between;align-items:center;">'+
+        '<span><i class="fas fa-list" style="color:#64748b;"></i> الحركات</span>'+
+        '<button onclick="finExport(\''+filterMonth+'\')" style="background:#f1f5f9;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;color:#475569;"><i class="fas fa-download"></i> تصدير</button>'+
+      '</div>'+
+      recentHtml+
+    '</div>'+
+
+    // تغيير PIN
+    '<button onclick="finChangePin()" style="width:100%;background:#f1f5f9;border:none;border-radius:10px;padding:12px;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;font-family:Cairo,sans-serif;margin-bottom:20px;"><i class="fas fa-key"></i> تغيير رمز PIN</button>'+
+
+    '</div>';
+
+  // رسم الـ chart
+  setTimeout(function(){
+    var ctx = document.getElementById('finChart');
+    if(!ctx) return;
+    if(window._finChartInst) { try{ window._finChartInst.destroy(); }catch(e){} }
+    window._finChartInst = new Chart(ctx, {
+      type:'bar',
+      data:{
+        labels: chartLabels,
+        datasets:[
+          {label:'إيرادات',data:chartIn,backgroundColor:'rgba(16,185,129,.7)',borderRadius:6},
+          {label:'مصروفات',data:chartOut,backgroundColor:'rgba(239,68,68,.7)',borderRadius:6}
+        ]
+      },
+      options:{
+        responsive:true,
+        plugins:{ legend:{ labels:{ font:{family:'Cairo'}, color:'#475569' } } },
+        scales:{
+          x:{ ticks:{ font:{family:'Cairo'}, color:'#64748b' }, grid:{display:false} },
+          y:{ ticks:{ font:{family:'Cairo'}, color:'#64748b' }, grid:{color:'#f1f5f9'} }
+        }
+      }
+    });
+  }, 100);
+}
+
+function _finCard(icon, label, val, color){
+  return '<div style="background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:12px 8px;text-align:center;border-top:3px solid '+color+';">'+
+    '<div style="font-size:20px;margin-bottom:4px;">'+icon+'</div>'+
+    '<div style="font-size:11px;font-weight:900;color:'+color+';word-break:break-all;line-height:1.3;">'+val+'</div>'+
+    '<div style="font-size:9px;color:#94a3b8;font-weight:700;margin-top:3px;">'+label+'</div>'+
+  '</div>';
+}
+
+function finSetPin(){
+  var p1 = (document.getElementById('finPin1')||{}).value||'';
+  var p2 = (document.getElementById('finPin2')||{}).value||'';
+  var err = document.getElementById('finPinErr');
+  if(p1.length<4||p1.length>6||!/^\d+$/.test(p1)){ err.style.display=''; err.textContent='الرمز يجب أن يكون 4-6 أرقام'; return; }
+  if(p1!==p2){ err.style.display=''; err.textContent='الرمزان غير متطابقين'; return; }
+  localStorage.setItem('shamali_fin_pin', _finHash(p1));
+  localStorage.setItem('shamali_fin_att','0');
+  _finUnlocked = true;
+  renderFinance();
+}
+
+function finLogin(){
+  var pin = (document.getElementById('finPinIn')||{}).value||'';
+  var stored = localStorage.getItem('shamali_fin_pin');
+  var err = document.getElementById('finPinErr');
+  if(_finHash(pin)===stored){
+    _finUnlocked=true;
+    localStorage.setItem('shamali_fin_att','0');
+    localStorage.removeItem('shamali_fin_lock');
+    window._finFilterMonth = null;
+    renderFinance();
+  } else {
+    var att = parseInt(localStorage.getItem('shamali_fin_att')||'0')+1;
+    localStorage.setItem('shamali_fin_att', att);
+    if(att>=3){ localStorage.setItem('shamali_fin_lock', Date.now()+5*60*1000); renderFinance(); return; }
+    err.style.display=''; err.textContent='رمز خاطئ — '+(3-att)+' محاولة متبقية';
+  }
+}
+
+function finLock(){ _finUnlocked=false; renderFinance(); }
+
+function finResetPin(){
+  if(!confirm('سيتم حذف الرمز السري. هل أنت متأكد؟')) return;
+  localStorage.removeItem('shamali_fin_pin');
+  localStorage.removeItem('shamali_fin_att');
+  localStorage.removeItem('shamali_fin_lock');
+  _finUnlocked=false;
+  renderFinance();
+}
+
+function finChangePin(){
+  var np = prompt('أدخل رمز PIN الجديد (4-6 أرقام):');
+  if(!np) return;
+  if(np.length<4||np.length>6||!/^\d+$/.test(np)){ alert('الرمز يجب أن يكون 4-6 أرقام'); return; }
+  var np2 = prompt('أعد الرمز للتأكيد:');
+  if(np!==np2){ alert('الرمزان غير متطابقين'); return; }
+  localStorage.setItem('shamali_fin_pin', _finHash(np));
+  alert('✅ تم تغيير رمز PIN بنجاح');
+}
+
+function finAddModal(type){
+  var old = document.getElementById('finModal'); if(old) old.remove();
+  var isIn = type==='income';
+  var cats = isIn
+    ? ['رسوم اشتراكات','رعاة','رسوم بطولة','مبيعات أدوات','أخرى']
+    : ['راتب مدرب','راتب مصور','راتب إداري','راتب مصمم','حجز ملعب','معدات ورياضية','مصاريف تشغيلية','أخرى'];
+
+  var modal = document.createElement('div');
+  modal.id='finModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0;';
+  modal.innerHTML=
+    '<div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;font-family:Cairo,sans-serif;direction:rtl;animation:slideUp .25s ease;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">'+
+        '<div style="font-size:16px;font-weight:900;color:'+(isIn?'#10b981':'#ef4444')+'">'+(isIn?'💰 إضافة إيراد':'💸 إضافة مصروف')+'</div>'+
+        '<button onclick="document.getElementById(\'finModal\').remove()" style="background:#f1f5f9;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>'+
+      '</div>'+
+      '<div class="mb"><label class="lbl">التصنيف</label>'+
+        '<select id="finCat" class="inp">'+cats.map(function(c){ return '<option>'+c+'</option>'; }).join('')+'</select></div>'+
+      '<div class="mb"><label class="lbl">المبلغ (ر.ع)</label>'+
+        '<input id="finAmt" type="number" step="0.001" min="0" class="inp" placeholder="0.000"></div>'+
+      '<div class="mb"><label class="lbl">التاريخ</label>'+
+        '<input id="finDate" type="date" class="inp" value="'+new Date().toISOString().substring(0,10)+'"></div>'+
+      '<div class="mb"><label class="lbl">ملاحظة (اختياري)</label>'+
+        '<input id="finNote" type="text" class="inp" placeholder="مثال: راتب مارس / اسم الراعي..."></div>'+
+      '<div id="finAddErr" style="color:#ef4444;font-size:12px;margin-bottom:10px;display:none;"></div>'+
+      '<button onclick="finSaveRecord(\''+type+'\')" style="width:100%;background:linear-gradient(135deg,'+(isIn?'#10b981,#059669':'#ef4444,#dc2626')+');color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">حفظ</button>'+
+    '</div>';
+  document.body.appendChild(modal);
+}
+
+function finSaveRecord(type){
+  var cat  = (document.getElementById('finCat')||{}).value||'';
+  var amtV = (document.getElementById('finAmt')||{}).value||'';
+  var date = (document.getElementById('finDate')||{}).value||'';
+  var note = (document.getElementById('finNote')||{}).value||'';
+  var err  = document.getElementById('finAddErr');
+  var amt  = parseFloat(amtV);
+  if(!cat||isNaN(amt)||amt<=0){ err.style.display=''; err.textContent='يرجى تعبئة التصنيف والمبلغ'; return; }
+  if(!date){ err.style.display=''; err.textContent='يرجى اختيار التاريخ'; return; }
+  var recs = _finRecords();
+  recs.push({ id: 'f'+Date.now(), type:type, cat:cat, amount:amt, date:date, note:note });
+  _finSave(recs);
+  var old = document.getElementById('finModal'); if(old) old.remove();
+  window._finFilterMonth = date.substring(0,7);
+  renderFinance();
+}
+
+function finDelete(id){
+  if(!confirm('حذف هذه الحركة؟')) return;
+  var recs = _finRecords().filter(function(r){ return r.id!==id; });
+  _finSave(recs);
+  renderFinance();
+}
+
+function finExport(monthKey){
+  var recs = _finRecords().filter(function(r){ return r.date && r.date.startsWith(monthKey); });
+  if(!recs.length){ alert('لا توجد بيانات لهذا الشهر'); return; }
+  var rows = [['النوع','التصنيف','المبلغ (ر.ع)','التاريخ','ملاحظة']];
+  recs.forEach(function(r){ rows.push([r.type==='income'?'إيراد':'مصروف',r.cat,r.amount,r.date,r.note||'']); });
+  _downloadCSV(rows, 'مالية-'+monthKey);
 }
 
 function loadSubsBadge(){
