@@ -3309,6 +3309,8 @@ function renderFinance(){
       '<button onclick="finAddModal(\'income\')" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:12px;padding:14px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="fas fa-plus-circle"></i> إيراد جديد</button>'+
       '<button onclick="finAddModal(\'expense\')" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;border-radius:12px;padding:14px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="fas fa-minus-circle"></i> مصروف جديد</button>'+
     '</div>'+
+    '<button onclick="finApplyRecurring(\''+filterMonth+'\')" style="width:100%;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="fas fa-sync-alt"></i> تطبيق المصروفات الثابتة لهذا الشهر</button>'+
+    '<button onclick="finManageRecurring()" style="width:100%;background:#f8fafc;border:1.5px dashed #7c3aed;border-radius:12px;padding:11px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;color:#7c3aed;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="fas fa-cog"></i> إدارة المصروفات الثابتة الشهرية</button>'+
 
     // رسم بياني
     '<div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);">'+
@@ -3334,7 +3336,10 @@ function renderFinance(){
     '<div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);">'+
       '<div style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:10px;border-bottom:2px solid #f1f5f9;padding-bottom:8px;display:flex;justify-content:space-between;align-items:center;">'+
         '<span><i class="fas fa-list" style="color:#64748b;"></i> الحركات</span>'+
-        '<button onclick="finExport(\''+filterMonth+'\')" style="background:#f1f5f9;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;color:#475569;"><i class="fas fa-download"></i> تصدير</button>'+
+        '<div style="display:flex;gap:6px;">'+
+        '<button onclick="finExportPDF(\''+filterMonth+'\')" style="background:linear-gradient(135deg,#b81d22,#7a1015);border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;color:#fff;"><i class="fas fa-file-pdf"></i> PDF</button>'+
+        '<button onclick="finExport(\''+filterMonth+'\')" style="background:#f1f5f9;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;color:#475569;"><i class="fas fa-file-excel"></i> Excel</button>'+
+        '</div>'+
       '</div>'+
       recentHtml+
     '</div>'+
@@ -3489,6 +3494,206 @@ function finExport(monthKey){
   var rows = [['النوع','التصنيف','المبلغ (ر.ع)','التاريخ','ملاحظة']];
   recs.forEach(function(r){ rows.push([r.type==='income'?'إيراد':'مصروف',r.cat,r.amount,r.date,r.note||'']); });
   _downloadCSV(rows, 'مالية-'+monthKey);
+}
+
+function finExportPDF(monthKey){
+  var recs = _finRecords().filter(function(r){ return r.date && r.date.startsWith(monthKey); });
+  var monthName = (function(){
+    var p = monthKey.split('-');
+    return MONTHS[parseInt(p[1])-1]+' '+p[0];
+  })();
+  var totalIn  = recs.filter(function(r){ return r.type==='income'; }).reduce(function(s,r){ return s+r.amount; },0);
+  var totalOut = recs.filter(function(r){ return r.type==='expense'; }).reduce(function(s,r){ return s+r.amount; },0);
+  var net = totalIn - totalOut;
+  function fmt(n){ return n.toLocaleString('ar-OM',{minimumFractionDigits:3,maximumFractionDigits:3})+' ر.ع'; }
+
+  // تجميع حسب التصنيف
+  var inCats={}, outCats={};
+  recs.forEach(function(r){
+    if(r.type==='income') inCats[r.cat]=(inCats[r.cat]||0)+r.amount;
+    else outCats[r.cat]=(outCats[r.cat]||0)+r.amount;
+  });
+
+  function catRows(obj, color){
+    return Object.keys(obj).map(function(k){
+      return '<tr><td style="padding:7px 12px;border-bottom:1px solid #f1f5f9;font-size:12px;color:#475569;text-align:right;">'+k+'</td>'+
+             '<td style="padding:7px 12px;border-bottom:1px solid #f1f5f9;font-size:12px;font-weight:700;color:'+color+';text-align:left;">'+fmt(obj[k])+'</td></tr>';
+    }).join('') || '<tr><td colspan="2" style="padding:10px;text-align:center;color:#94a3b8;font-size:11px;">لا توجد بيانات</td></tr>';
+  }
+
+  function recRows(){
+    return recs.slice(0,50).map(function(r){
+      var isIn=r.type==='income';
+      return '<tr><td style="padding:6px 10px;border-bottom:1px solid #f8fafc;font-size:11px;color:#475569;text-align:right;">'+(r.date||'').substring(0,10)+'</td>'+
+             '<td style="padding:6px 10px;border-bottom:1px solid #f8fafc;font-size:11px;color:#0f172a;text-align:right;">'+r.cat+'</td>'+
+             '<td style="padding:6px 10px;border-bottom:1px solid #f8fafc;font-size:11px;color:#64748b;text-align:right;">'+(r.note||'—')+'</td>'+
+             '<td style="padding:6px 10px;border-bottom:1px solid #f8fafc;font-size:11px;font-weight:700;color:'+(isIn?'#10b981':'#ef4444')+';text-align:left;">'+(isIn?'+':'-')+fmt(r.amount)+'</td></tr>';
+    }).join('');
+  }
+
+  var html =
+    '<div id="finPdfDiv" style="width:700px;font-family:Cairo,sans-serif;direction:rtl;background:#fff;padding:0;">'+
+      '<div style="background:linear-gradient(135deg,#064e3b,#0f172a);padding:28px 24px 20px;text-align:center;">'+
+        '<div style="font-size:11px;color:#10b981;letter-spacing:2px;font-weight:700;margin-bottom:6px;">أكاديمية الشمالي — سري وخاص</div>'+
+        '<div style="font-size:24px;font-weight:900;color:#fff;margin-bottom:4px;">التقرير المالي</div>'+
+        '<div style="font-size:16px;color:#10b981;font-weight:700;">'+monthName+'</div>'+
+        '<div style="height:2px;background:linear-gradient(90deg,transparent,#10b981,transparent);margin-top:14px;"></div>'+
+        '<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:8px;">تاريخ الإصدار: '+new Date().toLocaleDateString('ar-OM')+'</div>'+
+      '</div>'+
+      // ملخص
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-bottom:3px solid #f1f5f9;">'+
+        '<div style="padding:18px;text-align:center;border-left:1px solid #f1f5f9;">'+
+          '<div style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:4px;">إجمالي الإيرادات</div>'+
+          '<div style="font-size:16px;font-weight:900;color:#10b981;">'+fmt(totalIn)+'</div>'+
+        '</div>'+
+        '<div style="padding:18px;text-align:center;border-left:1px solid #f1f5f9;">'+
+          '<div style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:4px;">إجمالي المصروفات</div>'+
+          '<div style="font-size:16px;font-weight:900;color:#ef4444;">'+fmt(totalOut)+'</div>'+
+        '</div>'+
+        '<div style="padding:18px;text-align:center;background:'+(net>=0?'#f0fdf4':'#fef2f2')+';">'+
+          '<div style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:4px;">صافي الربح</div>'+
+          '<div style="font-size:16px;font-weight:900;color:'+(net>=0?'#059669':'#dc2626')+';">'+(net>=0?'+':'')+fmt(net)+'</div>'+
+        '</div>'+
+      '</div>'+
+      // جداول التفاصيل
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">'+
+        '<div style="padding:16px;border-left:1px solid #f1f5f9;">'+
+          '<div style="font-size:13px;font-weight:900;color:#10b981;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #dcfce7;">💰 الإيرادات</div>'+
+          '<table style="width:100%;border-collapse:collapse;">'+catRows(inCats,'#10b981')+'</table>'+
+          '<div style="margin-top:8px;font-size:12px;font-weight:900;color:#10b981;text-align:left;">الإجمالي: '+fmt(totalIn)+'</div>'+
+        '</div>'+
+        '<div style="padding:16px;">'+
+          '<div style="font-size:13px;font-weight:900;color:#ef4444;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #fee2e2;">💸 المصروفات</div>'+
+          '<table style="width:100%;border-collapse:collapse;">'+catRows(outCats,'#ef4444')+'</table>'+
+          '<div style="margin-top:8px;font-size:12px;font-weight:900;color:#ef4444;text-align:left;">الإجمالي: '+fmt(totalOut)+'</div>'+
+        '</div>'+
+      '</div>'+
+      // جدول الحركات
+      (recs.length?
+        '<div style="padding:16px;border-top:2px solid #f1f5f9;">'+
+          '<div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:10px;">📋 تفاصيل الحركات</div>'+
+          '<table style="width:100%;border-collapse:collapse;">'+
+            '<thead><tr style="background:#f8fafc;">'+
+              '<th style="padding:8px 10px;font-size:11px;color:#64748b;text-align:right;font-weight:700;">التاريخ</th>'+
+              '<th style="padding:8px 10px;font-size:11px;color:#64748b;text-align:right;font-weight:700;">التصنيف</th>'+
+              '<th style="padding:8px 10px;font-size:11px;color:#64748b;text-align:right;font-weight:700;">ملاحظة</th>'+
+              '<th style="padding:8px 10px;font-size:11px;color:#64748b;text-align:left;font-weight:700;">المبلغ</th>'+
+            '</tr></thead>'+
+            '<tbody>'+recRows()+'</tbody>'+
+          '</table>'+
+        '</div>'
+      :'')+
+      '<div style="background:#f8fafc;padding:12px 24px;text-align:center;font-size:10px;color:#94a3b8;">أكاديمية الشمالي — وثيقة سرية — '+new Date().toLocaleDateString('ar-OM')+'</div>'+
+    '</div>';
+
+  var wrap = document.createElement('div');
+  wrap.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;';
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap);
+
+  html2canvas(wrap.firstChild,{scale:2,useCORS:true,backgroundColor:'#fff'}).then(function(canvas){
+    document.body.removeChild(wrap);
+    var img = canvas.toDataURL('image/png');
+    var pdf = new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var pw = pdf.internal.pageSize.getWidth();
+    var ph = pdf.internal.pageSize.getHeight();
+    var iw = canvas.width/2; var ih = canvas.height/2;
+    var scale = pw/iw;
+    var th = ih*scale;
+    var y=0;
+    while(y<ih){
+      if(y>0) pdf.addPage();
+      pdf.addImage(img,'PNG',0,-(y*scale),pw,th);
+      y+=ph/scale;
+    }
+    pdf.save('تقرير-مالي-'+monthKey+'.pdf');
+  });
+}
+
+// ===== المصروفات الثابتة =====
+function _finRecurring(){ try{ return JSON.parse(localStorage.getItem('shamali_fin_recurring')||'[]'); }catch(e){ return []; } }
+function _finRecurringSave(arr){ localStorage.setItem('shamali_fin_recurring', JSON.stringify(arr)); }
+
+function finApplyRecurring(monthKey){
+  var recurring = _finRecurring();
+  if(!recurring.length){ alert('لا توجد مصروفات ثابتة. أضفها أولاً من زر "إدارة المصروفات الثابتة"'); return; }
+  var recs = _finRecords();
+  // تحقق من التكرار: لا تضاف إذا كانت موجودة بالفعل لهذا الشهر بنفس المعرف
+  var existing = recs.filter(function(r){ return r.date && r.date.startsWith(monthKey) && r.recurringId; }).map(function(r){ return r.recurringId; });
+  var added=0;
+  var firstDay = monthKey+'-01';
+  recurring.forEach(function(item){
+    if(existing.indexOf(item.id)>=0) return;
+    recs.push({ id:'f'+Date.now()+Math.random(), type:'expense', cat:item.cat, amount:item.amount, date:firstDay, note:item.note||'ثابت شهري', recurringId:item.id });
+    added++;
+  });
+  _finSave(recs);
+  if(added) alert('✅ تم تطبيق '+added+' مصروف ثابت لشهر '+(MONTHS[parseInt(monthKey.split('-')[1])-1]));
+  else alert('المصروفات الثابتة مطبّقة مسبقاً لهذا الشهر');
+  renderFinance();
+}
+
+function finManageRecurring(){
+  var recurring = _finRecurring();
+  var cats = ['راتب مدرب','راتب مصور','راتب إداري','راتب مصمم','حجز ملعب','معدات ورياضية','مصاريف تشغيلية','أخرى'];
+  var listHtml = recurring.length
+    ? recurring.map(function(item){
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;">'+
+          '<div>'+
+            '<div style="font-size:13px;font-weight:700;color:#0f172a;">'+item.cat+'</div>'+
+            '<div style="font-size:11px;color:#94a3b8;">'+(item.note||'')+'</div>'+
+          '</div>'+
+          '<div style="display:flex;align-items:center;gap:8px;">'+
+            '<span style="font-size:13px;font-weight:900;color:#ef4444;">'+item.amount.toFixed(3)+' ر.ع</span>'+
+            '<button onclick="finDeleteRecurring(\''+item.id+'\')" style="background:#fef2f2;border:none;border-radius:6px;padding:4px 8px;color:#ef4444;font-size:11px;cursor:pointer;font-family:Cairo,sans-serif;">حذف</button>'+
+          '</div>'+
+        '</div>';
+      }).join('')
+    : '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px;">لا توجد مصروفات ثابتة بعد</div>';
+
+  var old = document.getElementById('finRecModal'); if(old) old.remove();
+  var modal = document.createElement('div');
+  modal.id='finRecModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML=
+    '<div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;font-family:Cairo,sans-serif;direction:rtl;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">'+
+        '<div style="font-size:15px;font-weight:900;color:#7c3aed;">🔄 المصروفات الثابتة الشهرية</div>'+
+        '<button onclick="document.getElementById(\'finRecModal\').remove()" style="background:#f1f5f9;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>'+
+      '</div>'+
+      '<div style="font-size:11px;color:#64748b;margin-bottom:16px;">هذه المصروفات تُطبَّق تلقائياً بضغطة زر واحدة كل شهر</div>'+
+      // القائمة الحالية
+      '<div id="finRecList">'+listHtml+'</div>'+
+      // إضافة جديد
+      '<div style="background:#faf5ff;border-radius:12px;padding:16px;margin-top:16px;border:1.5px dashed #7c3aed;">'+
+        '<div style="font-size:12px;font-weight:800;color:#7c3aed;margin-bottom:12px;">➕ إضافة مصروف ثابت</div>'+
+        '<div class="mb"><label class="lbl">التصنيف</label><select id="recCat" class="inp">'+cats.map(function(c){ return '<option>'+c+'</option>'; }).join('')+'</select></div>'+
+        '<div class="mb"><label class="lbl">المبلغ (ر.ع)</label><input id="recAmt" type="number" step="0.001" min="0" class="inp" placeholder="0.000"></div>'+
+        '<div class="mb"><label class="lbl">ملاحظة (مثال: اسم المدرب)</label><input id="recNote" type="text" class="inp" placeholder="اختياري"></div>'+
+        '<button onclick="finAddRecurring()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">إضافة</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(modal);
+}
+
+function finAddRecurring(){
+  var cat  = (document.getElementById('recCat')||{}).value||'';
+  var amtV = (document.getElementById('recAmt')||{}).value||'';
+  var note = (document.getElementById('recNote')||{}).value||'';
+  var amt  = parseFloat(amtV);
+  if(!cat||isNaN(amt)||amt<=0){ alert('يرجى تعبئة التصنيف والمبلغ'); return; }
+  var arr = _finRecurring();
+  arr.push({ id:'r'+Date.now(), cat:cat, amount:amt, note:note });
+  _finRecurringSave(arr);
+  var old = document.getElementById('finRecModal'); if(old) old.remove();
+  finManageRecurring();
+}
+
+function finDeleteRecurring(id){
+  if(!confirm('حذف هذا المصروف الثابت؟')) return;
+  _finRecurringSave(_finRecurring().filter(function(r){ return r.id!==id; }));
+  var old = document.getElementById('finRecModal'); if(old) old.remove();
+  finManageRecurring();
 }
 
 function loadSubsBadge(){
