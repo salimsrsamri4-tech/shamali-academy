@@ -14,6 +14,7 @@
 <title>بوابة أكاديمية الشمالي</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800;900&display=swap" rel="stylesheet">
@@ -1482,10 +1483,13 @@ function showPlayerCard(idx){
       idRow('❤️','الحالة الصحية', p.health||'لا يوجد')+
       idRow('⚽','الموسم', season)+
     '</div>'+
-    '<div style="background:#0f172a;padding:9px;display:flex;align-items:center;justify-content:center;gap:8px;">'+
-      '<div style="width:24px;height:2px;background:#d4af37;border-radius:2px;"></div>'+
-      '<div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;letter-spacing:1.5px;">SHAMALI FC · 🇴🇲 OMAN · 2020</div>'+
-      '<div style="width:24px;height:2px;background:#d4af37;border-radius:2px;"></div>'+
+    '<div style="background:#0f172a;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;">'+
+      '<div style="flex:1;">'+
+        '<div style="width:24px;height:2px;background:#d4af37;border-radius:2px;margin-bottom:5px;"></div>'+
+        '<div style="font-size:7px;color:rgba(255,255,255,.5);font-weight:700;letter-spacing:1.5px;line-height:1.6;">SHAMALI FC · 🇴🇲 OMAN · 2020</div>'+
+        '<div style="font-size:7px;color:rgba(212,175,55,.6);font-weight:700;margin-top:3px;">امسح للتحقق من الهوية</div>'+
+      '</div>'+
+      '<div id="cardQR" style="background:#fff;padding:4px;border-radius:6px;border:2px solid #d4af37;flex-shrink:0;"></div>'+
     '</div>'+
     '</div>';
 
@@ -1504,6 +1508,12 @@ function showPlayerCard(idx){
     '</div></div>';
   document.body.appendChild(modal);
   modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+  // توليد QR
+  var qrEl = document.getElementById('cardQR');
+  if(qrEl && typeof QRCode !== 'undefined'){
+    var verifyUrl = window.location.origin + window.location.pathname + '?verify=' + p.id;
+    new QRCode(qrEl, {text: verifyUrl, width: 64, height: 64, correctLevel: QRCode.CorrectLevel.M});
+  }
 }
 
 function downloadPlayerCard(){
@@ -2150,7 +2160,9 @@ function renderPage(page) {
     case 'player_cards': renderPlayerCards(); break;
     case 'groupmsg': renderGroupMsg(); break;
     case 'substrack': renderSubsTrack(); break;
-    default: renderReg();
+    default:
+      if(page && page.indexOf('verify_') === 0){ renderVerify(page.replace('verify_','')); break; }
+      renderReg();
   }
   } catch(err) {
     el.innerHTML = '<div class="card"><div style="color:red;font-weight:700;padding:20px;">خطأ: ' + err.message + '</div></div>';
@@ -3213,6 +3225,56 @@ function remindAll(){
   next();
 }
 
+// ===== VERIFY PLAYER (QR) =====
+function renderVerify(playerId){
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ التحقق...</div>';
+  checkPlayer(playerId).then(function(p){
+    if(!p){
+      el.innerHTML = '<div class="card" style="text-align:center;padding:40px 20px;">'+
+        '<div style="font-size:48px;margin-bottom:12px;">❌</div>'+
+        '<div style="font-size:16px;font-weight:900;color:#dc2626;">رقم الملف غير موجود</div>'+
+        '<div style="font-size:12px;color:#64748b;margin-top:6px;">'+playerId+'</div>'+
+        '</div>';
+      return;
+    }
+    var cat = p.birthYear ? (new Date().getFullYear() - parseInt(p.birthYear)) + ' سنة' : '';
+    var photoHtml = p.photoB64
+      ? '<img src="'+p.photoB64+'" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid #d4af37;">'
+      : '<div style="width:90px;height:90px;border-radius:50%;background:#d4af37;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:#3b0a0a;border:3px solid #fff;">'+(p.playerName||'?').charAt(0)+'</div>';
+    el.innerHTML =
+      '<div style="max-width:360px;margin:30px auto;font-family:Cairo,sans-serif;direction:rtl;">'+
+      '<div style="background:linear-gradient(135deg,#3b0a0a,#b81d22);border-radius:20px 20px 0 0;padding:20px;text-align:center;">'+
+        '<div style="font-size:10px;color:#d4af37;font-weight:900;letter-spacing:2px;">SHAMALI FOOTBALL ACADEMY</div>'+
+        '<div style="font-size:18px;font-weight:900;color:#fff;margin:4px 0;">🦅 أكاديمية الشمالي</div>'+
+        '<div style="font-size:11px;color:rgba(255,255,255,.6);">بطاقة تحقق رسمية</div>'+
+      '</div>'+
+      '<div style="background:#fff;border:2px solid #e2e8f0;border-top:none;border-radius:0 0 20px 20px;padding:24px;text-align:center;">'+
+        '<div style="margin-bottom:14px;">'+photoHtml+'</div>'+
+        '<div style="font-size:20px;font-weight:900;color:#0f172a;margin-bottom:6px;">'+p.playerName+'</div>'+
+        '<div style="display:inline-block;background:#b81d22;color:#fff;border-radius:20px;padding:4px 16px;font-size:12px;font-weight:900;margin-bottom:16px;">'+p.id+'</div>'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">'+
+          '<div style="background:#f8fafc;border-radius:10px;padding:10px;">'+
+            '<div style="font-size:9px;color:#94a3b8;font-weight:700;">الفئة العمرية</div>'+
+            '<div style="font-size:13px;font-weight:800;color:#0f172a;">'+cat+'</div>'+
+          '</div>'+
+          '<div style="background:#f8fafc;border-radius:10px;padding:10px;">'+
+            '<div style="font-size:9px;color:#94a3b8;font-weight:700;">الجنسية</div>'+
+            '<div style="font-size:13px;font-weight:800;color:#0f172a;">'+(p.nationality||'—')+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:center;gap:8px;">'+
+          '<div style="font-size:22px;">✅</div>'+
+          '<div style="font-size:14px;font-weight:900;color:#16a34a;">لاعب مسجل رسمياً</div>'+
+        '</div>'+
+        '<div style="margin-top:10px;font-size:9px;color:#94a3b8;">تم التحقق عبر منصة أكاديمية الشمالي</div>'+
+      '</div>'+
+      '</div>';
+  }).catch(function(){
+    el.innerHTML = '<div class="card" style="text-align:center;padding:40px 20px;"><div style="font-size:14px;color:#dc2626;font-weight:700;">تعذّر الاتصال. تحقق من الإنترنت.</div></div>';
+  });
+}
+
 // ===== MATCH RESULT =====
 function renderMatchResult(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
@@ -3806,7 +3868,12 @@ function initApp(){
   var prc=document.getElementById('payRCash'); if(prc) prc.onclick=function(){setPay(this,'reg');};
   var prb=document.getElementById('payRBank'); if(prb) prb.onclick=function(){setPay(this,'reg');};
 }
-window.onload = function(){ initApp(); initSponsorTrack(); };
+window.onload = function(){
+  initApp(); initSponsorTrack();
+  var params = new URLSearchParams(window.location.search);
+  var vid = params.get('verify');
+  if(vid) go('verify_' + vid);
+};
 
 // ── Sponsors Ticker ──
 function initSponsorTrack(){
