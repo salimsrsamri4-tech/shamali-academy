@@ -3613,8 +3613,9 @@ function showSuccess(id, data) {
     '">'+
     // Header
     '<div style="background:linear-gradient(135deg,#3b0a0a,#b81d22);padding:14px 16px 0;text-align:center;position:relative;">'+
+        '<img src="logo.jpg" style="width:48px;height:48px;object-fit:contain;border-radius:50%;border:2px solid #d4af37;background:#fff;padding:2px;margin-bottom:4px;" onerror="this.style.display=\'none\'">'+
       '<div style="font-size:9px;color:#d4af37;font-weight:800;letter-spacing:2px;margin-bottom:2px;">SHAMALI FOOTBALL ACADEMY</div>'+
-      '<div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:2px;">🦅 أكاديمية الشمالي</div>'+
+      '<div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:2px;">أكاديمية الشمالي</div>'+
       '<div style="font-size:9px;color:rgba(255,255,255,.6);">بطاقة لاعب · '+season+'</div>'+
       '<div style="height:3px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:10px 0 0;"></div>'+
     '</div>'+
@@ -3638,10 +3639,16 @@ function showSuccess(id, data) {
       idRow('⚽','الموسم', season)+
     '</div>'+
     // Footer
-    '<div style="background:#0f172a;padding:8px;display:flex;align-items:center;justify-content:center;gap:8px;">'+
-      '<div style="width:20px;height:2px;background:#d4af37;"></div>'+
-      '<div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;letter-spacing:1px;">SHAMALI FC · 🇴🇲 OMAN</div>'+
-      '<div style="width:20px;height:2px;background:#d4af37;"></div>'+
+    '<div style="background:#0f172a;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">'+
+      '<div style="flex:1;">'+
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">'+
+          '<div style="width:16px;height:2px;background:#d4af37;"></div>'+
+          '<div style="font-size:7px;color:rgba(255,255,255,.5);font-weight:700;letter-spacing:1px;">SHAMALI FC · 🇴🇲 OMAN</div>'+
+          '<div style="width:16px;height:2px;background:#d4af37;"></div>'+
+        '</div>'+
+        '<div style="font-size:7px;color:rgba(212,175,55,.6);font-weight:700;">امسح للتحقق من الهوية</div>'+
+      '</div>'+
+      '<div id="regCardQR" style="background:#fff;padding:3px;border-radius:5px;border:2px solid #d4af37;flex-shrink:0;"></div>'+
     '</div>'+
     '</div>';
 
@@ -3659,6 +3666,15 @@ function showSuccess(id, data) {
     '<button data-pg="reg" style="background:#f1f5f9;color:#475569;border:none;border-radius:10px;padding:12px 22px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">'+
       '<i class="fas fa-user-plus"></i> تسجيل لاعب آخر</button>'+
     '</div></div>';
+
+  // توليد QR بعد رسم البطاقة
+  setTimeout(function(){
+    var qrEl = document.getElementById('regCardQR');
+    if(qrEl && typeof QRCode !== 'undefined'){
+      var verifyUrl = window.location.origin + window.location.pathname + '?verify=' + id;
+      new QRCode(qrEl, {text: verifyUrl, width: 60, height: 60, correctLevel: QRCode.CorrectLevel.M});
+    }
+  }, 100);
 }
 
 function idRow(icon, label, val) {
