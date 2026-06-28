@@ -2969,94 +2969,91 @@ function generateMonthlyReport(){
     var draws = monthMatches.filter(function(r){ return parseInt(r['أهداف الشمالي']||0) === parseInt(r['أهداف المنافس']||0); }).length;
     var losses = monthMatches.filter(function(r){ return parseInt(r['أهداف الشمالي']||0) < parseInt(r['أهداف المنافس']||0); }).length;
 
-    // بناء PDF
-    var pdf = new window.jspdf.jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
-    var pw = 210; var y = 0;
-
-    // هيدر
-    pdf.setFillColor(59,10,10);
-    pdf.rect(0,0,pw,40,'F');
-    pdf.setFillColor(212,175,55);
-    pdf.rect(0,40,pw,1.5,'F');
-    pdf.setFont('helvetica','bold');
-    pdf.setFontSize(9); pdf.setTextColor(212,175,55);
-    pdf.text('SHAMALI FOOTBALL ACADEMY', pw/2, 10, {align:'center'});
-    pdf.setFontSize(15); pdf.setTextColor(255,255,255);
-    pdf.text('التقرير الشهري', pw/2, 21, {align:'center'});
-    pdf.setFontSize(11); pdf.setTextColor(212,175,55);
-    pdf.text(month, pw/2, 30, {align:'center'});
-    pdf.setFontSize(7.5); pdf.setTextColor(160,160,160);
-    pdf.text('تاريخ الإصدار: '+new Date().toLocaleDateString('ar-OM'), pw/2, 37, {align:'center'});
-    y = 50;
-
-    function secTitle(title){
-      pdf.setFillColor(59,10,10);
-      pdf.rect(10, y, pw-20, 9, 'F');
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(10); pdf.setTextColor(212,175,55);
-      pdf.text(title, pw-14, y+6.2, {align:'right'});
-      y += 14;
-    }
-    function row(label, val, green){
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
-      pdf.setTextColor(green?22:80, green?163:80, green?74:80);
-      pdf.text(String(val), 14, y);
-      pdf.setTextColor(60,60,60);
-      pdf.text(label, pw-14, y, {align:'right'});
-      pdf.setDrawColor(230,230,230); pdf.setLineWidth(0.2);
-      pdf.line(14, y+2.5, pw-14, y+2.5);
-      y += 9;
-    }
-
-    // 1. ملخص اللاعبين
-    secTitle('ملخص اللاعبين');
-    row('اجمالي اللاعبين المسجلين', players.length);
-    row('اللاعبون النشطون هذا الشهر', monthRenewals.length, true);
-    row('عدد المدربين', coaches.length);
-    y += 4;
-
-    // 2. الفئات العمرية
-    secTitle('الفئات العمرية');
-    Object.keys(cats).forEach(function(k){ row('فئة '+k, cats[k]+' لاعب'); });
-    y += 4;
-
-    // 3. الحضور
-    secTitle('سجل الحضور — '+month);
-    row('اجمالي جلسات التدريب المسجلة', totalAtt);
-    row('اجمالي الحضور', totalPresent, true);
-    row('نسبة الحضور', totalAtt ? Math.round(totalPresent/totalAtt*100)+'%' : '—', true);
-    y += 4;
-
-    // 4. المدفوعات
-    secTitle('المدفوعات والاشتراكات — '+month);
-    row('عدد التجديدات هذا الشهر', monthRenewals.length, true);
-    row('الإيرادات التقديرية', monthRenewals.length * 20 +' ريال عماني', true);
+    // بناء HTML للتقرير ثم تحويله صورة
     var cashCount = monthRenewals.filter(function(r){ return r['الدفع']==='نقداً'; }).length;
     var bankCount = monthRenewals.length - cashCount;
-    row('نقداً', cashCount);
-    row('تحويل بنكي', bankCount);
-    y += 4;
+    var attRate = totalAtt ? Math.round(totalPresent/totalAtt*100)+'%' : '—';
 
-    // 5. نتائج المباريات
-    if(monthMatches.length){
-      secTitle('نتائج المباريات');
-      row('عدد المباريات', monthMatches.length);
-      row('انتصارات', wins, true);
-      row('تعادلات', draws);
-      row('خسائر', losses);
-    }
+    function sec(title){ return '<div style="background:#3b0a0a;color:#d4af37;font-size:13px;font-weight:900;padding:8px 14px;border-radius:6px;margin:14px 0 8px;text-align:right;">'+title+'</div>'; }
+    function rw(label, val, green){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-bottom:1px solid #e2e8f0;"><span style="font-size:12px;font-weight:900;color:'+(green?'#16a34a':'#0f172a')+';">'+val+'</span><span style="font-size:11px;color:#475569;">'+label+'</span></div>'; }
 
-    // فوتر
-    pdf.setFillColor(59,10,10);
-    pdf.rect(0,279,pw,18,'F');
-    pdf.setFillColor(212,175,55);
-    pdf.rect(0,279,pw,1,'F');
-    pdf.setFont('helvetica','normal'); pdf.setFontSize(7.5); pdf.setTextColor(160,160,160);
-    pdf.text('أكاديمية الشمالي لكرة القدم · تقرير سري للاستخدام الداخلي · '+month, pw/2, 289, {align:'center'});
-    pdf.setTextColor(212,175,55);
-    pdf.text('shamali-academy', pw/2, 294, {align:'center'});
+    var rptHtml =
+      '<div id="monthlyRptDiv" style="width:680px;font-family:Cairo,sans-serif;direction:rtl;background:#fff;padding:0;">'+
+        // هيدر
+        '<div style="background:#3b0a0a;padding:24px 20px 18px;text-align:center;">'+
+          '<div style="font-size:10px;color:#d4af37;font-weight:700;letter-spacing:2px;margin-bottom:4px;">SHAMALI FOOTBALL ACADEMY</div>'+
+          '<div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;">التقرير الشهري</div>'+
+          '<div style="font-size:14px;color:#d4af37;font-weight:700;">'+month+'</div>'+
+          '<div style="height:2px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin-top:12px;"></div>'+
+          '<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:8px;">تاريخ الإصدار: '+new Date().toLocaleDateString('ar-OM')+'</div>'+
+        '</div>'+
+        '<div style="padding:16px 20px;">'+
 
-    pdf.save('تقرير-'+month+'.pdf');
-    if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-file-pdf"></i> إنشاء التقرير PDF'; }
+        // إحصاء سريع
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:4px;">'+
+          ['إجمالي اللاعبين|'+players.length+'|#0f172a','مجددو الشهر|'+monthRenewals.length+'|#16a34a','نسبة الحضور|'+attRate+'|#b81d22','المدربون|'+coaches.length+'|#0369a1'].map(function(s){
+            var p=s.split('|');
+            return '<div style="background:#f8fafc;border-radius:10px;padding:12px;text-align:center;border:1.5px solid #e2e8f0;">'+
+              '<div style="font-size:22px;font-weight:900;color:'+p[2]+';">'+p[1]+'</div>'+
+              '<div style="font-size:9px;color:#64748b;font-weight:700;margin-top:3px;">'+p[0]+'</div></div>';
+          }).join('')+
+        '</div>'+
+
+        sec('👥 ملخص اللاعبين')+
+        rw('إجمالي اللاعبين المسجلين', players.length)+
+        rw('اللاعبون النشطون هذا الشهر', monthRenewals.length, true)+
+        rw('عدد المدربين', coaches.length)+
+
+        sec('🎯 الفئات العمرية')+
+        Object.keys(cats).map(function(k){ return rw('فئة '+k, cats[k]+' لاعب'); }).join('')+
+
+        sec('📋 سجل الحضور — '+month)+
+        rw('إجمالي جلسات التدريب المسجلة', totalAtt)+
+        rw('إجمالي الحضور', totalPresent, true)+
+        rw('نسبة الحضور', attRate, true)+
+
+        sec('💳 المدفوعات والاشتراكات — '+month)+
+        rw('عدد التجديدات هذا الشهر', monthRenewals.length, true)+
+        rw('الإيرادات التقديرية', (monthRenewals.length*20)+' ريال عماني', true)+
+        rw('نقداً', cashCount)+
+        rw('تحويل بنكي', bankCount)+
+
+        (monthMatches.length ? sec('⚽ نتائج المباريات')+rw('عدد المباريات',monthMatches.length)+rw('انتصارات',wins,true)+rw('تعادلات',draws)+rw('خسائر',losses) : '')+
+
+        '</div>'+
+        // فوتر
+        '<div style="background:#3b0a0a;padding:12px;text-align:center;margin-top:8px;">'+
+          '<div style="font-size:9px;color:rgba(255,255,255,.5);">أكاديمية الشمالي لكرة القدم · تقرير سري للاستخدام الداخلي · '+month+'</div>'+
+          '<div style="font-size:9px;color:#d4af37;margin-top:3px;">shamali-academy.github.io</div>'+
+        '</div>'+
+      '</div>';
+
+    // إضافة div مخفي للرسم
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;';
+    wrap.innerHTML = rptHtml;
+    document.body.appendChild(wrap);
+
+    html2canvas(wrap.firstChild, {scale:2, useCORS:true, backgroundColor:'#fff'}).then(function(canvas){
+      document.body.removeChild(wrap);
+      var img = canvas.toDataURL('image/png');
+      var pdf = new window.jspdf.jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
+      var pw = 210; var ph = 297;
+      var imgH = (canvas.height * pw) / canvas.width;
+      if(imgH <= ph){
+        pdf.addImage(img,'PNG',0,0,pw,imgH);
+      } else {
+        // صفحات متعددة إن طال التقرير
+        var pos = 0;
+        while(pos < imgH){
+          pdf.addImage(img,'PNG',0,-pos,pw,imgH);
+          pos += ph;
+          if(pos < imgH) pdf.addPage();
+        }
+      }
+      pdf.save('تقرير-'+month+'.pdf');
+      if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-file-pdf"></i> إنشاء التقرير PDF'; }
+    });
   }).catch(function(){
     if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-file-pdf"></i> إنشاء التقرير PDF'; }
     alert('تعذّر إنشاء التقرير');
