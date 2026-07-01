@@ -4896,7 +4896,7 @@ function initSponsorTrack(){
   var all = SPONSORS.concat(SPONSORS);
   track.innerHTML = all.map(function(s){
     return '<div style="display:inline-flex;align-items:center;gap:8px;flex-shrink:0;margin-left:32px;">'+
-      '<img src="'+thumb(s.id)+'" style="height:22px;max-width:55px;object-fit:contain;filter:brightness(0) invert(1);opacity:.85;" onerror="this.style.display=\'none\'">'+
+      '<img src="'+thumb(s.id)+'" style="height:22px;max-width:55px;object-fit:contain;opacity:.9;" onerror="this.style.display=\'none\'">'+
       '<span style="font-size:11px;color:rgba(255,255,255,.85);font-weight:600;font-family:Cairo,sans-serif;letter-spacing:.3px;">'+s.name+'</span>'+
       '<span style="color:#d4af37;font-size:8px;margin-right:10px;opacity:.7;">◆</span>'+
       '</div>';
