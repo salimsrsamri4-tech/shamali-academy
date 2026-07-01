@@ -11,265 +11,222 @@
 
   body {
     font-family: 'Cairo', sans-serif;
-    background: #f0f0f0;
+    background: #e5e7eb;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    min-height: 100vh;
     padding: 20px;
   }
 
-  .flyer {
+  /* صفحة A4 تحتوي 4 نسخ */
+  .a4-page {
     width: 210mm;
-    min-height: 297mm;
+    height: 297mm;
     background: #fff;
-    position: relative;
-    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 0;
     box-shadow: 0 8px 40px rgba(0,0,0,.2);
+    overflow: hidden;
+    position: relative;
   }
 
-  /* الهيدر الأحمر */
-  .header {
-    background: linear-gradient(135deg, #7a0f12 0%, #b81d22 50%, #7a0f12 100%);
-    padding: 32px 36px 28px;
-    position: relative;
-    text-align: center;
-  }
-  .header::after {
+  /* خطوط القطع */
+  .a4-page::before {
     content: '';
     position: absolute;
-    bottom: -1px;
-    left: 0; right: 0;
-    height: 40px;
+    top: 50%; left: 0; right: 0;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, #ccc 0, #ccc 6px, transparent 6px, transparent 12px);
+    z-index: 10;
+    pointer-events: none;
+  }
+  .a4-page::after {
+    content: '';
+    position: absolute;
+    left: 50%; top: 0; bottom: 0;
+    width: 1px;
+    background: repeating-linear-gradient(180deg, #ccc 0, #ccc 6px, transparent 6px, transparent 12px);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* كل نسخة */
+  .mini {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: none;
+  }
+
+  /* الهيدر */
+  .hdr {
+    background: linear-gradient(135deg, #7a0f12 0%, #b81d22 50%, #7a0f12 100%);
+    padding: 10px 12px 8px;
+    text-align: center;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .hdr::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 14px;
     background: #fff;
     clip-path: ellipse(55% 100% at 50% 100%);
   }
-  .header-top {
+  .hdr-row {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 16px;
-    margin-bottom: 16px;
+    gap: 7px;
+    margin-bottom: 4px;
   }
-  .logo-circle {
-    width: 72px;
-    height: 72px;
+  .hdr-logo {
+    width: 28px; height: 28px;
     border-radius: 50%;
+    border: 1px solid rgba(212,175,55,.5);
+    overflow: hidden;
+    flex-shrink: 0;
     background: rgba(255,255,255,.1);
-    border: 2px solid rgba(212,175,55,.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
   }
-  .logo-circle img {
-    width: 62px;
-    height: 62px;
-    object-fit: contain;
-  }
-  .academy-name {
-    font-size: 28px;
-    font-weight: 900;
-    color: #fff;
-    line-height: 1.2;
-  }
-  .academy-sub {
-    font-size: 12px;
-    color: rgba(255,255,255,.7);
-    font-weight: 600;
-    letter-spacing: 1px;
-  }
+  .hdr-logo img { width: 24px; height: 24px; object-fit: contain; }
+  .hdr-name { font-size: 13px; font-weight: 900; color: #fff; line-height: 1.1; }
+  .hdr-sub  { font-size: 7px; color: rgba(255,255,255,.65); font-weight: 600; letter-spacing: .5px; }
   .gold-line {
-    width: 60px;
-    height: 3px;
+    width: 30px; height: 2px;
     background: linear-gradient(90deg, transparent, #d4af37, transparent);
-    margin: 10px auto 8px;
-    border-radius: 2px;
+    margin: 3px auto 2px; border-radius: 1px;
   }
-  .tagline {
-    font-size: 13px;
-    color: rgba(255,255,255,.85);
-    font-weight: 600;
-  }
+  .hdr-tag { font-size: 7px; color: rgba(255,255,255,.8); font-weight: 600; }
 
-  /* المحتوى الرئيسي */
-  .body {
-    padding: 44px 36px 28px;
-  }
+  /* الجسم */
+  .bdy { padding: 16px 10px 8px; flex: 1; display: flex; flex-direction: column; }
 
-  .invite-title {
-    text-align: center;
-    font-size: 22px;
-    font-weight: 900;
-    color: #b81d22;
-    margin-bottom: 6px;
-  }
-  .invite-sub {
-    text-align: center;
-    font-size: 13px;
-    color: #64748b;
-    margin-bottom: 28px;
-    font-weight: 600;
-  }
+  .inv-title { text-align: center; font-size: 11px; font-weight: 900; color: #b81d22; margin-bottom: 2px; }
+  .inv-sub   { text-align: center; font-size: 7px; color: #64748b; font-weight: 600; margin-bottom: 8px; }
 
-  /* بطاقات الخدمات */
-  .services-grid {
+  /* الخدمات */
+  .svc-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 28px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
   }
-  .service-card {
+  .svc-card {
     background: #fafafa;
-    border: 1.5px solid #f1f1f1;
-    border-radius: 12px;
-    padding: 14px 10px;
+    border: 1px solid #f0f0f0;
+    border-top: 2px solid #b81d22;
+    border-radius: 6px;
+    padding: 5px 3px;
     text-align: center;
-    border-top: 3px solid #b81d22;
   }
-  .service-icon { font-size: 22px; margin-bottom: 6px; }
-  .service-name { font-size: 11px; font-weight: 700; color: #0f172a; }
+  .svc-icon { font-size: 11px; margin-bottom: 2px; }
+  .svc-name { font-size: 6.5px; font-weight: 700; color: #0f172a; }
 
-  /* قسم الباركود */
-  .qr-section {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    border-radius: 18px;
-    padding: 28px 24px;
+  /* الباركود */
+  .qr-sec {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    border-radius: 8px;
+    padding: 8px 10px;
     display: flex;
     align-items: center;
-    gap: 24px;
-    margin-bottom: 24px;
-    position: relative;
-    overflow: hidden;
-  }
-  .qr-section::before {
-    content: '';
-    position: absolute;
-    top: -30px; left: -30px;
-    width: 120px; height: 120px;
-    background: rgba(212,175,55,.06);
-    border-radius: 50%;
-  }
-  .qr-box {
-    background: #fff;
-    border-radius: 12px;
-    padding: 10px;
+    gap: 8px;
+    margin-bottom: 6px;
     flex-shrink: 0;
-    box-shadow: 0 4px 16px rgba(0,0,0,.3);
   }
-  .qr-box #qrcode canvas,
-  .qr-box #qrcode img {
-    display: block;
-    border-radius: 4px;
+  .qr-wrap {
+    background: #fff;
+    border-radius: 5px;
+    padding: 4px;
+    flex-shrink: 0;
   }
   .qr-info { flex: 1; }
   .qr-badge {
     display: inline-block;
     background: #d4af37;
     color: #0f172a;
-    font-size: 9px;
+    font-size: 6px;
     font-weight: 800;
-    padding: 3px 10px;
-    border-radius: 20px;
-    margin-bottom: 10px;
-    letter-spacing: .5px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-bottom: 4px;
   }
-  .qr-title {
-    font-size: 17px;
-    font-weight: 900;
-    color: #fff;
-    margin-bottom: 8px;
-    line-height: 1.3;
-  }
+  .qr-title { font-size: 8px; font-weight: 900; color: #fff; margin-bottom: 4px; line-height: 1.3; }
   .qr-steps { list-style: none; }
   .qr-steps li {
-    font-size: 11px;
-    color: rgba(255,255,255,.7);
-    margin-bottom: 5px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 600;
+    font-size: 6.5px; color: rgba(255,255,255,.7);
+    margin-bottom: 2px; display: flex; align-items: center; gap: 4px; font-weight: 600;
   }
-  .step-num {
-    width: 18px;
-    height: 18px;
+  .snum {
+    width: 11px; height: 11px;
     background: rgba(212,175,55,.2);
     border: 1px solid rgba(212,175,55,.4);
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    color: #d4af37;
-    font-weight: 800;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 7px; color: #d4af37; font-weight: 800; flex-shrink: 0;
   }
 
-  /* معلومات التواصل */
-  .contact-bar {
+  /* التواصل */
+  .contact {
     background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 5px 8px;
     display: flex;
     justify-content: space-around;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 6px;
+    flex-shrink: 0;
   }
-  .contact-item {
-    text-align: center;
-  }
-  .contact-label { font-size: 10px; color: #94a3b8; font-weight: 600; margin-bottom: 3px; }
-  .contact-value { font-size: 12px; color: #0f172a; font-weight: 800; }
-  .contact-divider { width: 1px; height: 32px; background: #e2e8f0; }
+  .ci { text-align: center; }
+  .cl { font-size: 6px; color: #94a3b8; font-weight: 600; margin-bottom: 1px; }
+  .cv { font-size: 7px; color: #0f172a; font-weight: 800; }
+  .cdiv { width: 1px; height: 20px; background: #e2e8f0; }
 
   /* الفوتر */
-  .footer {
+  .ftr {
     background: linear-gradient(135deg, #7a0f12, #b81d22);
-    padding: 14px 36px;
+    padding: 6px 10px;
     text-align: center;
     position: relative;
+    flex-shrink: 0;
+    margin-top: auto;
   }
-  .footer::before {
+  .ftr::before {
     content: '';
     position: absolute;
     top: -1px; left: 0; right: 0;
-    height: 40px;
+    height: 14px;
     background: #fff;
     clip-path: ellipse(55% 100% at 50% 0%);
   }
-  .footer-text {
+  .ftr-txt {
     position: relative;
-    font-size: 11px;
+    font-size: 6.5px;
     color: rgba(255,255,255,.8);
     font-weight: 600;
-    padding-top: 10px;
+    padding-top: 6px;
+    line-height: 1.5;
   }
-  .footer-gold {
-    color: #d4af37;
-    font-weight: 900;
-    font-size: 13px;
-  }
+  .ftr-gold { color: #d4af37; font-weight: 900; font-size: 7.5px; }
 
-  /* للطباعة */
+  /* الطباعة */
   @media print {
-    body { background: #fff; padding: 0; }
-    .flyer { box-shadow: none; width: 100%; min-height: 100vh; }
+    body { background: #fff; padding: 0; margin: 0; }
+    .a4-page { box-shadow: none; width: 210mm; height: 297mm; }
     .no-print { display: none !important; }
+    @page { size: A4; margin: 0; }
   }
 
-  /* زر الطباعة */
   .print-btn {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
+    margin-top: 20px;
     background: #b81d22;
     color: #fff;
     border: none;
-    padding: 14px 36px;
+    padding: 14px 40px;
     font-family: 'Cairo', sans-serif;
     font-size: 15px;
     font-weight: 800;
@@ -279,124 +236,216 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    z-index: 999;
   }
   .print-btn:hover { background: #9a1518; }
 </style>
 </head>
 <body>
 
-<div class="flyer">
+<div class="a4-page" id="page">
 
-  <!-- الهيدر -->
-  <div class="header">
-    <div class="header-top">
-      <div class="logo-circle">
-        <img src="logo.jpg" alt="شعار الأكاديمية" onerror="this.parentElement.innerHTML='🦅'">
+  <!-- النسخة 1 -->
+  <div class="mini">
+    <div class="hdr">
+      <div class="hdr-row">
+        <div class="hdr-logo"><img src="logo.jpg" onerror="this.parentElement.innerHTML='🦅'"></div>
+        <div>
+          <div class="hdr-name">أكاديمية الشمالي</div>
+          <div class="hdr-sub">AL-SHAMALI ACADEMY</div>
+        </div>
       </div>
-      <div>
-        <div class="academy-name">أكاديمية الشمالي</div>
-        <div class="academy-sub">AL-SHAMALI ACADEMY</div>
+      <div class="gold-line"></div>
+      <div class="hdr-tag">لكرة القدم · سلطنة عُمان · تأسست ٢٠٢٠</div>
+    </div>
+    <div class="bdy">
+      <div class="inv-title">🌟 سجّل ابنك معنا</div>
+      <div class="inv-sub">انضم إلى البوابة الإلكترونية — تسجيل سهل وسريع</div>
+      <div class="svc-grid">
+        <div class="svc-card"><div class="svc-icon">📋</div><div class="svc-name">تسجيل اللاعبين</div></div>
+        <div class="svc-card"><div class="svc-icon">📅</div><div class="svc-name">جداول التدريب</div></div>
+        <div class="svc-card"><div class="svc-icon">✅</div><div class="svc-name">متابعة الحضور</div></div>
+        <div class="svc-card"><div class="svc-icon">🏅</div><div class="svc-name">شهادات التكريم</div></div>
+        <div class="svc-card"><div class="svc-icon">👨‍💼</div><div class="svc-name">ملفات المدربين</div></div>
+        <div class="svc-card"><div class="svc-icon">📊</div><div class="svc-name">التقارير والإحصاء</div></div>
+      </div>
+      <div class="qr-sec">
+        <div class="qr-wrap"><div class="qr1"></div></div>
+        <div class="qr-info">
+          <div class="qr-badge">▶ امسح للتسجيل الآن</div>
+          <div class="qr-title">افتح المنصة من هاتفك مباشرة</div>
+          <ul class="qr-steps">
+            <li><span class="snum">١</span> وجّه الكاميرا نحو الرمز</li>
+            <li><span class="snum">٢</span> اضغط الرابط الذي يظهر</li>
+            <li><span class="snum">٣</span> سجّل بياناتك وأرسل</li>
+          </ul>
+        </div>
+      </div>
+      <div class="contact">
+        <div class="ci"><div class="cl">📞 للاستفسار</div><div class="cv">98555987</div></div>
+        <div class="cdiv"></div>
+        <div class="ci"><div class="cl">💬 واتساب</div><div class="cv">92126558</div></div>
+        <div class="cdiv"></div>
+        <div class="ci"><div class="cl">📸 إنستغرام</div><div class="cv">al_shamali.acad</div></div>
       </div>
     </div>
-    <div class="gold-line"></div>
-    <div class="tagline">لكرة القدم · سلطنة عُمان · تأسست ٢٠٢٠</div>
+    <div class="ftr"><div class="ftr-txt"><span class="ftr-gold">أكاديمية الشمالي لكرة القدم</span><br>نحو جيل رياضي متميز · عُمان ٢٠٢٠</div></div>
   </div>
 
-  <!-- المحتوى -->
-  <div class="body">
-
-    <div class="invite-title">🌟 سجّل ابنك معنا</div>
-    <div class="invite-sub">انضم إلى البوابة الإلكترونية لأكاديمية الشمالي — تسجيل سهل وسريع</div>
-
-    <!-- الخدمات -->
-    <div class="services-grid">
-      <div class="service-card">
-        <div class="service-icon">📋</div>
-        <div class="service-name">تسجيل اللاعبين</div>
+  <!-- النسخة 2 -->
+  <div class="mini">
+    <div class="hdr">
+      <div class="hdr-row">
+        <div class="hdr-logo"><img src="logo.jpg" onerror="this.parentElement.innerHTML='🦅'"></div>
+        <div>
+          <div class="hdr-name">أكاديمية الشمالي</div>
+          <div class="hdr-sub">AL-SHAMALI ACADEMY</div>
+        </div>
       </div>
-      <div class="service-card">
-        <div class="service-icon">📅</div>
-        <div class="service-name">جداول التدريب</div>
+      <div class="gold-line"></div>
+      <div class="hdr-tag">لكرة القدم · سلطنة عُمان · تأسست ٢٠٢٠</div>
+    </div>
+    <div class="bdy">
+      <div class="inv-title">🌟 سجّل ابنك معنا</div>
+      <div class="inv-sub">انضم إلى البوابة الإلكترونية — تسجيل سهل وسريع</div>
+      <div class="svc-grid">
+        <div class="svc-card"><div class="svc-icon">📋</div><div class="svc-name">تسجيل اللاعبين</div></div>
+        <div class="svc-card"><div class="svc-icon">📅</div><div class="svc-name">جداول التدريب</div></div>
+        <div class="svc-card"><div class="svc-icon">✅</div><div class="svc-name">متابعة الحضور</div></div>
+        <div class="svc-card"><div class="svc-icon">🏅</div><div class="svc-name">شهادات التكريم</div></div>
+        <div class="svc-card"><div class="svc-icon">👨‍💼</div><div class="svc-name">ملفات المدربين</div></div>
+        <div class="svc-card"><div class="svc-icon">📊</div><div class="svc-name">التقارير والإحصاء</div></div>
       </div>
-      <div class="service-card">
-        <div class="service-icon">✅</div>
-        <div class="service-name">متابعة الحضور</div>
+      <div class="qr-sec">
+        <div class="qr-wrap"><div class="qr2"></div></div>
+        <div class="qr-info">
+          <div class="qr-badge">▶ امسح للتسجيل الآن</div>
+          <div class="qr-title">افتح المنصة من هاتفك مباشرة</div>
+          <ul class="qr-steps">
+            <li><span class="snum">١</span> وجّه الكاميرا نحو الرمز</li>
+            <li><span class="snum">٢</span> اضغط الرابط الذي يظهر</li>
+            <li><span class="snum">٣</span> سجّل بياناتك وأرسل</li>
+          </ul>
+        </div>
       </div>
-      <div class="service-card">
-        <div class="service-icon">🏅</div>
-        <div class="service-name">شهادات التكريم</div>
-      </div>
-      <div class="service-card">
-        <div class="service-icon">👨‍💼</div>
-        <div class="service-name">ملفات المدربين</div>
-      </div>
-      <div class="service-card">
-        <div class="service-icon">📊</div>
-        <div class="service-name">التقارير والإحصاء</div>
+      <div class="contact">
+        <div class="ci"><div class="cl">📞 للاستفسار</div><div class="cv">98555987</div></div>
+        <div class="cdiv"></div>
+        <div class="ci"><div class="cl">💬 واتساب</div><div class="cv">92126558</div></div>
+        <div class="cdiv"></div>
+        <div class="ci"><div class="cl">📸 إنستغرام</div><div class="cv">al_shamali.acad</div></div>
       </div>
     </div>
-
-    <!-- الباركود -->
-    <div class="qr-section">
-      <div class="qr-box">
-        <div id="qrcode"></div>
-      </div>
-      <div class="qr-info">
-        <div class="qr-badge">▶ امسح للتسجيل الآن</div>
-        <div class="qr-title">افتح المنصة مباشرة من هاتفك</div>
-        <ul class="qr-steps">
-          <li><span class="step-num">١</span> وجّه كاميرا هاتفك نحو الرمز</li>
-          <li><span class="step-num">٢</span> اضغط على الرابط الذي يظهر</li>
-          <li><span class="step-num">٣</span> سجّل بياناتك واضغط إرسال</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- التواصل -->
-    <div class="contact-bar">
-      <div class="contact-item">
-        <div class="contact-label">📞 للاستفسار</div>
-        <div class="contact-value">98555987</div>
-      </div>
-      <div class="contact-divider"></div>
-      <div class="contact-item">
-        <div class="contact-label">💬 واتساب</div>
-        <div class="contact-value">92126558</div>
-      </div>
-      <div class="contact-divider"></div>
-      <div class="contact-item">
-        <div class="contact-label">📸 إنستغرام</div>
-        <div class="contact-value">al_shamali.acad</div>
-      </div>
-    </div>
-
+    <div class="ftr"><div class="ftr-txt"><span class="ftr-gold">أكاديمية الشمالي لكرة القدم</span><br>نحو جيل رياضي متميز · عُمان ٢٠٢٠</div></div>
   </div>
 
-  <!-- الفوتر -->
-  <div class="footer">
-    <div class="footer-text">
-      <span class="footer-gold">أكاديمية الشمالي لكرة القدم</span><br>
-      نحو جيل رياضي متميز · سلطنة عُمان ٢٠٢٠
+  <!-- النسخة 3 -->
+  <div class="mini">
+    <div class="hdr">
+      <div class="hdr-row">
+        <div class="hdr-logo"><img src="logo.jpg" onerror="this.parentElement.innerHTML='🦅'"></div>
+        <div>
+          <div class="hdr-name">أكاديمية الشمالي</div>
+          <div class="hdr-sub">AL-SHAMALI ACADEMY</div>
+        </div>
+      </div>
+      <div class="gold-line"></div>
+      <div class="hdr-tag">لكرة القدم · سلطنة عُمان · تأسست ٢٠٢٠</div>
     </div>
+    <div class="bdy">
+      <div class="inv-title">🌟 سجّل ابنك معنا</div>
+      <div class="inv-sub">انضم إلى البوابة الإلكترونية — تسجيل سهل وسريع</div>
+      <div class="svc-grid">
+        <div class="svc-card"><div class="svc-icon">📋</div><div class="svc-name">تسجيل اللاعبين</div></div>
+        <div class="svc-card"><div class="svc-icon">📅</div><div class="svc-name">جداول التدريب</div></div>
+        <div class="svc-card"><div class="svc-icon">✅</div><div class="svc-name">متابعة الحضور</div></div>
+        <div class="svc-card"><div class="svc-icon">🏅</div><div class="svc-name">شهادات التكريم</div></div>
+        <div class="svc-card"><div class="svc-icon">👨‍💼</div><div class="svc-name">ملفات المدربين</div></div>
+        <div class="svc-card"><div class="svc-icon">📊</div><div class="svc-name">التقارير والإحصاء</div></div>
+      </div>
+      <div class="qr-sec">
+        <div class="qr-wrap"><div class="qr3"></div></div>
+        <div class="qr-info">
+          <div class="qr-badge">▶ امسح للتسجيل الآن</div>
+          <div class="qr-title">افتح المنصة من هاتفك مباشرة</div>
+          <ul class="qr-steps">
+            <li><span class="snum">١</span> وجّه الكاميرا نحو الرمز</li>
+            <li><span class="snum">٢</span> اضغط الرابط الذي يظهر</li>
+            <li><span class="snum">٣</span> سجّل بياناتك وأرسل</li>
+          </ul>
+        </div>
+      </div>
+      <div class="contact">
+        <div class="ci"><div class="cl">📞 للاستفسار</div><div class="cv">98555987</div></div>
+        <div class="cdiv"></div>
+        <div class="ci"><div class="cl">💬 واتساب</div><div class="cv">92126558</div></div>
+        <div class="cdiv"></div>
+        <div class="ci"><div class="cl">📸 إنستغرام</div><div class="cv">al_shamali.acad</div></div>
+      </div>
+    </div>
+    <div class="ftr"><div class="ftr-txt"><span class="ftr-gold">أكاديمية الشمالي لكرة القدم</span><br>نحو جيل رياضي متميز · عُمان ٢٠٢٠</div></div>
+  </div>
+
+  <!-- النسخة 4 -->
+  <div class="mini">
+    <div class="hdr">
+      <div class="hdr-row">
+        <div class="hdr-logo"><img src="logo.jpg" onerror="this.parentElement.innerHTML='🦅'"></div>
+        <div>
+          <div class="hdr-name">أكاديمية الشمالي</div>
+          <div class="hdr-sub">AL-SHAMALI ACADEMY</div>
+        </div>
+      </div>
+      <div class="gold-line"></div>
+      <div class="hdr-tag">لكرة القدم · سلطنة عُمان · تأسست ٢٠٢٠</div>
+    </div>
+    <div class="bdy">
+      <div class="inv-title">🌟 سجّل ابنك معنا</div>
+      <div class="inv-sub">انضم إلى البوابة الإلكترونية — تسجيل سهل وسريع</div>
+      <div class="svc-grid">
+        <div class="svc-card"><div class="svc-icon">📋</div><div class="svc-name">تسجيل اللاعبين</div></div>
+        <div class="svc-card"><div class="svc-icon">📅</div><div class="svc-name">جداول التدريب</div></div>
+        <div class="svc-card"><div class="svc-icon">✅</div><div class="svc-name">متابعة الحضور</div></div>
+        <div class="svc-card"><div class="svc-icon">🏅</div><div class="svc-name">شهادات التكريم</div></div>
+        <div class="svc-card"><div class="svc-icon">👨‍💼</div><div class="svc-name">ملفات المدربين</div></div>
+        <div class="svc-card"><div class="svc-icon">📊</div><div class="svc-name">التقارير والإحصاء</div></div>
+      </div>
+      <div class="qr-sec">
+        <div class="qr-wrap"><div class="qr4"></div></div>
+        <div class="qr-info">
+          <div class="qr-badge">▶ امسح للتسجيل الآن</div>
+          <div class="qr-title">افتح المنصة من هاتفك مباشرة</div>
+          <ul class="qr-steps">
+            <li><span class="snum">١</span> وجّه الكاميرا نحو الرمز</li>
+            <li><span class="snum">٢</span> اضغط الرابط الذي يظهر</li>
+            <li><span class="snum">٣</span> سجّل بياناتك وأرسل</li>
+          </ul>
+        </div>
+      </div>
+      <div class="contact">
+        <div class="ci"><div class="cl">📞 للاستفسار</div><div class="cv">98555987</div></div>
+        <div class="cdiv"></div>
+        <div class="ci"><div class="cl">💬 واتساب</div><div class="cv">92126558</div></div>
+        <div class="cdiv"></div>
+        <div class="ci"><div class="cl">📸 إنستغرام</div><div class="cv">al_shamali.acad</div></div>
+      </div>
+    </div>
+    <div class="ftr"><div class="ftr-txt"><span class="ftr-gold">أكاديمية الشمالي لكرة القدم</span><br>نحو جيل رياضي متميز · عُمان ٢٠٢٠</div></div>
   </div>
 
 </div>
 
 <!-- زر الطباعة -->
 <button class="print-btn no-print" onclick="window.print()">
-  🖨️ طباعة / حفظ PDF
+  🖨️ طباعة A4 — ٤ نسخ
 </button>
 
 <script>
-  new QRCode(document.getElementById("qrcode"), {
-    text: "https://salimsrsamri4-tech.github.io/shamali-academy",
-    width: 130,
-    height: 130,
-    colorDark: "#0f172a",
-    colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H
-  });
+  var url = "https://salimsrsamri4-tech.github.io/shamali-academy";
+  var opts = { width: 70, height: 70, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H };
+  new QRCode(document.querySelector(".qr1"), Object.assign({text: url}, opts));
+  new QRCode(document.querySelector(".qr2"), Object.assign({text: url}, opts));
+  new QRCode(document.querySelector(".qr3"), Object.assign({text: url}, opts));
+  new QRCode(document.querySelector(".qr4"), Object.assign({text: url}, opts));
 </script>
 
 </body>
