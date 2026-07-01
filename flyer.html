@@ -4,10 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>نشرة أكاديمية الشمالي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif !important; }
 
   body {
     font-family: 'Cairo', sans-serif;
@@ -440,7 +442,7 @@
 </div>
 
 <!-- زر الطباعة -->
-<button class="print-btn no-print" onclick="window.print()">
+<button class="print-btn no-print" onclick="printWhenReady()">
   🖨️ طباعة A4 — ٤ نسخ
 </button>
 
@@ -451,6 +453,12 @@
   new QRCode(document.querySelector(".qr2"), Object.assign({text: url}, opts));
   new QRCode(document.querySelector(".qr3"), Object.assign({text: url}, opts));
   new QRCode(document.querySelector(".qr4"), Object.assign({text: url}, opts));
+
+  function printWhenReady() {
+    document.fonts.ready.then(function() {
+      setTimeout(function() { window.print(); }, 300);
+    });
+  }
 </script>
 
 </body>
