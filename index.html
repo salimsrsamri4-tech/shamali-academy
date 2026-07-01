@@ -295,11 +295,17 @@ window.addEventListener('load',function(){
   </div>
 </div>
 
-<!-- إعلانات الرعاة المتحركة -->
-<div style="overflow:hidden;position:relative;height:40px;display:flex;align-items:center;background:linear-gradient(180deg,#8c1215,#a01a1f);border-bottom:2px solid #d4af37;">
-  <div style="position:absolute;right:0;top:0;bottom:0;width:40px;background:linear-gradient(to left,#a01a1f,transparent);z-index:2;pointer-events:none;"></div>
-  <div style="position:absolute;left:0;top:0;bottom:0;width:40px;background:linear-gradient(to right,#a01a1f,transparent);z-index:2;pointer-events:none;"></div>
-  <div id="sponsorTrack" style="display:flex;align-items:center;white-space:nowrap;position:absolute;left:0;z-index:1;"></div>
+<!-- شريط الرعاة الاحترافي -->
+<div style="position:relative;background:#0f172a;border-top:1px solid rgba(212,175,55,.25);border-bottom:1px solid rgba(212,175,55,.25);height:44px;display:flex;align-items:center;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.25);">
+  <!-- تسمية ثابتة على اليمين -->
+  <div style="position:absolute;right:0;top:0;bottom:0;z-index:4;display:flex;align-items:center;padding:0 14px;background:linear-gradient(to left,#0f172a 70%,transparent);gap:6px;min-width:110px;">
+    <span style="font-size:9px;font-family:Cairo,sans-serif;font-weight:700;color:#d4af37;letter-spacing:.5px;white-space:nowrap;">شركاؤنا</span>
+    <span style="width:1px;height:18px;background:rgba(212,175,55,.4);display:inline-block;"></span>
+  </div>
+  <!-- تلاشي الجانب الأيسر -->
+  <div style="position:absolute;left:0;top:0;bottom:0;width:40px;background:linear-gradient(to right,#0f172a,transparent);z-index:3;pointer-events:none;"></div>
+  <!-- مسار الإعلانات -->
+  <div id="sponsorTrack" style="display:flex;align-items:center;white-space:nowrap;position:absolute;left:0;z-index:1;padding-right:120px;"></div>
 </div>
 
 <div id="content" style="padding:12px;max-width:700px;margin:0 auto;">
@@ -4889,10 +4895,10 @@ function initSponsorTrack(){
   if(!track) return;
   var all = SPONSORS.concat(SPONSORS);
   track.innerHTML = all.map(function(s){
-    return '<div style="display:inline-flex;align-items:center;gap:6px;flex-shrink:0;margin-left:24px;">'+
-      '<img src="'+thumb(s.id)+'" style="height:24px;max-width:60px;object-fit:contain;" onerror="this.style.display=\'none\'">'+
-      '<span style="font-size:11px;color:#0f172a;font-weight:700;font-family:Cairo,sans-serif;">'+s.name+'</span>'+
-      '<span style="color:#d4af37;margin-right:24px;">·</span>'+
+    return '<div style="display:inline-flex;align-items:center;gap:8px;flex-shrink:0;margin-left:32px;">'+
+      '<img src="'+thumb(s.id)+'" style="height:22px;max-width:55px;object-fit:contain;filter:brightness(0) invert(1);opacity:.85;" onerror="this.style.display=\'none\'">'+
+      '<span style="font-size:11px;color:rgba(255,255,255,.85);font-weight:600;font-family:Cairo,sans-serif;letter-spacing:.3px;">'+s.name+'</span>'+
+      '<span style="color:#d4af37;font-size:8px;margin-right:10px;opacity:.7;">◆</span>'+
       '</div>';
   }).join('');
 
