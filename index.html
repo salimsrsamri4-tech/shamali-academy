@@ -296,11 +296,11 @@ window.addEventListener('load',function(){
 </div>
 
 
-<!-- شريط الرعاة الدوّار -->
-<div style="background:linear-gradient(180deg,#8c1215 0%,#f1f5f9 100%);overflow:hidden;position:relative;height:56px;display:flex;align-items:center;">
-  <div style="position:absolute;right:0;top:0;bottom:0;width:50px;background:linear-gradient(to left,rgba(241,245,249,1),transparent);z-index:2;pointer-events:none;"></div>
-  <div style="position:absolute;left:0;top:0;bottom:0;width:50px;background:linear-gradient(to right,rgba(241,245,249,1),transparent);z-index:2;pointer-events:none;"></div>
-  <div id="sponsorTrack" style="display:flex;align-items:center;gap:28px;white-space:nowrap;position:absolute;left:0;z-index:1;"></div>
+<!-- إعلانات الرعاة المتحركة -->
+<div style="overflow:hidden;position:relative;height:36px;display:flex;align-items:center;margin:0 0 4px;">
+  <div style="position:absolute;right:0;top:0;bottom:0;width:40px;background:linear-gradient(to left,#f1f5f9,transparent);z-index:2;pointer-events:none;"></div>
+  <div style="position:absolute;left:0;top:0;bottom:0;width:40px;background:linear-gradient(to right,#f1f5f9,transparent);z-index:2;pointer-events:none;"></div>
+  <div id="sponsorTrack" style="display:flex;align-items:center;white-space:nowrap;position:absolute;left:0;z-index:1;"></div>
 </div>
 
 <div id="content" style="padding:12px;max-width:700px;margin:0 auto;">
@@ -4890,9 +4890,10 @@ function initSponsorTrack(){
   if(!track) return;
   var all = SPONSORS.concat(SPONSORS);
   track.innerHTML = all.map(function(s){
-    return '<div style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #d4af37;border-radius:8px;padding:5px 12px;flex-shrink:0;margin-left:8px;">'+
-      '<img src="'+thumb(s.id)+'" style="height:26px;max-width:65px;object-fit:contain;mix-blend-mode:multiply;" onerror="this.style.display=\'none\'">'+
-      '<span style="font-size:10px;color:#0f172a;font-weight:700;font-family:Cairo,sans-serif;">'+s.name+'</span>'+
+    return '<div style="display:inline-flex;align-items:center;gap:6px;flex-shrink:0;margin-left:24px;">'+
+      '<img src="'+thumb(s.id)+'" style="height:24px;max-width:60px;object-fit:contain;" onerror="this.style.display=\'none\'">'+
+      '<span style="font-size:11px;color:#0f172a;font-weight:700;font-family:Cairo,sans-serif;">'+s.name+'</span>'+
+      '<span style="color:#d4af37;margin-right:24px;">·</span>'+
       '</div>';
   }).join('');
 
