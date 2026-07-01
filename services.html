@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>خدمات أكاديمية الشمالي الرقمية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Cairo',sans-serif;background:#f8fafc;color:#0f172a;direction:rtl;}
+
+/* هيدر */
+.hero{background:linear-gradient(160deg,#0f172a 0%,#7a1015 100%);color:#fff;padding:0;position:relative;overflow:hidden;min-height:92vh;display:flex;flex-direction:column;}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%;opacity:.25;}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(15,23,42,.85),rgba(122,16,21,.7));}
+.nav{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:20px 32px;border-bottom:1px solid rgba(255,255,255,.1);}
+.nav-brand{display:flex;align-items:center;gap:12px;}
+.nav-brand img{width:44px;height:44px;border-radius:50%;object-fit:contain;background:#fff;padding:4px;}
+.nav-brand-text .name{font-size:16px;font-weight:900;color:#fff;}
+.nav-brand-text .sub{font-size:10px;color:rgba(255,255,255,.5);}
+.nav-cta{background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;padding:10px 22px;border-radius:25px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;text-decoration:none;display:inline-block;transition:transform .2s;}
+.nav-cta:hover{transform:scale(1.05);}
+
+.hero-body{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;}
+.hero-badge{background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.4);color:#d4af37;padding:6px 18px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:20px;display:inline-block;}
+.hero-title{font-size:clamp(26px,6vw,52px);font-weight:900;color:#fff;line-height:1.2;margin-bottom:16px;}
+.hero-title span{color:#d4af37;}
+.hero-sub{font-size:15px;color:rgba(255,255,255,.65);max-width:560px;line-height:1.8;margin-bottom:36px;}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+.btn-main{background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;padding:14px 32px;border-radius:30px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Cairo',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:transform .2s,box-shadow .2s;}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(184,29,34,.4);}
+.btn-outline{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.4);padding:13px 28px;border-radius:30px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;}
+.btn-outline:hover{border-color:#d4af37;color:#d4af37;}
+
+.hero-stats{position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid rgba(255,255,255,.1);}
+.hero-stat{padding:20px;text-align:center;border-left:1px solid rgba(255,255,255,.1);}
+.hero-stat:last-child{border-left:none;}
+.hero-stat-n{font-size:28px;font-weight:900;color:#d4af37;}
+.hero-stat-l{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;}
+
+/* خدمات */
+.section{padding:72px 24px;}
+.section-label{text-align:center;font-size:12px;font-weight:700;color:#b81d22;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.section-title{text-align:center;font-size:clamp(22px,4vw,36px);font-weight:900;color:#0f172a;margin-bottom:12px;}
+.section-sub{text-align:center;font-size:14px;color:#64748b;max-width:520px;margin:0 auto 52px;line-height:1.8;}
+
+.services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:24px;max-width:1100px;margin:0 auto;}
+.srv-card{background:#fff;border-radius:20px;padding:32px 28px;border:1px solid #e2e8f0;transition:all .25s;position:relative;overflow:hidden;}
+.srv-card::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--cc,#b81d22);border-radius:0 20px 20px 0;}
+.srv-card:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(0,0,0,.1);}
+.srv-icon{width:56px;height:56px;border-radius:16px;background:var(--cbg,#fef2f2);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;}
+.srv-title{font-size:17px;font-weight:900;color:#0f172a;margin-bottom:8px;}
+.srv-desc{font-size:13px;color:#64748b;line-height:1.8;margin-bottom:20px;}
+.srv-features{list-style:none;}
+.srv-features li{font-size:12px;color:#475569;padding:5px 0;border-bottom:1px solid #f8fafc;display:flex;align-items:center;gap:8px;}
+.srv-features li:last-child{border-bottom:none;}
+.srv-features li::before{content:'✓';color:var(--cc,#b81d22);font-weight:900;font-size:11px;flex-shrink:0;}
+
+/* كيف يعمل */
+.how{background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:72px 24px;}
+.how .section-title{color:#fff;}
+.how .section-sub{color:rgba(255,255,255,.5);}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;max-width:900px;margin:0 auto;position:relative;}
+.steps::before{content:'';position:absolute;top:32px;right:10%;left:10%;height:2px;background:linear-gradient(90deg,#b81d22,#d4af37);z-index:0;}
+.step{text-align:center;padding:0 20px;position:relative;z-index:1;}
+.step-num{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;font-size:22px;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;border:4px solid #0f172a;}
+.step-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:6px;}
+.step-desc{font-size:12px;color:rgba(255,255,255,.5);line-height:1.7;}
+
+/* مميزات */
+.features{background:#f8fafc;padding:72px 24px;}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;max-width:1000px;margin:0 auto;}
+.feat{background:#fff;border-radius:14px;padding:24px 20px;display:flex;gap:16px;align-items:flex-start;border:1px solid #e2e8f0;transition:box-shadow .2s;}
+.feat:hover{box-shadow:0 8px 24px rgba(0,0,0,.08);}
+.feat-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#b81d22,#7a1015);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;flex-shrink:0;}
+.feat-text .t{font-size:14px;font-weight:800;color:#0f172a;margin-bottom:4px;}
+.feat-text .d{font-size:12px;color:#64748b;line-height:1.7;}
+
+/* CTA */
+.cta{background:linear-gradient(135deg,#b81d22,#7a1015);padding:72px 24px;text-align:center;}
+.cta h2{font-size:clamp(22px,4vw,36px);font-weight:900;color:#fff;margin-bottom:12px;}
+.cta p{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:32px;}
+.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+.btn-white{background:#fff;color:#b81d22;border:none;padding:14px 32px;border-radius:30px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Cairo',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:transform .2s;}
+.btn-white:hover{transform:translateY(-2px);}
+.btn-wa{background:#25d366;color:#fff;border:none;padding:14px 32px;border-radius:30px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Cairo',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:transform .2s;}
+.btn-wa:hover{transform:translateY(-2px);}
+
+/* فوتر */
+footer{background:#0f172a;padding:28px 24px;text-align:center;}
+footer p{font-size:12px;color:rgba(255,255,255,.35);}
+footer span{color:#d4af37;font-weight:700;}
+
+@media(max-width:600px){
+  .nav{padding:14px 16px;}
+  .steps::before{display:none;}
+  .hero-stats{grid-template-columns:1fr;}
+  .hero-stat{border-left:none;border-bottom:1px solid rgba(255,255,255,.1);}
+}
+</style>
+</head>
+<body>
+
+<!-- هيدر -->
+<div class="hero">
+  <img src="hero.jpg" class="hero-img" alt="">
+  <div class="hero-overlay"></div>
+
+  <!-- شريط التنقل -->
+  <nav class="nav">
+    <div class="nav-brand">
+      <img src="logo.jpg" alt="شعار الشمالي">
+      <div class="nav-brand-text">
+        <div class="name">أكاديمية الشمالي</div>
+        <div class="sub">لكرة القدم · سلطنة عُمان</div>
+      </div>
+    </div>
+    <a href="index.html" class="nav-cta"><i class="fas fa-sign-in-alt"></i> دخول المنصة</a>
+  </nav>
+
+  <!-- المحتوى الرئيسي -->
+  <div class="hero-body">
+    <div class="hero-badge">🏅 منصة رقمية متكاملة</div>
+    <h1 class="hero-title">خدمات أكاديمية<br><span>الشمالي الرقمية</span></h1>
+    <p class="hero-sub">نظام إدارة احترافي يجمع التسجيل والحضور والجدولة والتواصل مع أولياء الأمور في مكان واحد — بسيط، سريع، وآمن.</p>
+    <div class="hero-btns">
+      <a href="index.html" class="btn-main"><i class="fas fa-rocket"></i> ابدأ الآن</a>
+      <a href="https://wa.me/968XXXXXXXX" class="btn-outline"><i class="fab fa-whatsapp"></i> تواصل معنا</a>
+    </div>
+  </div>
+
+  <!-- إحصائيات -->
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-n">+100</div>
+      <div class="hero-stat-l">لاعب مسجل</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-n">6+</div>
+      <div class="hero-stat-l">فئات عمرية</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-n">2020</div>
+      <div class="hero-stat-l">سنة التأسيس</div>
+    </div>
+  </div>
+</div>
+
+<!-- الخدمات -->
+<div class="section">
+  <div class="section-label">خدماتنا</div>
+  <h2 class="section-title">كل ما تحتاجه في مكان واحد</h2>
+  <p class="section-sub">منصة متكاملة تُسهّل إدارة الأكاديمية وتُقرّب ولي الأمر من متابعة تطور ابنه</p>
+
+  <div class="services-grid">
+
+    <div class="srv-card" style="--cc:#b81d22;--cbg:#fef2f2;">
+      <div class="srv-icon">📝</div>
+      <div class="srv-title">التسجيل الرقمي</div>
+      <div class="srv-desc">تسجيل اللاعبين بسهولة مع حفظ كامل البيانات والصور وإصدار بطاقة لاعب فورية.</div>
+      <ul class="srv-features">
+        <li>نموذج تسجيل إلكتروني متكامل</li>
+        <li>بطاقة لاعب بـ QR Code</li>
+        <li>حفظ الصورة الشخصية</li>
+        <li>تصدير البيانات Excel</li>
+      </ul>
+    </div>
+
+    <div class="srv-card" style="--cc:#16a34a;--cbg:#f0fdf4;">
+      <div class="srv-icon">📅</div>
+      <div class="srv-title">الجدولة والتقويم</div>
+      <div class="srv-desc">إدارة جداول التدريب والمباريات والفعاليات مع إشعارات تلقائية لأولياء الأمور.</div>
+      <ul class="srv-features">
+        <li>تقويم تفاعلي للفعاليات</li>
+        <li>إشعارات واتساب جماعية</li>
+        <li>جدول المباريات ونتائجها</li>
+        <li>تذكير تلقائي قبل التدريب</li>
+      </ul>
+    </div>
+
+    <div class="srv-card" style="--cc:#0369a1;--cbg:#eff6ff;">
+      <div class="srv-icon">✅</div>
+      <div class="srv-title">متابعة الحضور</div>
+      <div class="srv-desc">تسجيل الحضور اليومي لكل لاعب مع تقارير شهرية تلقائية وإشعار عند الغياب.</div>
+      <ul class="srv-features">
+        <li>حضور يومي سريع بضغطة</li>
+        <li>نسبة حضور لكل لاعب</li>
+        <li>إشعار غياب لولي الأمر</li>
+        <li>تقرير شهري PDF</li>
+      </ul>
+    </div>
+
+    <div class="srv-card" style="--cc:#7c3aed;--cbg:#faf5ff;">
+      <div class="srv-icon">👨‍👩‍👦</div>
+      <div class="srv-title">بوابة ولي الأمر</div>
+      <div class="srv-desc">يتابع ولي الأمر حضور ابنه وأخباره ومواعيد تدريباته مباشرة من هاتفه.</div>
+      <ul class="srv-features">
+        <li>دخول بدون كلمة مرور</li>
+        <li>متابعة الحضور والغياب</li>
+        <li>الفعاليات القادمة</li>
+        <li>التواصل مع الإدارة</li>
+      </ul>
+    </div>
+
+    <div class="srv-card" style="--cc:#d4af37;--cbg:#fffbeb;">
+      <div class="srv-icon">🏆</div>
+      <div class="srv-title">إدارة البطولات</div>
+      <div class="srv-desc">تنظيم البطولات الداخلية وتسجيل الأكاديميات المشاركة وإدارة النتائج.</div>
+      <ul class="srv-features">
+        <li>تسجيل الأكاديميات</li>
+        <li>جدول المباريات</li>
+        <li>النتائج والترتيب</li>
+        <li>بطاقات اللاعبين</li>
+      </ul>
+    </div>
+
+    <div class="srv-card" style="--cc:#10b981;--cbg:#ecfdf5;">
+      <div class="srv-icon">💼</div>
+      <div class="srv-title">الإدارة المالية</div>
+      <div class="srv-desc">متابعة الاشتراكات والمصروفات والإيرادات بنظام مالي خاص وآمن للمدير.</div>
+      <ul class="srv-features">
+        <li>متابعة تجديد الاشتراكات</li>
+        <li>نظام مالي خاص بالمدير</li>
+        <li>تقارير مالية PDF</li>
+        <li>مصروفات ثابتة شهرية</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- كيف يعمل -->
+<div class="how">
+  <div class="section-label" style="color:#d4af37;">كيف يعمل</div>
+  <h2 class="section-title">3 خطوات فقط</h2>
+  <p class="section-sub">البدء سريع ولا يحتاج خبرة تقنية</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-title">سجّل اللاعبين</div>
+      <div class="step-desc">أدخل بيانات اللاعب وصورته وتصدر البطاقة تلقائياً</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-title">أدِر التدريبات</div>
+      <div class="step-desc">سجّل الحضور وأضف المباريات والأخبار بسهولة</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-title">تواصل مع الأهل</div>
+      <div class="step-desc">يتابع ولي الأمر كل شيء من هاتفه مباشرةً</div>
+    </div>
+  </div>
+</div>
+
+<!-- المميزات -->
+<div class="features">
+  <div class="section-label">لماذا نحن</div>
+  <h2 class="section-title">مميزات المنصة</h2>
+  <p class="section-sub">مبنية خصيصاً لاحتياجات الأكاديميات العُمانية</p>
+
+  <div class="feat-grid">
+    <div class="feat">
+      <div class="feat-icon"><i class="fas fa-mobile-alt"></i></div>
+      <div class="feat-text">
+        <div class="t">تطبيق على الهاتف</div>
+        <div class="d">تثبّت المنصة على الهاتف كتطبيق كامل بدون متجر</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon"><i class="fas fa-lock"></i></div>
+      <div class="feat-text">
+        <div class="t">آمنة وخاصة</div>
+        <div class="d">بيانات اللاعبين محمية ولا يصل إليها إلا المخوّلون</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon"><i class="fas fa-wifi"></i></div>
+      <div class="feat-text">
+        <div class="t">تعمل بدون إنترنت</div>
+        <div class="d">بعض الوظائف تعمل offline عند انقطاع الشبكة</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon"><i class="fab fa-whatsapp"></i></div>
+      <div class="feat-text">
+        <div class="t">تكامل واتساب</div>
+        <div class="d">إرسال إشعارات جماعية للأهل مباشرة عبر واتساب</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon"><i class="fas fa-file-pdf"></i></div>
+      <div class="feat-text">
+        <div class="t">تقارير PDF عربية</div>
+        <div class="d">تقارير شهرية احترافية جاهزة للطباعة بالعربي</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon"><i class="fas fa-cloud"></i></div>
+      <div class="feat-text">
+        <div class="t">حفظ تلقائي</div>
+        <div class="d">جميع البيانات تُحفظ تلقائياً على Google Sheets</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta">
+  <h2>جاهز لتطوير أكاديميتك؟</h2>
+  <p>انضم لأكاديمية الشمالي وابدأ رحلة الإدارة الرقمية اليوم</p>
+  <div class="cta-btns">
+    <a href="index.html" class="btn-white"><i class="fas fa-rocket"></i> ادخل المنصة</a>
+    <a href="https://wa.me/968XXXXXXXX" class="btn-wa"><i class="fab fa-whatsapp"></i> تواصل معنا</a>
+  </div>
+</div>
+
+<!-- فوتر -->
+<footer>
+  <p>© 2025 <span>أكاديمية الشمالي لكرة القدم</span> · سلطنة عُمان · جميع الحقوق محفوظة</p>
+</footer>
+
+</body>
+</html>
