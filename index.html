@@ -4649,6 +4649,40 @@ function showSuccess(id, data) {
       '<i class="fas fa-user-plus"></i> لاعب آخر</button>'+
     '</div></div>';
 
+  // نافذة خيارات ما بعد التسجيل
+  setTimeout(function(){
+    var mo = document.createElement('div');
+    mo.id = 'postRegModal';
+    mo.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+    mo.innerHTML =
+      '<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px 20px 32px;font-family:Cairo,sans-serif;">'+
+        '<div style="width:40px;height:4px;background:#e2e8f0;border-radius:2px;margin:0 auto 18px;"></div>'+
+        '<div style="text-align:center;margin-bottom:18px;">'+
+          '<div style="font-size:32px;margin-bottom:6px;">🎉</div>'+
+          '<div style="font-size:16px;font-weight:900;color:#0f172a;">تم التسجيل بنجاح</div>'+
+          '<div style="font-size:11px;color:#64748b;margin-top:4px;">اختر ماذا تريد أن تفعل بالبطاقة</div>'+
+        '</div>'+
+        '<div style="display:flex;flex-direction:column;gap:10px;">'+
+          '<button onclick="document.getElementById(\'postRegModal\').remove();printCard()" style="background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;border:none;border-radius:14px;padding:15px 18px;font-size:14px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;gap:12px;width:100%;">'+
+            '<div style="width:38px;height:38px;background:rgba(255,255,255,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🖨️</div>'+
+            '<div style="text-align:right;"><div style="font-size:13px;font-weight:900;">طباعة</div><div style="font-size:10px;opacity:.6;font-weight:600;">طباعة البطاقة مباشرة</div></div>'+
+          '</button>'+
+          '<button onclick="document.getElementById(\'postRegModal\').remove();downloadCardPDF()" style="background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:14px;padding:15px 18px;font-size:14px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;gap:12px;width:100%;">'+
+            '<div style="width:38px;height:38px;background:rgba(255,255,255,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📄</div>'+
+            '<div style="text-align:right;"><div style="font-size:13px;font-weight:900;">تنزيل PDF</div><div style="font-size:10px;opacity:.6;font-weight:600;">حفظ البطاقة كملف PDF</div></div>'+
+          '</button>'+
+          '<button onclick="document.getElementById(\'postRegModal\').remove();shareCardPDF()" style="background:linear-gradient(135deg,#128c7e,#25d366);color:#fff;border:none;border-radius:14px;padding:15px 18px;font-size:14px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;gap:12px;width:100%;">'+
+            '<div style="width:38px;height:38px;background:rgba(255,255,255,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">💬</div>'+
+            '<div style="text-align:right;"><div style="font-size:13px;font-weight:900;">إرسال واتساب</div><div style="font-size:10px;opacity:.6;font-weight:600;">مشاركة البطاقة عبر واتساب</div></div>'+
+          '</button>'+
+          '<button onclick="document.getElementById(\'postRegModal\').remove()" style="background:#f1f5f9;color:#475569;border:none;border-radius:14px;padding:13px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;width:100%;">'+
+            'لاحقاً — عرض البطاقة فقط'+
+          '</button>'+
+        '</div>'+
+      '</div>';
+    document.body.appendChild(mo);
+  }, 400);
+
   // توليد QR بعد رسم البطاقة
   setTimeout(function(){
     var qrEl = document.getElementById('regCardQR');
