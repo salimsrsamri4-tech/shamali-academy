@@ -257,6 +257,7 @@ window.addEventListener('load',function(){
     <button class="sb-btn gold" data-page="coaches" data-pg="coaches"><i class="fas fa-id-card"></i> المدربون</button>
     <button class="sb-btn gold" data-page="reports" data-pg="reports"><i class="fas fa-file-alt"></i> التقارير</button>
     <button class="sb-btn gold" data-page="suggestions" data-pg="suggestions"><i class="fas fa-inbox"></i> صندوق المقترحات</button>
+    <button class="sb-btn gold" data-page="teamsuggestions" data-pg="teamsuggestions"><i class="fas fa-bullhorn"></i> مقترحات فريق الشمالي</button>
     <button class="sb-btn gold" data-page="birthdays" data-pg="birthdays"><i class="fas fa-birthday-cake"></i> أعياد الميلاد</button>
     <button class="sb-btn gold" data-page="groupmsg" data-pg="groupmsg"><i class="fas fa-paper-plane"></i> إشعار جماعي</button>
     <button class="sb-btn gold" data-page="substrack" data-pg="substrack"><i class="fas fa-bell"></i> متابعة الاشتراكات <span id="subsBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
@@ -2171,6 +2172,68 @@ function renderSuggestions(){
   });
 }
 
+// ===== TEAM SUGGESTIONS ADMIN =====
+function renderTeamSuggestions(){
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ تحميل مقترحات الفريق...</div>';
+  apiGet('مقترحات أعضاء الفريق').then(function(rows){
+    if(!Array.isArray(rows)||!rows.length){
+      el.innerHTML='<div style="background:linear-gradient(135deg,#0f172a,#7a1015);padding:20px;text-align:center;color:#fff;border-radius:0;">'+
+        '<div style="font-size:28px;">📭</div><div style="font-weight:900;margin-top:6px;">لا توجد مقترحات بعد</div></div>';
+      return;
+    }
+    var sorted = rows.slice().reverse();
+    var counts = {جديد:0};
+    sorted.forEach(function(r){ var s=r['الحالة']||'جديد'; counts[s]=(counts[s]||0)+1; });
+
+    var catIcon = {'تدريب وفني':'⚽','إداري وتنظيمي':'🗂️','مرافق وملاعب':'🏟️','فعاليات ومسابقات':'🏆','رعاية وشراكات':'🤝','أخرى':'💬'};
+    var roleColor = {'لاعب':'#16a34a','ولي أمر لاعب':'#1d4ed8','مدرب / طاقم فني':'#0891b2','عضو إداري':'#d4af37','داعم / عضو مساند':'#a855f7'};
+
+    var html =
+      '<div style="background:linear-gradient(135deg,#0f172a,#7a1015);padding:20px 16px;text-align:center;color:#fff;">'+
+      '<div style="font-size:28px;margin-bottom:4px;">📣</div>'+
+      '<div style="font-size:18px;font-weight:900;">مقترحات فريق الشمالي</div>'+
+      '<div style="display:flex;justify-content:center;gap:16px;margin-top:12px;">'+
+      '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 18px;text-align:center;">'+
+      '<div style="font-size:18px;font-weight:900;">'+sorted.length+'</div><div style="font-size:10px;opacity:.8;">إجمالي</div></div>'+
+      '<div style="background:rgba(239,68,68,.3);border-radius:10px;padding:8px 18px;text-align:center;">'+
+      '<div style="font-size:18px;font-weight:900;">'+(counts['جديد']||0)+'</div><div style="font-size:10px;opacity:.8;">جديد</div></div>'+
+      '</div></div>'+
+      '<div style="padding:12px;">';
+
+    sorted.forEach(function(r){
+      var role = r['الصفة']||'-';
+      var color = roleColor[role]||'#475569';
+      var cat = r['التصنيف']||'أخرى';
+      var icon = catIcon[cat]||'💬';
+      var phone = (r['رقم التواصل']||'').replace(/\D/g,'');
+      html +=
+        '<div style="background:#fff;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border-right:4px solid '+color+';">'+
+        '<div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">'+
+        '<div>'+
+        '<div style="font-size:12px;font-weight:900;color:'+color+';">'+role+'</div>'+
+        '<div style="font-size:10px;color:#94a3b8;">'+(r['التاريخ']||'')+'</div>'+
+        '</div>'+
+        '<span style="font-size:11px;font-weight:800;background:#f8fafc;border:1px solid #e2e8f0;border-radius:20px;padding:3px 10px;">'+icon+' '+cat+'</span>'+
+        '</div>'+
+        '<div style="padding:12px 14px;">'+
+        '<div style="display:flex;gap:16px;margin-bottom:8px;flex-wrap:wrap;">'+
+        '<div><div style="font-size:9px;color:#94a3b8;font-weight:700;">الاسم</div><div style="font-size:12px;font-weight:800;color:#1e293b;">'+(r['الاسم']||'-')+'</div></div>'+
+        (phone?'<div><div style="font-size:9px;color:#94a3b8;font-weight:700;">التواصل</div><a href="https://wa.me/'+phone+'" target="_blank" style="font-size:12px;font-weight:800;color:#16a34a;text-decoration:none;"><i class="fab fa-whatsapp"></i> '+r['رقم التواصل']+'</a></div>':'')+
+        '</div>'+
+        (r['العنوان'] && r['العنوان']!=='-' ? '<div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:6px;">'+r['العنوان']+'</div>' : '')+
+        '<div style="background:#f8fafc;border-radius:8px;padding:10px;font-size:13px;color:#334155;line-height:1.7;border-right:3px solid '+color+';">'+
+        (r['نص المقترح']||'')+'</div>'+
+        '</div></div>';
+    });
+
+    html += '</div>';
+    el.innerHTML = html;
+  }).catch(function(){
+    el.innerHTML='<div class="card"><div class="al al-warn">تعذّر تحميل مقترحات الفريق</div></div>';
+  });
+}
+
 // ===== REPORTS =====
 function renderReports(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
@@ -2281,6 +2344,7 @@ function renderPage(page) {
     case 'reports': renderReports(); break;
     case 'suggest': renderSuggest(); break;
     case 'suggestions': renderSuggestions(); break;
+    case 'teamsuggestions': renderTeamSuggestions(); break;
     case 'coachreport': renderCoachReport(); break;
     case 'matchlist': renderMatchList(); break;
     case 'matchresult': renderMatchResult(); break;
