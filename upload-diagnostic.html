@@ -43,10 +43,15 @@ function runTest(){
     var elapsed = Date.now() - startTime;
     out.textContent = 'استلمنا استجابة من الخادم بعد ' + elapsed + ' ملي ثانية\n';
     out.textContent += 'HTTP Status: ' + r.status + ' ' + r.statusText + '\n';
-    out.textContent += 'Response Type: ' + r.type + '\n\n';
+    out.textContent += 'Response Type: ' + r.type + '\n';
+    out.textContent += 'Redirected: ' + r.redirected + '\n';
+    out.textContent += 'Final URL: ' + r.url + '\n';
+    out.textContent += 'Content-Type Header: ' + (r.headers.get('content-type') || '(غير موجود)') + '\n\n';
     return r.text();
   }).then(function(text){
-    out.textContent += 'محتوى الاستجابة:\n' + text;
+    out.textContent += 'طول محتوى الاستجابة: ' + text.length + ' حرف\n';
+    out.textContent += 'محتوى الاستجابة (JSON مُرمّز حتى تظهر أي رموز مخفية):\n' + JSON.stringify(text) + '\n\n';
+    out.textContent += 'المحتوى الخام:\n' + text;
     try {
       var json = JSON.parse(text);
       if(json.id || json.url){
@@ -55,7 +60,7 @@ function runTest(){
         out.innerHTML += '\n\n<span class="err">❌ الخادم استجاب لكن برسالة خطأ: ' + json.error + '</span>';
       }
     } catch(e){
-      out.innerHTML += '\n\n<span class="err">⚠️ الاستجابة ليست JSON صالح (قد تكون صفحة HTML/تسجيل دخول)</span>';
+      out.innerHTML += '\n\n<span class="err">⚠️ الاستجابة ليست JSON صالح (قد تكون صفحة HTML/تسجيل دخول أو فاضية)</span>';
     }
     btn.disabled = false;
   }).catch(function(err){
