@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#7a1015">
+<title>تسجيل مهرجان نبض المستقبل الثالث 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#f8fafc;}
+body{font-family:'Cairo',sans-serif;color:#0f172a;direction:rtl;}
+
+/* هيدر */
+.hero{background:linear-gradient(160deg,#0f172a 0%,#7a1015 100%);color:#fff;position:relative;overflow:hidden;padding-bottom:36px;}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%;opacity:.18;}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(15,23,42,.9),rgba(122,16,21,.75));}
+.nav{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid rgba(255,255,255,.1);}
+.nav-brand{display:flex;align-items:center;gap:10px;}
+.nav-brand img{width:40px;height:40px;border-radius:50%;object-fit:contain;background:#fff;padding:3px;}
+.nav-brand-text .name{font-size:15px;font-weight:900;color:#fff;}
+.nav-brand-text .sub{font-size:10px;color:rgba(255,255,255,.5);}
+.nav-back{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.nav-back:hover{background:rgba(255,255,255,.18);}
+
+.hero-body{position:relative;z-index:2;text-align:center;padding:34px 20px 6px;}
+.hero-icon{font-size:38px;margin-bottom:8px;}
+.hero-title{font-size:clamp(19px,5vw,28px);font-weight:900;color:#fff;line-height:1.4;}
+.hero-title span{color:#d4af37;}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.7);max-width:520px;margin:10px auto 0;line-height:1.9;}
+.hero-tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;}
+.hero-tag{background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.4);color:#d4af37;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;}
+
+/* المحتوى */
+.wrap{max-width:640px;margin:-20px auto 0;padding:0 16px 40px;position:relative;z-index:3;}
+.card{background:#fff;border-radius:18px;padding:24px 22px;box-shadow:0 10px 30px rgba(15,23,42,.1);border:1px solid #e2e8f0;}
+.fld{margin-bottom:16px;}
+.lbl{font-size:12px;color:#334155;font-weight:800;display:block;margin-bottom:7px;}
+.lbl i{color:#b81d22;width:16px;text-align:center;}
+.req{color:#b81d22;}
+.hint{font-size:10px;color:#94a3b8;margin-top:5px;line-height:1.6;}
+.inp,.sel,.txt{width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:11px 13px;font-family:'Cairo',sans-serif;font-size:13px;background:#f8fafc;color:#0f172a;}
+.inp:focus,.sel:focus,.txt:focus{outline:none;border-color:#b81d22;background:#fff;}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:480px){.r2{grid-template-columns:1fr;}}
+
+.cat-badge{display:none;margin-top:8px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:9px 12px;font-size:12px;font-weight:800;color:#15803d;align-items:center;gap:8px;}
+.cat-badge.show{display:flex;}
+
+.upl-box{border:2px dashed #cbd5e1;border-radius:12px;padding:20px;text-align:center;cursor:pointer;background:#f8fafc;}
+.upl-box i{font-size:26px;color:#b81d22;margin-bottom:6px;display:block;}
+.upl-box .t{font-size:13px;font-weight:700;color:#475569;}
+.upl-box .s{font-size:10px;color:#94a3b8;margin-top:3px;}
+.upl-preview{display:none;align-items:center;gap:10px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:10px;margin-bottom:8px;}
+.upl-preview.show{display:flex;}
+.upl-preview img{width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;background:#fff;}
+.upl-preview .ok{font-size:12px;font-weight:700;color:#16a34a;}
+.upl-preview button{font-size:11px;color:#64748b;background:none;border:none;cursor:pointer;padding:0;font-family:'Cairo',sans-serif;}
+
+.btn-send{width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;padding:15px;font-size:15px;font-weight:900;border-radius:12px;cursor:pointer;font-family:'Cairo',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-send:disabled{opacity:.65;cursor:default;}
+.btn-send:hover:not(:disabled){transform:translateY(-1px);}
+
+.al{padding:12px 14px;border-radius:10px;font-size:12px;font-weight:700;margin-top:14px;}
+.al-ok{background:#f0fdf4;border:1.5px solid #86efac;color:#15803d;}
+.al-err{background:#fef2f2;border:1.5px solid #fca5a5;color:#dc2626;}
+
+.note{font-size:11px;color:#94a3b8;text-align:center;margin-top:14px;line-height:1.8;}
+
+footer{background:#0f172a;padding:26px 24px;text-align:center;margin-top:8px;}
+footer p{font-size:12px;color:rgba(255,255,255,.4);}
+footer span{color:#d4af37;font-weight:700;}
+footer a{color:#25d366;text-decoration:none;font-weight:700;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <img src="hero.jpg" class="hero-img" alt="">
+  <div class="hero-overlay"></div>
+
+  <nav class="nav">
+    <div class="nav-brand">
+      <img src="logo.jpg" alt="شعار الشمالي">
+      <div class="nav-brand-text">
+        <div class="name">أكاديمية الشمالي</div>
+        <div class="sub">لكرة القدم · سلطنة عُمان</div>
+      </div>
+    </div>
+    <a href="index.html" class="nav-back"><i class="fas fa-arrow-right"></i> الصفحة الرئيسية</a>
+  </nav>
+
+  <div class="hero-body">
+    <div class="hero-icon">🏆</div>
+    <div class="hero-title">تسجيل مشاركة <span>مهرجان نبض المستقبل الثالث 2026</span></div>
+    <div class="hero-sub">أكاديمية الشمالي مشاركة رسميًا في المهرجان — يرجى من ولي الأمر تعبئة بيانات اللاعب المشارك وإرفاق نسخة من الهوية.</div>
+    <div class="hero-tags">
+      <span class="hero-tag">🎂 2013-2014</span>
+      <span class="hero-tag">🎂 2015-2016</span>
+      <span class="hero-tag">🎂 2017-2018</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="fld">
+      <label class="lbl"><i class="fas fa-user"></i> الاسم الثلاثي للاعب <span class="req">*</span></label>
+      <input id="pName" type="text" class="inp" placeholder="مثال: محمد سالم راشد الشمالي">
+    </div>
+
+    <div class="fld">
+      <label class="lbl"><i class="fas fa-cake-candles"></i> سنة ميلاد اللاعب <span class="req">*</span></label>
+      <select id="pYear" class="sel" onchange="updateCategory()">
+        <option value="">اختر سنة الميلاد</option>
+        <option value="2013">2013</option>
+        <option value="2014">2014</option>
+        <option value="2015">2015</option>
+        <option value="2016">2016</option>
+        <option value="2017">2017</option>
+        <option value="2018">2018</option>
+      </select>
+      <div class="cat-badge" id="catBadge"><i class="fas fa-shield-halved"></i> <span id="catText"></span></div>
+    </div>
+
+    <div class="fld">
+      <label class="lbl"><i class="fas fa-id-card"></i> رقم الهوية / البطاقة الشخصية <span class="req">*</span></label>
+      <input id="pId" type="text" inputmode="numeric" class="inp" placeholder="رقم الهوية كما هو مدوّن في البطاقة">
+    </div>
+
+    <div class="fld">
+      <label class="lbl"><i class="fas fa-camera"></i> صورة الهوية (نسخة واضحة) <span class="req">*</span></label>
+      <div class="upl-preview" id="idPreview">
+        <img id="idPreviewImg" src="">
+        <div style="flex:1;"><div class="ok">✅ تم إرفاق الصورة</div>
+          <button onclick="document.getElementById('idFile').click()">تغيير الصورة</button></div>
+      </div>
+      <label class="upl-box" id="idDrop" onclick="document.getElementById('idFile').click()">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <div class="t">اضغط لرفع صورة الهوية</div>
+        <div class="s">PNG أو JPG — يفضّل صورة واضحة للوجه الأمامي</div>
+      </label>
+      <input type="file" id="idFile" accept="image/*" style="display:none;" onchange="previewId(this)">
+    </div>
+
+    <div class="r2 fld">
+      <div>
+        <label class="lbl"><i class="fas fa-user-shield"></i> اسم ولي الأمر <span class="req">*</span></label>
+        <input id="parentName" type="text" class="inp" placeholder="الاسم الكامل">
+      </div>
+      <div>
+        <label class="lbl"><i class="fab fa-whatsapp"></i> واتساب ولي الأمر <span class="req">*</span></label>
+        <input id="parentPhone" type="tel" class="inp" placeholder="مثال: 96892126558">
+      </div>
+    </div>
+
+    <button class="btn-send" id="sendBtn" onclick="submitFestivalReg()"><i class="fas fa-paper-plane"></i> إرسال التسجيل</button>
+    <div id="resultMsg"></div>
+    <div class="note">بياناتك تصل مباشرة إلى إدارة أكاديمية الشمالي وتُستخدم فقط لأغراض التسجيل في المهرجان.</div>
+  </div>
+</div>
+
+<footer>
+  <p>© 2025 <span>أكاديمية الشمالي لكرة القدم</span> · سلطنة عُمان · جميع الحقوق محفوظة</p>
+  <p style="margin-top:6px;">للاستفسار: <a href="https://api.whatsapp.com/send?phone=96892126558" target="_blank">واتساب الأكاديمية</a></p>
+</footer>
+
+<script>
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbxWnWGRS2aXtw4IsRazKAlpUuorcP5bheLBU25FWd_0ppoRy6GW6PK9FZXYjwNL86AN/exec';
+var UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbx7tusYxtQP-eeP2Gp6vK5u0hxeJiE_e4zoaCLuS-62Tq--fPZSz0NalTrsJLbLX_xA/exec';
+var SHEET_NAME = 'تسجيل مهرجان نبض المستقبل 2026';
+
+var categoryByYear = {
+  '2013':'2013-2014', '2014':'2013-2014',
+  '2015':'2015-2016', '2016':'2015-2016',
+  '2017':'2017-2018', '2018':'2017-2018'
+};
+var idFileB64 = '';
+
+function updateCategory(){
+  var year = document.getElementById('pYear').value;
+  var badge = document.getElementById('catBadge');
+  var text = document.getElementById('catText');
+  if(year && categoryByYear[year]){
+    text.textContent = 'الفئة العمرية: ' + categoryByYear[year];
+    badge.classList.add('show');
+  } else {
+    badge.classList.remove('show');
+  }
+}
+
+function previewId(input){
+  var file = input.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    idFileB64 = e.target.result;
+    document.getElementById('idPreviewImg').src = e.target.result;
+    document.getElementById('idPreview').classList.add('show');
+    document.getElementById('idDrop').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function dataURLtoBlob(dataURL){
+  var arr = dataURL.split(','), mime = arr[0].match(/:(.*?);/)[1];
+  var bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+  while(n--) u8arr[n] = bstr.charCodeAt(n);
+  return new Blob([u8arr], {type: mime});
+}
+
+function uploadIdImage(name){
+  return new Promise(function(resolve){
+    var base64 = idFileB64.split(',')[1];
+    var blob = dataURLtoBlob(idFileB64);
+    fetch(UPLOAD_URL, {
+      method: 'POST',
+      body: JSON.stringify({file: base64, mimeType: blob.type, filename: name})
+    }).then(function(r){ return r.json(); }).then(function(res){
+      resolve(res || {});
+    }).catch(function(){ resolve({}); });
+  });
+}
+
+function submitFestivalReg(){
+  var name = document.getElementById('pName').value.trim();
+  var year = document.getElementById('pYear').value;
+  var idNum = document.getElementById('pId').value.trim();
+  var parentName = document.getElementById('parentName').value.trim();
+  var parentPhone = document.getElementById('parentPhone').value.trim();
+  var resultEl = document.getElementById('resultMsg');
+  resultEl.innerHTML = '';
+
+  if(!name || !year || !idNum || !idFileB64 || !parentName || !parentPhone){
+    resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> يرجى تعبئة جميع الحقول المطلوبة وإرفاق صورة الهوية</div>';
+    return;
+  }
+
+  var btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
+
+  uploadIdImage('هوية_' + name.replace(/\s+/g,'_') + '_' + Date.now()).then(function(uploadRes){
+    var idImageUrl = uploadRes.url || (uploadRes.id ? 'https://drive.google.com/file/d/' + uploadRes.id + '/view' : '');
+    var row = {
+      'التاريخ': new Date().toLocaleString('ar-SA'),
+      'الاسم الثلاثي': name,
+      'سنة الميلاد': year,
+      'الفئة العمرية': categoryByYear[year] || '-',
+      'رقم الهوية': idNum,
+      'صورة الهوية': idImageUrl,
+      'اسم ولي الأمر': parentName,
+      'واتساب ولي الأمر': parentPhone,
+      'الحالة': 'جديد'
+    };
+    return fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify({action:'append', sheet: SHEET_NAME, data: [row]})
+    });
+  }).then(function(){
+    resultEl.innerHTML = '<div class="al al-ok"><i class="fas fa-circle-check"></i> تم إرسال التسجيل بنجاح! سيتم التواصل معكم قريبًا من إدارة الأكاديمية 🦅</div>';
+    btn.style.display = 'none';
+  }).catch(function(){
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
+    resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> تعذّر الإرسال، تحقق من الاتصال بالإنترنت وحاول مجدداً</div>';
+  });
+}
+</script>
+</body>
+</html>
