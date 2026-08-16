@@ -2236,10 +2236,10 @@ function renderTeamSuggestions(){
 }
 
 // ===== FESTIVAL REGISTRATIONS ADMIN =====
-function _driveThumb(url){
+function _driveThumb(url, size){
   if(!url) return '';
   var m = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  return m ? 'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w300' : '';
+  return m ? 'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w'+(size||300) : '';
 }
 
 function renderFestivalReg(){
@@ -2285,8 +2285,10 @@ function _drawFestivalReg(query){
     '<div style="font-size:17px;font-weight:900;">'+counts['2017-2018']+'</div><div style="font-size:9px;opacity:.8;">2017-2018</div></div>'+
     '</div></div>'+
     '<div style="padding:12px;">'+
-    '<button id="festPdfBtn" onclick="exportFestivalRegPDF()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">'+
+    '<button id="festPdfBtn" onclick="exportFestivalRegPDF()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;">'+
     '<i class="fas fa-file-pdf"></i> تصدير قائمة PDF للجنة المنظمة</button>'+
+    '<button onclick="printFestivalIds()" style="width:100%;background:#0f172a;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">'+
+    '<i class="fas fa-id-card"></i> طباعة نسخ الهويات</button>'+
     '<div class="sbar"><input id="festSearch" placeholder="ابحث بالاسم أو رقم الهوية..." value="'+(query||'')+'"><button onclick="_drawFestivalReg(document.getElementById(\'festSearch\').value)"><i class="fas fa-search"></i></button></div>';
 
   if(!filtered.length){
@@ -2410,6 +2412,69 @@ function exportFestivalRegPDF(){
     if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-file-pdf"></i> تصدير قائمة PDF للجنة المنظمة'; }
     alert('تعذّر إنشاء ملف PDF');
   });
+}
+
+function printFestivalIds(){
+  var rows = (window._festivalRows || []).filter(function(r){ return r['صورة الهوية']; });
+  if(!rows.length){ alert('لا توجد صور هويات مرفقة للطباعة'); return; }
+
+  var cats = ['2013-2014','2015-2016','2017-2018'];
+  var byCat = {};
+  cats.forEach(function(c){ byCat[c]=[]; });
+  rows.forEach(function(r){ var c=r['الفئة العمرية']; if(byCat[c]) byCat[c].push(r); });
+  cats.forEach(function(c){
+    byCat[c].sort(function(a,b){ return (a['الاسم الثلاثي']||'').localeCompare(b['الاسم الثلاثي']||'','ar'); });
+  });
+
+  var cardsHtml = cats.map(function(c){
+    var list = byCat[c];
+    if(!list.length) return '';
+    return '<div class="cat-title">الفئة العمرية '+c+' — ('+list.length+' لاعب)</div>'+
+      '<div class="id-grid">'+
+      list.map(function(r){
+        var img = _driveThumb(r['صورة الهوية'], 900) || r['صورة الهوية'];
+        return '<div class="id-card">'+
+          '<img src="'+img+'" alt="هوية">'+
+          '<div class="id-name">'+(r['الاسم الثلاثي']||'-')+'</div>'+
+          '<div class="id-meta">رقم الهوية: '+(r['رقم الهوية']||'-')+' &nbsp;·&nbsp; سنة الميلاد: '+(r['سنة الميلاد']||'-')+'</div>'+
+          '</div>';
+      }).join('')+
+      '</div>';
+  }).join('');
+
+  var html =
+    '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'+
+    '<title>نسخ هويات المشاركين — مهرجان نبض المستقبل 2026</title>'+
+    '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800;900&display=swap" rel="stylesheet">'+
+    '<style>'+
+    '*{box-sizing:border-box;margin:0;padding:0;}'+
+    'body{font-family:Cairo,sans-serif;direction:rtl;background:#f1f5f9;color:#0f172a;padding:20px;}'+
+    '.hdr{background:linear-gradient(135deg,#0f172a,#7a1015);color:#fff;padding:16px 20px;border-radius:10px;text-align:center;margin-bottom:16px;}'+
+    '.hdr .t{font-size:16px;font-weight:900;}'+
+    '.hdr .s{font-size:11px;opacity:.7;margin-top:4px;}'+
+    '.cat-title{background:#0f172a;color:#fff;border-radius:8px;padding:8px 14px;margin:16px 0 10px;font-size:13px;font-weight:900;}'+
+    '.id-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}'+
+    '.id-card{background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;break-inside:avoid;}'+
+    '.id-card img{width:100%;max-height:220px;object-fit:contain;border-radius:6px;background:#f8fafc;margin-bottom:8px;}'+
+    '.id-name{font-size:13px;font-weight:800;}'+
+    '.id-meta{font-size:10px;color:#64748b;margin-top:3px;}'+
+    '.no-print{text-align:center;padding:20px;background:#f8fafc;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}'+
+    '.no-print button{padding:12px 28px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;color:#fff;}'+
+    '@media print{body{background:#fff;padding:0;}.no-print{display:none!important;}.id-grid{grid-template-columns:1fr 1fr;}}'+
+    '</style></head><body>'+
+    '<div class="hdr"><div class="t">نسخ هويات المشاركين — مهرجان نبض المستقبل الثالث 2026</div>'+
+    '<div class="s">أكاديمية الشمالي لكرة القدم · إجمالي '+rows.length+' هوية مرفقة</div></div>'+
+    cardsHtml+
+    '<div class="no-print">'+
+    '<button onclick="window.print()" style="background:#b81d22;">🖨️ طباعة / حفظ PDF</button>'+
+    '<button onclick="window.close()" style="background:#64748b;">✕ إغلاق</button>'+
+    '</div>'+
+    '</body></html>';
+
+  var w = window.open('','_blank','width=900,height=750');
+  if(!w){ alert('يرجى السماح بالنوافذ المنبثقة في المتصفح ثم المحاولة مرة أخرى'); return; }
+  w.document.write(html);
+  w.document.close();
 }
 
 // ===== REPORTS =====
