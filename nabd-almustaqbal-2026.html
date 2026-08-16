@@ -211,16 +211,22 @@ function dataURLtoBlob(dataURL){
   return new Blob([u8arr], {type: mime});
 }
 
-function uploadIdImage(name){
-  return new Promise(function(resolve){
+function uploadIdImage(name, attempt){
+  attempt = attempt || 1;
+  return new Promise(function(resolve, reject){
     var base64 = idFileB64.split(',')[1];
     var blob = dataURLtoBlob(idFileB64);
     fetch(UPLOAD_URL, {
       method: 'POST',
       body: JSON.stringify({file: base64, mimeType: blob.type, filename: name})
     }).then(function(r){ return r.json(); }).then(function(res){
-      resolve(res || {});
-    }).catch(function(){ resolve({}); });
+      if(res && (res.id || res.url)){ resolve(res); return; }
+      if(attempt < 2){ uploadIdImage(name, attempt+1).then(resolve).catch(reject); return; }
+      reject(new Error('upload_failed'));
+    }).catch(function(err){
+      if(attempt < 2){ uploadIdImage(name, attempt+1).then(resolve).catch(reject); return; }
+      reject(err);
+    });
   });
 }
 
@@ -264,10 +270,14 @@ function submitFestivalReg(){
   }).then(function(){
     resultEl.innerHTML = '<div class="al al-ok"><i class="fas fa-circle-check"></i> تم إرسال التسجيل بنجاح! سيتم التواصل معكم قريبًا من إدارة الأكاديمية 🦅</div>';
     btn.style.display = 'none';
-  }).catch(function(){
+  }).catch(function(err){
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
-    resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> تعذّر الإرسال، تحقق من الاتصال بالإنترنت وحاول مجدداً</div>';
+    var uploadFailed = err && err.message === 'upload_failed';
+    var msg = uploadFailed
+      ? 'تعذّر رفع صورة الهوية، تحقق من الاتصال بالإنترنت وحاول مرة أخرى'
+      : 'تعذّر الإرسال، تحقق من الاتصال بالإنترنت وحاول مجدداً';
+    resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> '+msg+'</div>';
   });
 }
 </script>
