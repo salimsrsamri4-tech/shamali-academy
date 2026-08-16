@@ -258,6 +258,7 @@ window.addEventListener('load',function(){
     <button class="sb-btn gold" data-page="reports" data-pg="reports"><i class="fas fa-file-alt"></i> التقارير</button>
     <button class="sb-btn gold" data-page="suggestions" data-pg="suggestions"><i class="fas fa-inbox"></i> صندوق المقترحات</button>
     <button class="sb-btn gold" data-page="teamsuggestions" data-pg="teamsuggestions"><i class="fas fa-bullhorn"></i> مقترحات فريق الشمالي</button>
+    <button class="sb-btn gold" data-page="festivalreg" data-pg="festivalreg"><i class="fas fa-trophy"></i> تسجيلات مهرجان نبض المستقبل</button>
     <button class="sb-btn gold" data-page="birthdays" data-pg="birthdays"><i class="fas fa-birthday-cake"></i> أعياد الميلاد</button>
     <button class="sb-btn gold" data-page="groupmsg" data-pg="groupmsg"><i class="fas fa-paper-plane"></i> إشعار جماعي</button>
     <button class="sb-btn gold" data-page="substrack" data-pg="substrack"><i class="fas fa-bell"></i> متابعة الاشتراكات <span id="subsBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
@@ -2234,6 +2235,94 @@ function renderTeamSuggestions(){
   });
 }
 
+// ===== FESTIVAL REGISTRATIONS ADMIN =====
+function _driveThumb(url){
+  if(!url) return '';
+  var m = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  return m ? 'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w300' : '';
+}
+
+function renderFestivalReg(){
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ تحميل تسجيلات المهرجان...</div>';
+  apiGet('تسجيل مهرجان نبض المستقبل 2026').then(function(rows){
+    window._festivalRows = Array.isArray(rows) ? rows : [];
+    _drawFestivalReg('');
+  }).catch(function(){
+    el.innerHTML='<div class="card"><div class="al al-warn">تعذّر تحميل تسجيلات المهرجان</div></div>';
+  });
+}
+
+function _drawFestivalReg(query){
+  var el = document.getElementById('content');
+  var rows = window._festivalRows || [];
+  if(!rows.length){
+    el.innerHTML='<div style="background:linear-gradient(135deg,#1e3a5f,#b81d22);padding:20px;text-align:center;color:#fff;">'+
+      '<div style="font-size:28px;">🏆</div><div style="font-weight:900;margin-top:6px;">لا توجد تسجيلات بعد</div></div>';
+    return;
+  }
+  var sorted = rows.slice().reverse();
+  var counts = {'2013-2014':0,'2015-2016':0,'2017-2018':0};
+  sorted.forEach(function(r){ var c=r['الفئة العمرية']; if(counts[c]!==undefined) counts[c]++; });
+
+  var filtered = query ? sorted.filter(function(r){
+    return (r['الاسم الثلاثي']||'').toLowerCase().indexOf(query.toLowerCase())>-1 ||
+           (r['رقم الهوية']||'').indexOf(query)>-1;
+  }) : sorted;
+
+  var html =
+    '<div style="background:linear-gradient(135deg,#1e3a5f,#b81d22);padding:20px 16px;text-align:center;color:#fff;">'+
+    '<div style="font-size:28px;margin-bottom:4px;">🏆</div>'+
+    '<div style="font-size:17px;font-weight:900;">تسجيلات مهرجان نبض المستقبل الثالث 2026</div>'+
+    '<div style="display:flex;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap;">'+
+    '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;">'+
+    '<div style="font-size:17px;font-weight:900;">'+sorted.length+'</div><div style="font-size:9px;opacity:.8;">إجمالي</div></div>'+
+    '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;">'+
+    '<div style="font-size:17px;font-weight:900;">'+counts['2013-2014']+'</div><div style="font-size:9px;opacity:.8;">2013-2014</div></div>'+
+    '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;">'+
+    '<div style="font-size:17px;font-weight:900;">'+counts['2015-2016']+'</div><div style="font-size:9px;opacity:.8;">2015-2016</div></div>'+
+    '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;">'+
+    '<div style="font-size:17px;font-weight:900;">'+counts['2017-2018']+'</div><div style="font-size:9px;opacity:.8;">2017-2018</div></div>'+
+    '</div></div>'+
+    '<div style="padding:12px;">'+
+    '<div class="sbar"><input id="festSearch" placeholder="ابحث بالاسم أو رقم الهوية..." value="'+(query||'')+'"><button onclick="_drawFestivalReg(document.getElementById(\'festSearch\').value)"><i class="fas fa-search"></i></button></div>';
+
+  if(!filtered.length){
+    html += '<div class="al al-warn">لا توجد نتائج مطابقة</div>';
+  }
+
+  filtered.forEach(function(r){
+    var cat = r['الفئة العمرية']||'-';
+    var thumb = _driveThumb(r['صورة الهوية']);
+    var phone = (r['واتساب ولي الأمر']||'').replace(/\D/g,'');
+    html +=
+      '<div style="background:#fff;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border-right:4px solid #b81d22;">'+
+      '<div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">'+
+      '<div>'+
+      '<div style="font-size:13px;font-weight:900;color:#0f172a;">'+(r['الاسم الثلاثي']||'-')+'</div>'+
+      '<div style="font-size:10px;color:#94a3b8;">'+(r['التاريخ']||'')+'</div>'+
+      '</div>'+
+      '<span style="font-size:11px;font-weight:800;background:#fff0f0;color:#b81d22;border:1px solid #fecaca;border-radius:20px;padding:3px 10px;">🎂 '+cat+'</span>'+
+      '</div>'+
+      '<div style="padding:12px 14px;display:flex;gap:12px;">'+
+      (thumb?'<a href="'+r['صورة الهوية']+'" target="_blank"><img src="'+thumb+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;flex-shrink:0;"></a>':
+        '<div style="width:64px;height:64px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;flex-shrink:0;"><i class="fas fa-id-card"></i></div>')+
+      '<div style="flex:1;">'+
+      '<div style="display:flex;gap:16px;margin-bottom:6px;flex-wrap:wrap;">'+
+      '<div><div style="font-size:9px;color:#94a3b8;font-weight:700;">سنة الميلاد</div><div style="font-size:12px;font-weight:800;color:#1e293b;">'+(r['سنة الميلاد']||'-')+'</div></div>'+
+      '<div><div style="font-size:9px;color:#94a3b8;font-weight:700;">رقم الهوية</div><div style="font-size:12px;font-weight:800;color:#1e293b;">'+(r['رقم الهوية']||'-')+'</div></div>'+
+      '</div>'+
+      '<div style="font-size:9px;color:#94a3b8;font-weight:700;">ولي الأمر</div>'+
+      '<div style="font-size:12px;font-weight:800;color:#1e293b;">'+(r['اسم ولي الأمر']||'-')+
+      (phone?' · <a href="https://wa.me/'+phone+'" target="_blank" style="color:#16a34a;text-decoration:none;"><i class="fab fa-whatsapp"></i> '+r['واتساب ولي الأمر']+'</a>':'')+
+      '</div>'+
+      '</div></div></div>';
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 // ===== REPORTS =====
 function renderReports(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
@@ -2345,6 +2434,7 @@ function renderPage(page) {
     case 'suggest': renderSuggest(); break;
     case 'suggestions': renderSuggestions(); break;
     case 'teamsuggestions': renderTeamSuggestions(); break;
+    case 'festivalreg': renderFestivalReg(); break;
     case 'coachreport': renderCoachReport(); break;
     case 'matchlist': renderMatchList(); break;
     case 'matchresult': renderMatchResult(); break;
