@@ -2245,12 +2245,35 @@ function _driveThumb(url, size){
 function renderFestivalReg(){
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ تحميل تسجيلات المهرجان...</div>';
-  apiGet('تسجيل مهرجان نبض المستقبل 2026').then(function(rows){
-    window._festivalRows = Array.isArray(rows) ? rows : [];
+  Promise.all([
+    apiGet('تسجيل مهرجان نبض المستقبل 2026'),
+    apiGet('الجهاز الفني والإداري - مهرجان نبض المستقبل 2026')
+  ]).then(function(results){
+    window._festivalRows = Array.isArray(results[0]) ? results[0] : [];
+    window._festivalStaffRows = Array.isArray(results[1]) ? results[1] : [];
+    window._festivalTab = 'players';
     _drawFestivalReg('');
   }).catch(function(){
     el.innerHTML='<div class="card"><div class="al al-warn">تعذّر تحميل تسجيلات المهرجان</div></div>';
   });
+}
+
+function _festivalTabsHtml(){
+  var tab = window._festivalTab || 'players';
+  function tabBtn(id, label, icon){
+    var on = tab===id;
+    return '<button onclick="_setFestivalTab(\''+id+'\')" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid '+(on?'#b81d22':'#e2e8f0')+';background:'+(on?'#fff0f0':'#fff')+';color:'+(on?'#b81d22':'#475569')+';font-weight:800;font-size:12px;cursor:pointer;font-family:Cairo,sans-serif;">'+icon+' '+label+'</button>';
+  }
+  return '<div style="display:flex;gap:8px;padding:12px 12px 0;">'+
+    tabBtn('players','اللاعبون','🧒')+
+    tabBtn('staff','الجهاز الفني والإداري','🧑‍💼')+
+    '</div>';
+}
+
+function _setFestivalTab(tab){
+  window._festivalTab = tab;
+  if(tab==='players') _drawFestivalReg('');
+  else _drawFestivalStaff('');
 }
 
 function _drawFestivalReg(query){
@@ -2258,7 +2281,8 @@ function _drawFestivalReg(query){
   var rows = window._festivalRows || [];
   if(!rows.length){
     el.innerHTML='<div style="background:linear-gradient(135deg,#1e3a5f,#b81d22);padding:20px;text-align:center;color:#fff;">'+
-      '<div style="font-size:28px;">🏆</div><div style="font-weight:900;margin-top:6px;">لا توجد تسجيلات بعد</div></div>';
+      '<div style="font-size:28px;">🏆</div><div style="font-weight:900;margin-top:6px;">لا توجد تسجيلات بعد</div></div>'+
+      _festivalTabsHtml();
     return;
   }
   var sorted = rows.slice().reverse();
@@ -2284,6 +2308,7 @@ function _drawFestivalReg(query){
     '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;">'+
     '<div style="font-size:17px;font-weight:900;">'+counts['2017-2018']+'</div><div style="font-size:9px;opacity:.8;">2017-2018</div></div>'+
     '</div></div>'+
+    _festivalTabsHtml()+
     '<div style="padding:12px;">'+
     '<button id="festPdfBtn" onclick="exportFestivalRegPDF()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;">'+
     '<i class="fas fa-file-pdf"></i> تصدير قائمة PDF للجنة المنظمة</button>'+
@@ -2320,6 +2345,70 @@ function _drawFestivalReg(query){
       '<div style="font-size:12px;font-weight:800;color:#1e293b;">'+(r['اسم ولي الأمر']||'-')+
       (phone?' · <a href="https://wa.me/'+phone+'" target="_blank" style="color:#16a34a;text-decoration:none;"><i class="fab fa-whatsapp"></i> '+r['واتساب ولي الأمر']+'</a>':'')+
       '</div>'+
+      '</div></div></div>';
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function _drawFestivalStaff(query){
+  var el = document.getElementById('content');
+  var rows = window._festivalStaffRows || [];
+  var cats = ['2013-2014','2015-2016','2017-2018'];
+  var counts = {'2013-2014':0,'2015-2016':0,'2017-2018':0};
+  rows.forEach(function(r){ var c=r['الفئة']; if(counts[c]!==undefined) counts[c]++; });
+
+  var sorted = rows.slice().reverse();
+  var filtered = query ? sorted.filter(function(r){
+    return (r['الاسم الثلاثي']||'').toLowerCase().indexOf(query.toLowerCase())>-1 ||
+           (r['رقم الهوية']||'').indexOf(query)>-1;
+  }) : sorted;
+
+  var html =
+    '<div style="background:linear-gradient(135deg,#1e3a5f,#b81d22);padding:20px 16px;text-align:center;color:#fff;">'+
+    '<div style="font-size:28px;margin-bottom:4px;">🧑‍💼</div>'+
+    '<div style="font-size:17px;font-weight:900;">الجهاز الفني والإداري — مهرجان نبض المستقبل</div>'+
+    '<div style="display:flex;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap;">'+
+    cats.map(function(c){
+      var n = counts[c];
+      var full = n>=3;
+      return '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;border-bottom:3px solid '+(full?'#4ade80':'#fca5a5')+';">'+
+        '<div style="font-size:17px;font-weight:900;">'+n+'/3</div><div style="font-size:9px;opacity:.8;">'+c+'</div></div>';
+    }).join('')+
+    '</div></div>'+
+    _festivalTabsHtml()+
+    '<div style="padding:12px;">'+
+    '<div class="sbar"><input id="festStaffSearch" placeholder="ابحث بالاسم أو رقم الهوية..." value="'+(query||'')+'"><button onclick="_drawFestivalStaff(document.getElementById(\'festStaffSearch\').value)"><i class="fas fa-search"></i></button></div>';
+
+  if(!rows.length){
+    html += '<div class="al al-warn">لا توجد تسجيلات للجهاز الفني والإداري بعد</div>';
+  } else if(!filtered.length){
+    html += '<div class="al al-warn">لا توجد نتائج مطابقة</div>';
+  }
+
+  filtered.forEach(function(r){
+    var cat = r['الفئة']||'-';
+    var thumb = _driveThumb(r['صورة الهوية']);
+    var phone = (r['رقم التواصل']||'').replace(/\D/g,'');
+    html +=
+      '<div style="background:#fff;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border-right:4px solid #1e3a5f;">'+
+      '<div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">'+
+      '<div>'+
+      '<div style="font-size:13px;font-weight:900;color:#0f172a;">'+(r['الاسم الثلاثي']||'-')+'</div>'+
+      '<div style="font-size:10px;color:#94a3b8;">'+(r['التاريخ']||'')+'</div>'+
+      '</div>'+
+      '<span style="font-size:11px;font-weight:800;background:#eff6ff;color:#1e3a5f;border:1px solid #bfdbfe;border-radius:20px;padding:3px 10px;">🎂 '+cat+'</span>'+
+      '</div>'+
+      '<div style="padding:12px 14px;display:flex;gap:12px;">'+
+      (thumb?'<a href="'+r['صورة الهوية']+'" target="_blank"><img src="'+thumb+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;flex-shrink:0;"></a>':
+        '<div style="width:64px;height:64px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;flex-shrink:0;"><i class="fas fa-id-card"></i></div>')+
+      '<div style="flex:1;">'+
+      '<div style="display:flex;gap:16px;margin-bottom:6px;flex-wrap:wrap;">'+
+      '<div><div style="font-size:9px;color:#94a3b8;font-weight:700;">الصفة</div><div style="font-size:12px;font-weight:800;color:#1e293b;">'+(r['الصفة']||'-')+'</div></div>'+
+      '<div><div style="font-size:9px;color:#94a3b8;font-weight:700;">رقم الهوية</div><div style="font-size:12px;font-weight:800;color:#1e293b;">'+(r['رقم الهوية']||'-')+'</div></div>'+
+      '</div>'+
+      (phone?'<a href="https://wa.me/'+phone+'" target="_blank" style="color:#16a34a;text-decoration:none;font-size:12px;font-weight:800;"><i class="fab fa-whatsapp"></i> '+r['رقم التواصل']+'</a>':'')+
       '</div></div></div>';
   });
 
@@ -2371,14 +2460,47 @@ function exportFestivalRegPDF(){
       '</tbody></table>';
   }).join('');
 
+  var staffRows = window._festivalStaffRows || [];
+  var staffByCat = {};
+  cats.forEach(function(c){ staffByCat[c]=[]; });
+  staffRows.forEach(function(r){ var c=r['الفئة']; if(staffByCat[c]) staffByCat[c].push(r); });
+  cats.forEach(function(c){
+    staffByCat[c].sort(function(a,b){ return (a['الاسم الثلاثي']||'').localeCompare(b['الاسم الثلاثي']||'','ar'); });
+  });
+
+  function tblRowStaff(n,name,role,idnum){
+    return '<tr>'+
+      '<td style="padding:8px 6px;border-bottom:1px solid #e2e8f0;text-align:center;width:32px;color:#64748b;">'+n+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;">'+name+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:center;width:120px;">'+role+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:center;width:110px;">'+idnum+'</td>'+
+    '</tr>';
+  }
+
+  var staffSectionsHtml = cats.map(function(c){
+    var list = staffByCat[c];
+    if(!list.length) return '';
+    return '<div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);color:#fff;border-radius:8px;padding:9px 14px;margin:16px 0 8px;font-size:13px;font-weight:900;">'+
+      'الجهاز الفني والإداري — فئة '+c+' — ('+list.length+' من 3)</div>'+
+      '<table style="width:100%;border-collapse:collapse;font-size:12px;">'+
+      '<thead><tr style="background:#f1f5f9;">'+
+        '<th style="padding:8px 6px;text-align:center;">#</th>'+
+        '<th style="padding:8px 10px;text-align:right;">الاسم الثلاثي</th>'+
+        '<th style="padding:8px 10px;text-align:center;">الصفة</th>'+
+        '<th style="padding:8px 10px;text-align:center;">رقم الهوية</th>'+
+      '</tr></thead><tbody>'+
+      list.map(function(r,i){ return tblRowStaff(i+1, r['الاسم الثلاثي']||'-', r['الصفة']||'-', r['رقم الهوية']||'-'); }).join('')+
+      '</tbody></table>';
+  }).join('');
+
   var rptHtml =
     '<div style="width:780px;background:#fff;font-family:Cairo,sans-serif;direction:rtl;">'+
       '<div style="background:linear-gradient(135deg,#0f172a,#7a1015);padding:20px 24px;text-align:center;">'+
         '<div style="font-size:18px;font-weight:900;color:#fff;">أكاديمية الشمالي لكرة القدم</div>'+
         '<div style="font-size:14px;font-weight:800;color:#d4af37;margin-top:4px;">قائمة المشاركين — مهرجان نبض المستقبل الثالث 2026</div>'+
-        '<div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:6px;">تاريخ الإصدار: '+new Date().toLocaleDateString('ar-OM')+' · إجمالي المسجلين: '+rows.length+'</div>'+
+        '<div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:6px;">تاريخ الإصدار: '+new Date().toLocaleDateString('ar-OM')+' · إجمالي اللاعبين: '+rows.length+' · إجمالي الجهاز الفني والإداري: '+staffRows.length+'</div>'+
       '</div>'+
-      '<div style="padding:8px 24px 24px;">'+sectionsHtml+'</div>'+
+      '<div style="padding:8px 24px 24px;">'+sectionsHtml+(staffSectionsHtml?staffSectionsHtml:'')+'</div>'+
       '<div style="background:#0f172a;padding:12px;text-align:center;">'+
         '<div style="font-size:9px;color:rgba(255,255,255,.5);">أكاديمية الشمالي لكرة القدم · سلطنة عُمان · للجنة المنظمة لمهرجان نبض المستقبل الثالث 2026</div>'+
       '</div>'+
@@ -2416,7 +2538,8 @@ function exportFestivalRegPDF(){
 
 function printFestivalIds(){
   var rows = (window._festivalRows || []).filter(function(r){ return r['صورة الهوية']; });
-  if(!rows.length){ alert('لا توجد صور هويات مرفقة للطباعة'); return; }
+  var staffRows = (window._festivalStaffRows || []).filter(function(r){ return r['صورة الهوية']; });
+  if(!rows.length && !staffRows.length){ alert('لا توجد صور هويات مرفقة للطباعة'); return; }
 
   var cats = ['2013-2014','2015-2016','2017-2018'];
   var byCat = {};
@@ -2437,6 +2560,29 @@ function printFestivalIds(){
           '<img src="'+img+'" alt="هوية">'+
           '<div class="id-name">'+(r['الاسم الثلاثي']||'-')+'</div>'+
           '<div class="id-meta">رقم الهوية: '+(r['رقم الهوية']||'-')+' &nbsp;·&nbsp; سنة الميلاد: '+(r['سنة الميلاد']||'-')+'</div>'+
+          '</div>';
+      }).join('')+
+      '</div>';
+  }).join('');
+
+  var staffByCat = {};
+  cats.forEach(function(c){ staffByCat[c]=[]; });
+  staffRows.forEach(function(r){ var c=r['الفئة']; if(staffByCat[c]) staffByCat[c].push(r); });
+  cats.forEach(function(c){
+    staffByCat[c].sort(function(a,b){ return (a['الاسم الثلاثي']||'').localeCompare(b['الاسم الثلاثي']||'','ar'); });
+  });
+
+  var staffCardsHtml = cats.map(function(c){
+    var list = staffByCat[c];
+    if(!list.length) return '';
+    return '<div class="cat-title">الجهاز الفني والإداري — فئة '+c+' — ('+list.length+' من 3)</div>'+
+      '<div class="id-grid">'+
+      list.map(function(r){
+        var img = _driveThumb(r['صورة الهوية'], 900) || r['صورة الهوية'];
+        return '<div class="id-card">'+
+          '<img src="'+img+'" alt="هوية">'+
+          '<div class="id-name">'+(r['الاسم الثلاثي']||'-')+'</div>'+
+          '<div class="id-meta">'+(r['الصفة']||'-')+' &nbsp;·&nbsp; رقم الهوية: '+(r['رقم الهوية']||'-')+'</div>'+
           '</div>';
       }).join('')+
       '</div>';
@@ -2463,8 +2609,9 @@ function printFestivalIds(){
     '@media print{body{background:#fff;padding:0;}.no-print{display:none!important;}.id-grid{grid-template-columns:1fr 1fr;}}'+
     '</style></head><body>'+
     '<div class="hdr"><div class="t">نسخ هويات المشاركين — مهرجان نبض المستقبل الثالث 2026</div>'+
-    '<div class="s">أكاديمية الشمالي لكرة القدم · إجمالي '+rows.length+' هوية مرفقة</div></div>'+
+    '<div class="s">أكاديمية الشمالي لكرة القدم · '+rows.length+' هوية لاعب · '+staffRows.length+' هوية من الجهاز الفني والإداري</div></div>'+
     cardsHtml+
+    (staffCardsHtml?staffCardsHtml:'')+
     '<div class="no-print">'+
     '<button onclick="window.print()" style="background:#b81d22;">🖨️ طباعة / حفظ PDF</button>'+
     '<button onclick="window.close()" style="background:#64748b;">✕ إغلاق</button>'+

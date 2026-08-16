@@ -49,6 +49,11 @@ body{font-family:'Cairo',sans-serif;color:#0f172a;direction:rtl;}
 .cat-badge{display:none;margin-top:8px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:9px 12px;font-size:12px;font-weight:800;color:#15803d;align-items:center;gap:8px;}
 .cat-badge.show{display:flex;}
 
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.type-btn{border:1.5px solid #e2e8f0;background:#f8fafc;border-radius:10px;padding:12px 8px;text-align:center;font-size:12px;font-weight:800;color:#475569;cursor:pointer;font-family:'Cairo',sans-serif;}
+.type-btn .ic{font-size:20px;display:block;margin-bottom:4px;}
+.type-btn.on{border-color:#b81d22;background:#fff0f0;color:#b81d22;}
+
 .upl-box{border:2px dashed #cbd5e1;border-radius:12px;padding:20px;text-align:center;cursor:pointer;background:#f8fafc;}
 .upl-box i{font-size:26px;color:#b81d22;margin-bottom:6px;display:block;}
 .upl-box .t{font-size:13px;font-weight:700;color:#475569;}
@@ -66,6 +71,7 @@ body{font-family:'Cairo',sans-serif;color:#0f172a;direction:rtl;}
 .al{padding:12px 14px;border-radius:10px;font-size:12px;font-weight:700;margin-top:14px;}
 .al-ok{background:#f0fdf4;border:1.5px solid #86efac;color:#15803d;}
 .al-err{background:#fef2f2;border:1.5px solid #fca5a5;color:#dc2626;}
+.al-warn{background:#fffbeb;border:1.5px solid #fcd34d;color:#92400e;}
 
 .note{font-size:11px;color:#94a3b8;text-align:center;margin-top:14px;line-height:1.8;}
 
@@ -95,7 +101,7 @@ footer a{color:#25d366;text-decoration:none;font-weight:700;}
   <div class="hero-body">
     <div class="hero-icon">🏆</div>
     <div class="hero-title">تسجيل مشاركة <span>مهرجان نبض المستقبل الثالث 2026</span></div>
-    <div class="hero-sub">أكاديمية الشمالي مشاركة رسميًا في المهرجان — يرجى من ولي الأمر تعبئة بيانات اللاعب المشارك وإرفاق نسخة من الهوية.</div>
+    <div class="hero-sub">أكاديمية الشمالي مشاركة رسميًا في المهرجان — سجّل بيانات اللاعب أو عضو الجهاز الفني والإداري وأرفق نسخة من الهوية.</div>
     <div class="hero-tags">
       <span class="hero-tag">🎂 2013-2014</span>
       <span class="hero-tag">🎂 2015-2016</span>
@@ -106,30 +112,78 @@ footer a{color:#25d366;text-decoration:none;font-weight:700;}
 
 <div class="wrap">
   <div class="card">
-    <div class="fld">
-      <label class="lbl"><i class="fas fa-user"></i> الاسم الثلاثي للاعب <span class="req">*</span></label>
-      <input id="pName" type="text" class="inp" placeholder="مثال: محمد سالم راشد الشمالي">
-    </div>
 
     <div class="fld">
-      <label class="lbl"><i class="fas fa-cake-candles"></i> سنة ميلاد اللاعب <span class="req">*</span></label>
-      <select id="pYear" class="sel" onchange="updateCategory()">
-        <option value="">اختر سنة الميلاد</option>
-        <option value="2013">2013</option>
-        <option value="2014">2014</option>
-        <option value="2015">2015</option>
-        <option value="2016">2016</option>
-        <option value="2017">2017</option>
-        <option value="2018">2018</option>
-      </select>
-      <div class="cat-badge" id="catBadge"><i class="fas fa-shield-halved"></i> <span id="catText"></span></div>
+      <label class="lbl"><i class="fas fa-list-check"></i> نوع التسجيل <span class="req">*</span></label>
+      <div class="type-grid">
+        <div class="type-btn on" id="typeBtnPlayer" onclick="setRegType('player')"><span class="ic">🧒</span> تسجيل لاعب</div>
+        <div class="type-btn" id="typeBtnStaff" onclick="setRegType('staff')"><span class="ic">🧑‍💼</span> عضو جهاز فني/إداري</div>
+      </div>
     </div>
 
-    <div class="fld">
-      <label class="lbl"><i class="fas fa-id-card"></i> رقم الهوية / البطاقة الشخصية <span class="req">*</span></label>
-      <input id="pId" type="text" inputmode="numeric" class="inp" placeholder="رقم الهوية كما هو مدوّن في البطاقة">
+    <!-- حقول اللاعب -->
+    <div id="playerFields">
+      <div class="fld">
+        <label class="lbl"><i class="fas fa-user"></i> الاسم الثلاثي للاعب <span class="req">*</span></label>
+        <input id="pName" type="text" class="inp" placeholder="مثال: محمد سالم راشد الشمالي">
+      </div>
+
+      <div class="fld">
+        <label class="lbl"><i class="fas fa-cake-candles"></i> سنة ميلاد اللاعب <span class="req">*</span></label>
+        <select id="pYear" class="sel" onchange="updateCategory()">
+          <option value="">اختر سنة الميلاد</option>
+          <option value="2013">2013</option>
+          <option value="2014">2014</option>
+          <option value="2015">2015</option>
+          <option value="2016">2016</option>
+          <option value="2017">2017</option>
+          <option value="2018">2018</option>
+        </select>
+        <div class="cat-badge" id="catBadge"><i class="fas fa-shield-halved"></i> <span id="catText"></span></div>
+      </div>
+
+      <div class="fld">
+        <label class="lbl"><i class="fas fa-id-card"></i> رقم الهوية / البطاقة الشخصية <span class="req">*</span></label>
+        <input id="pId" type="text" inputmode="numeric" class="inp" placeholder="رقم الهوية كما هو مدوّن في البطاقة">
+      </div>
     </div>
 
+    <!-- حقول الجهاز الفني والإداري -->
+    <div id="staffFields" style="display:none;">
+      <div class="fld">
+        <label class="lbl"><i class="fas fa-user"></i> الاسم الثلاثي <span class="req">*</span></label>
+        <input id="sName" type="text" class="inp" placeholder="الاسم الكامل">
+      </div>
+
+      <div class="fld">
+        <label class="lbl"><i class="fas fa-briefcase"></i> الصفة <span class="req">*</span></label>
+        <select id="sRole" class="sel">
+          <option value="مدرب رئيسي">مدرب رئيسي</option>
+          <option value="مدرب مساعد">مدرب مساعد</option>
+          <option value="إداري">إداري</option>
+          <option value="طبيب / معالج فيزيائي">طبيب / معالج فيزيائي</option>
+          <option value="أخرى">أخرى</option>
+        </select>
+      </div>
+
+      <div class="fld">
+        <label class="lbl"><i class="fas fa-shield-halved"></i> الفئة العمرية المسؤول عنها <span class="req">*</span></label>
+        <select id="sCategory" class="sel">
+          <option value="">اختر الفئة</option>
+          <option value="2013-2014">2013-2014</option>
+          <option value="2015-2016">2015-2016</option>
+          <option value="2017-2018">2017-2018</option>
+        </select>
+        <div class="hint">مسموح 3 أعضاء كحد أقصى من الجهاز الفني والإداري لكل فئة عمرية</div>
+      </div>
+
+      <div class="fld">
+        <label class="lbl"><i class="fas fa-id-card"></i> رقم الهوية / البطاقة الشخصية <span class="req">*</span></label>
+        <input id="sId" type="text" inputmode="numeric" class="inp" placeholder="رقم الهوية كما هو مدوّن في البطاقة">
+      </div>
+    </div>
+
+    <!-- صورة الهوية (مشتركة) -->
     <div class="fld">
       <label class="lbl"><i class="fas fa-camera"></i> صورة الهوية (نسخة واضحة) <span class="req">*</span></label>
       <div class="upl-preview" id="idPreview">
@@ -145,7 +199,8 @@ footer a{color:#25d366;text-decoration:none;font-weight:700;}
       <input type="file" id="idFile" accept="image/*" style="display:none;" onchange="previewId(this)">
     </div>
 
-    <div class="r2 fld">
+    <!-- بيانات التواصل: ولي أمر (لاعب) -->
+    <div id="playerContact" class="r2 fld">
       <div>
         <label class="lbl"><i class="fas fa-user-shield"></i> اسم ولي الأمر <span class="req">*</span></label>
         <input id="parentName" type="text" class="inp" placeholder="الاسم الكامل">
@@ -154,6 +209,12 @@ footer a{color:#25d366;text-decoration:none;font-weight:700;}
         <label class="lbl"><i class="fab fa-whatsapp"></i> واتساب ولي الأمر <span class="req">*</span></label>
         <input id="parentPhone" type="tel" class="inp" placeholder="مثال: 96892126558">
       </div>
+    </div>
+
+    <!-- بيانات التواصل: عضو الجهاز نفسه -->
+    <div id="staffContact" class="fld" style="display:none;">
+      <label class="lbl"><i class="fab fa-whatsapp"></i> رقم التواصل / واتساب <span class="req">*</span></label>
+      <input id="staffPhone" type="tel" class="inp" placeholder="مثال: 96892126558">
     </div>
 
     <button class="btn-send" id="sendBtn" onclick="submitFestivalReg()"><i class="fas fa-paper-plane"></i> إرسال التسجيل</button>
@@ -171,6 +232,8 @@ footer a{color:#25d366;text-decoration:none;font-weight:700;}
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxWnWGRS2aXtw4IsRazKAlpUuorcP5bheLBU25FWd_0ppoRy6GW6PK9FZXYjwNL86AN/exec';
 var UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbzt0ZSA68BHMkAvtrMZsI_vYep2WjW4gdeS6-plgB3_y58qPTK6xL4Z13ilsGwEi--a/exec';
 var SHEET_NAME = 'تسجيل مهرجان نبض المستقبل 2026';
+var STAFF_SHEET_NAME = 'الجهاز الفني والإداري - مهرجان نبض المستقبل 2026';
+var STAFF_CAP_PER_CATEGORY = 3;
 
 var categoryByYear = {
   '2013':'2013-2014', '2014':'2013-2014',
@@ -178,6 +241,18 @@ var categoryByYear = {
   '2017':'2017-2018', '2018':'2017-2018'
 };
 var idFileB64 = '';
+var regType = 'player';
+
+function setRegType(t){
+  regType = t;
+  document.getElementById('typeBtnPlayer').classList.toggle('on', t==='player');
+  document.getElementById('typeBtnStaff').classList.toggle('on', t==='staff');
+  document.getElementById('playerFields').style.display = t==='player' ? 'block' : 'none';
+  document.getElementById('staffFields').style.display = t==='staff' ? 'block' : 'none';
+  document.getElementById('playerContact').style.display = t==='player' ? 'grid' : 'none';
+  document.getElementById('staffContact').style.display = t==='staff' ? 'block' : 'none';
+  document.getElementById('resultMsg').innerHTML = '';
+}
 
 function updateCategory(){
   var year = document.getElementById('pYear').value;
@@ -230,7 +305,19 @@ function uploadIdImage(name, attempt){
   });
 }
 
+function apiGetSheet(sheet){
+  return fetch(GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheet) + '&limit=500')
+    .then(function(r){ return r.json(); })
+    .then(function(data){ return Array.isArray(data) ? data : []; })
+    .catch(function(){ return []; });
+}
+
 function submitFestivalReg(){
+  if(regType === 'staff'){ submitStaffReg(); return; }
+  submitPlayerReg();
+}
+
+function submitPlayerReg(){
   var name = document.getElementById('pName').value.trim();
   var year = document.getElementById('pYear').value;
   var idNum = document.getElementById('pId').value.trim();
@@ -278,6 +365,67 @@ function submitFestivalReg(){
       ? 'تعذّر رفع صورة الهوية، تحقق من الاتصال بالإنترنت وحاول مرة أخرى'
       : 'تعذّر الإرسال، تحقق من الاتصال بالإنترنت وحاول مجدداً';
     resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> '+msg+'</div>';
+  });
+}
+
+function submitStaffReg(){
+  var name = document.getElementById('sName').value.trim();
+  var role = document.getElementById('sRole').value;
+  var category = document.getElementById('sCategory').value;
+  var idNum = document.getElementById('sId').value.trim();
+  var phone = document.getElementById('staffPhone').value.trim();
+  var resultEl = document.getElementById('resultMsg');
+  resultEl.innerHTML = '';
+
+  if(!name || !role || !category || !idNum || !idFileB64 || !phone){
+    resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> يرجى تعبئة جميع الحقول المطلوبة وإرفاق صورة الهوية</div>';
+    return;
+  }
+
+  var btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التحقق...';
+
+  apiGetSheet(STAFF_SHEET_NAME).then(function(rows){
+    var countInCategory = rows.filter(function(r){ return r['الفئة'] === category; }).length;
+    if(countInCategory >= STAFF_CAP_PER_CATEGORY){
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
+      resultEl.innerHTML = '<div class="al al-warn"><i class="fas fa-triangle-exclamation"></i> تم الوصول للحد الأقصى (3 أعضاء) من الجهاز الفني والإداري لفئة '+category+'. يرجى التواصل مع إدارة الأكاديمية.</div>';
+      return;
+    }
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
+    uploadIdImage('هوية_' + name.replace(/\s+/g,'_') + '_' + Date.now()).then(function(uploadRes){
+      var idImageUrl = uploadRes.url || (uploadRes.id ? 'https://drive.google.com/file/d/' + uploadRes.id + '/view' : '');
+      var row = {
+        'التاريخ': new Date().toLocaleString('ar-SA'),
+        'الاسم الثلاثي': name,
+        'الصفة': role,
+        'الفئة': category,
+        'رقم الهوية': idNum,
+        'صورة الهوية': idImageUrl,
+        'رقم التواصل': phone,
+        'الحالة': 'جديد'
+      };
+      return fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type': 'text/plain'},
+        body: JSON.stringify({action:'append', sheet: STAFF_SHEET_NAME, data: [row]})
+      });
+    }).then(function(){
+      resultEl.innerHTML = '<div class="al al-ok"><i class="fas fa-circle-check"></i> تم إرسال التسجيل بنجاح! سيتم التواصل معكم قريبًا من إدارة الأكاديمية 🦅</div>';
+      btn.style.display = 'none';
+    }).catch(function(err){
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
+      var uploadFailed = err && err.message === 'upload_failed';
+      var msg = uploadFailed
+        ? 'تعذّر رفع صورة الهوية، تحقق من الاتصال بالإنترنت وحاول مرة أخرى'
+        : 'تعذّر الإرسال، تحقق من الاتصال بالإنترنت وحاول مجدداً';
+      resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> '+msg+'</div>';
+    });
   });
 }
 </script>
