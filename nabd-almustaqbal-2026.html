@@ -101,7 +101,7 @@ footer a{color:#25d366;text-decoration:none;font-weight:700;}
   <div class="hero-body">
     <div class="hero-icon">🏆</div>
     <div class="hero-title">تسجيل مشاركة <span>مهرجان نبض المستقبل الثالث 2026</span></div>
-    <div class="hero-sub">أكاديمية الشمالي مشاركة رسميًا في المهرجان — سجّل بيانات اللاعب أو عضو الجهاز الفني والإداري وأرفق نسخة من الهوية.</div>
+    <div class="hero-sub">سجّل بيانات اللاعب أو عضو الجهاز الفني والإداري وأرفق نسخة من الهوية.</div>
     <div class="hero-tags">
       <span class="hero-tag">🎂 2013-2014</span>
       <span class="hero-tag">🎂 2015-2016</span>
@@ -112,6 +112,11 @@ footer a{color:#25d366;text-decoration:none;font-weight:700;}
 
 <div class="wrap">
   <div class="card">
+
+    <div class="fld">
+      <label class="lbl"><i class="fas fa-shield-halved"></i> اسم الأكاديمية <span class="req">*</span></label>
+      <input id="academyName" type="text" class="inp" placeholder="مثال: أكاديمية الشمالي" value="أكاديمية الشمالي">
+    </div>
 
     <div class="fld">
       <label class="lbl"><i class="fas fa-list-check"></i> نوع التسجيل <span class="req">*</span></label>
@@ -239,6 +244,7 @@ var UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbzt0ZSA68BHMkAvtrMZsI_
 var SHEET_NAME = 'تسجيل مهرجان نبض المستقبل 2026';
 var STAFF_SHEET_NAME = 'الجهاز الفني والإداري - مهرجان نبض المستقبل 2026';
 var STAFF_CAP_PER_CATEGORY = 3;
+var PLAYER_CAP_PER_CATEGORY = 17;
 
 var categoryByYear = {
   '2013':'2013-2014', '2014':'2013-2014',
@@ -323,6 +329,7 @@ function submitFestivalReg(){
 }
 
 function submitPlayerReg(){
+  var academyName = document.getElementById('academyName').value.trim();
   var name = document.getElementById('pName').value.trim();
   var year = document.getElementById('pYear').value;
   var idNum = document.getElementById('pId').value.trim();
@@ -332,50 +339,65 @@ function submitPlayerReg(){
   var resultEl = document.getElementById('resultMsg');
   resultEl.innerHTML = '';
 
-  if(!name || !year || !idNum || !idFileB64 || !parentName || !parentPhone){
+  if(!academyName || !name || !year || !idNum || !idFileB64 || !parentName || !parentPhone){
     resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> يرجى تعبئة جميع الحقول المطلوبة وإرفاق صورة الهوية</div>';
     return;
   }
 
   var btn = document.getElementById('sendBtn');
   btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التحقق...';
 
-  uploadIdImage('هوية_' + name.replace(/\s+/g,'_') + '_' + Date.now()).then(function(uploadRes){
-    var idImageUrl = uploadRes.url || (uploadRes.id ? 'https://drive.google.com/file/d/' + uploadRes.id + '/view' : '');
-    var row = {
-      'التاريخ': new Date().toLocaleString('ar-SA'),
-      'الاسم الثلاثي': name,
-      'سنة الميلاد': year,
-      'الفئة العمرية': categoryByYear[year] || '-',
-      'رقم الهوية': idNum,
-      'رقم القميص': shirtNumber,
-      'صورة الهوية': idImageUrl,
-      'اسم ولي الأمر': parentName,
-      'واتساب ولي الأمر': parentPhone,
-      'الحالة': 'جديد'
-    };
-    return fetch(GAS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type': 'text/plain'},
-      body: JSON.stringify({action:'append', sheet: SHEET_NAME, data: [row]})
+  var category = categoryByYear[year] || '-';
+
+  apiGetSheet(SHEET_NAME).then(function(existing){
+    var countInCategory = existing.filter(function(r){ return r['الفئة العمرية'] === category && r['اسم الأكاديمية'] === academyName; }).length;
+    if(countInCategory >= PLAYER_CAP_PER_CATEGORY){
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
+      resultEl.innerHTML = '<div class="al al-warn"><i class="fas fa-triangle-exclamation"></i> تم الوصول للحد الأقصى (17 لاعبًا) لفئة '+category+' لهذه الأكاديمية. يرجى التواصل مع إدارة الأكاديمية.</div>';
+      return;
+    }
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
+    uploadIdImage('هوية_' + name.replace(/\s+/g,'_') + '_' + Date.now()).then(function(uploadRes){
+      var idImageUrl = uploadRes.url || (uploadRes.id ? 'https://drive.google.com/file/d/' + uploadRes.id + '/view' : '');
+      var row = {
+        'التاريخ': new Date().toLocaleString('ar-SA'),
+        'اسم الأكاديمية': academyName,
+        'الاسم الثلاثي': name,
+        'سنة الميلاد': year,
+        'الفئة العمرية': category,
+        'رقم الهوية': idNum,
+        'رقم القميص': shirtNumber,
+        'صورة الهوية': idImageUrl,
+        'اسم ولي الأمر': parentName,
+        'واتساب ولي الأمر': parentPhone,
+        'الحالة': 'جديد'
+      };
+      return fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type': 'text/plain'},
+        body: JSON.stringify({action:'append', sheet: SHEET_NAME, data: [row]})
+      });
+    }).then(function(){
+      resultEl.innerHTML = '<div class="al al-ok"><i class="fas fa-circle-check"></i> تم إرسال التسجيل بنجاح! سيتم التواصل معكم قريبًا من إدارة الأكاديمية 🦅</div>';
+      btn.style.display = 'none';
+    }).catch(function(err){
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
+      var uploadFailed = err && err.message === 'upload_failed';
+      var msg = uploadFailed
+        ? 'تعذّر رفع صورة الهوية، تحقق من الاتصال بالإنترنت وحاول مرة أخرى'
+        : 'تعذّر الإرسال، تحقق من الاتصال بالإنترنت وحاول مجدداً';
+      resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> '+msg+'</div>';
     });
-  }).then(function(){
-    resultEl.innerHTML = '<div class="al al-ok"><i class="fas fa-circle-check"></i> تم إرسال التسجيل بنجاح! سيتم التواصل معكم قريبًا من إدارة الأكاديمية 🦅</div>';
-    btn.style.display = 'none';
-  }).catch(function(err){
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
-    var uploadFailed = err && err.message === 'upload_failed';
-    var msg = uploadFailed
-      ? 'تعذّر رفع صورة الهوية، تحقق من الاتصال بالإنترنت وحاول مرة أخرى'
-      : 'تعذّر الإرسال، تحقق من الاتصال بالإنترنت وحاول مجدداً';
-    resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> '+msg+'</div>';
   });
 }
 
 function submitStaffReg(){
+  var academyName = document.getElementById('academyName').value.trim();
   var name = document.getElementById('sName').value.trim();
   var role = document.getElementById('sRole').value;
   var category = document.getElementById('sCategory').value;
@@ -384,7 +406,7 @@ function submitStaffReg(){
   var resultEl = document.getElementById('resultMsg');
   resultEl.innerHTML = '';
 
-  if(!name || !role || !category || !idNum || !idFileB64 || !phone){
+  if(!academyName || !name || !role || !category || !idNum || !idFileB64 || !phone){
     resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> يرجى تعبئة جميع الحقول المطلوبة وإرفاق صورة الهوية</div>';
     return;
   }
@@ -394,11 +416,11 @@ function submitStaffReg(){
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التحقق...';
 
   apiGetSheet(STAFF_SHEET_NAME).then(function(rows){
-    var countInCategory = rows.filter(function(r){ return r['الفئة'] === category; }).length;
+    var countInCategory = rows.filter(function(r){ return r['الفئة'] === category && r['اسم الأكاديمية'] === academyName; }).length;
     if(countInCategory >= STAFF_CAP_PER_CATEGORY){
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
-      resultEl.innerHTML = '<div class="al al-warn"><i class="fas fa-triangle-exclamation"></i> تم الوصول للحد الأقصى (3 أعضاء) من الجهاز الفني والإداري لفئة '+category+'. يرجى التواصل مع إدارة الأكاديمية.</div>';
+      resultEl.innerHTML = '<div class="al al-warn"><i class="fas fa-triangle-exclamation"></i> تم الوصول للحد الأقصى (3 أعضاء) من الجهاز الفني والإداري لفئة '+category+' لهذه الأكاديمية. يرجى التواصل مع إدارة الأكاديمية.</div>';
       return;
     }
 
@@ -407,6 +429,7 @@ function submitStaffReg(){
       var idImageUrl = uploadRes.url || (uploadRes.id ? 'https://drive.google.com/file/d/' + uploadRes.id + '/view' : '');
       var row = {
         'التاريخ': new Date().toLocaleString('ar-SA'),
+        'اسم الأكاديمية': academyName,
         'الاسم الثلاثي': name,
         'الصفة': role,
         'الفئة': category,
