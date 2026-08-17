@@ -2434,8 +2434,8 @@ function _buildOfficialCategoryPdf(cat, players, staff){
     for(var i=0; i<PLAYER_ROWS; i++){
       var p = players[i];
       playerRows += _officialFormRow(i+1, p ? p['الاسم الثلاثي'] : '', {
-        role: '',
-        notes: p && p['سنة الميلاد'] ? 'مواليد '+p['سنة الميلاد'] : ''
+        role: p && p['سنة الميلاد'] ? p['سنة الميلاد'] : '',
+        notes: ''
       });
     }
     var staffRows = '';
