@@ -244,6 +244,7 @@ var UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbzt0ZSA68BHMkAvtrMZsI_
 var SHEET_NAME = 'تسجيل مهرجان نبض المستقبل 2026';
 var STAFF_SHEET_NAME = 'الجهاز الفني والإداري - مهرجان نبض المستقبل 2026';
 var STAFF_CAP_PER_CATEGORY = 3;
+var PLAYER_CAP_PER_CATEGORY = 17;
 
 var categoryByYear = {
   '2013':'2013-2014', '2014':'2013-2014',
@@ -345,40 +346,53 @@ function submitPlayerReg(){
 
   var btn = document.getElementById('sendBtn');
   btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التحقق...';
 
-  uploadIdImage('هوية_' + name.replace(/\s+/g,'_') + '_' + Date.now()).then(function(uploadRes){
-    var idImageUrl = uploadRes.url || (uploadRes.id ? 'https://drive.google.com/file/d/' + uploadRes.id + '/view' : '');
-    var row = {
-      'التاريخ': new Date().toLocaleString('ar-SA'),
-      'اسم الأكاديمية': academyName,
-      'الاسم الثلاثي': name,
-      'سنة الميلاد': year,
-      'الفئة العمرية': categoryByYear[year] || '-',
-      'رقم الهوية': idNum,
-      'رقم القميص': shirtNumber,
-      'صورة الهوية': idImageUrl,
-      'اسم ولي الأمر': parentName,
-      'واتساب ولي الأمر': parentPhone,
-      'الحالة': 'جديد'
-    };
-    return fetch(GAS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type': 'text/plain'},
-      body: JSON.stringify({action:'append', sheet: SHEET_NAME, data: [row]})
+  var category = categoryByYear[year] || '-';
+
+  apiGetSheet(SHEET_NAME).then(function(existing){
+    var countInCategory = existing.filter(function(r){ return r['الفئة العمرية'] === category && r['اسم الأكاديمية'] === academyName; }).length;
+    if(countInCategory >= PLAYER_CAP_PER_CATEGORY){
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
+      resultEl.innerHTML = '<div class="al al-warn"><i class="fas fa-triangle-exclamation"></i> تم الوصول للحد الأقصى (17 لاعبًا) لفئة '+category+' لهذه الأكاديمية. يرجى التواصل مع إدارة الأكاديمية.</div>';
+      return;
+    }
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
+    uploadIdImage('هوية_' + name.replace(/\s+/g,'_') + '_' + Date.now()).then(function(uploadRes){
+      var idImageUrl = uploadRes.url || (uploadRes.id ? 'https://drive.google.com/file/d/' + uploadRes.id + '/view' : '');
+      var row = {
+        'التاريخ': new Date().toLocaleString('ar-SA'),
+        'اسم الأكاديمية': academyName,
+        'الاسم الثلاثي': name,
+        'سنة الميلاد': year,
+        'الفئة العمرية': category,
+        'رقم الهوية': idNum,
+        'رقم القميص': shirtNumber,
+        'صورة الهوية': idImageUrl,
+        'اسم ولي الأمر': parentName,
+        'واتساب ولي الأمر': parentPhone,
+        'الحالة': 'جديد'
+      };
+      return fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type': 'text/plain'},
+        body: JSON.stringify({action:'append', sheet: SHEET_NAME, data: [row]})
+      });
+    }).then(function(){
+      resultEl.innerHTML = '<div class="al al-ok"><i class="fas fa-circle-check"></i> تم إرسال التسجيل بنجاح! سيتم التواصل معكم قريبًا من إدارة الأكاديمية 🦅</div>';
+      btn.style.display = 'none';
+    }).catch(function(err){
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
+      var uploadFailed = err && err.message === 'upload_failed';
+      var msg = uploadFailed
+        ? 'تعذّر رفع صورة الهوية، تحقق من الاتصال بالإنترنت وحاول مرة أخرى'
+        : 'تعذّر الإرسال، تحقق من الاتصال بالإنترنت وحاول مجدداً';
+      resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> '+msg+'</div>';
     });
-  }).then(function(){
-    resultEl.innerHTML = '<div class="al al-ok"><i class="fas fa-circle-check"></i> تم إرسال التسجيل بنجاح! سيتم التواصل معكم قريبًا من إدارة الأكاديمية 🦅</div>';
-    btn.style.display = 'none';
-  }).catch(function(err){
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
-    var uploadFailed = err && err.message === 'upload_failed';
-    var msg = uploadFailed
-      ? 'تعذّر رفع صورة الهوية، تحقق من الاتصال بالإنترنت وحاول مرة أخرى'
-      : 'تعذّر الإرسال، تحقق من الاتصال بالإنترنت وحاول مجدداً';
-    resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> '+msg+'</div>';
   });
 }
 

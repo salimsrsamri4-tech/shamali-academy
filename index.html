@@ -2435,7 +2435,7 @@ function _officialFormRow(n, name, extra){
 
 function _buildOfficialCategoryPdf(academyName, cat, players, staff){
   return new Promise(function(resolve){
-    var PLAYER_ROWS = Math.max(17, players.length);
+    var PLAYER_ROWS = 17;
     var playerRows = '';
     for(var i=0; i<PLAYER_ROWS; i++){
       var p = players[i];
