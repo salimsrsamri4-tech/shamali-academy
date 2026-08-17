@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تشخيص GAS_URL — اسم الأكاديمية</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:sans-serif;direction:rtl;background:#f1f5f9;padding:20px;color:#0f172a;}
+h1{font-size:16px;margin-bottom:6px;}
+p{font-size:12px;color:#64748b;margin-bottom:16px;line-height:1.7;}
+button{background:#b81d22;color:#fff;border:none;border-radius:8px;padding:14px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-bottom:10px;}
+button:disabled{opacity:.6;}
+#out{margin-top:16px;background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;padding:14px;font-size:12px;white-space:pre-wrap;word-break:break-word;direction:ltr;text-align:left;min-height:60px;}
+.ok{color:#15803d;font-weight:700;}
+.err{color:#dc2626;font-weight:700;}
+</style>
+</head>
+<body>
+<h1>🔧 تشخيص GAS_URL — عمود اسم الأكاديمية</h1>
+<p>الخطوة 1: تتحقق أن الرابط شغّال وتقرأ رؤوس الأعمدة الحالية في شيت التسجيل.<br>الخطوة 2: ترسل صف اختباري حقيقي فيه اسم الأكاديمية وتعرض رد الخادم الفعلي (بدون no-cors) حتى نشوف أي خطأ حقيقي لو صار.</p>
+<button onclick="checkHeaders()">1️⃣ فحص رؤوس الأعمدة الحالية</button>
+<button onclick="testAppend()">2️⃣ إرسال صف اختباري وعرض الرد</button>
+<div id="out">النتيجة راح تظهر هنا...</div>
+
+<script>
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbww7-Ya1oaYKfIer6gGUj7jfpqlfaa8ZR-jpRegdAMpFtkADWDu1CLeuwVEZ3KqDWns/exec';
+var SHEET_NAME = 'تسجيل مهرجان نبض المستقبل 2026';
+
+function checkHeaders(){
+  var out = document.getElementById('out');
+  out.textContent = 'جارٍ القراءة من:\n' + GAS_URL + '\n\n(الرجاء الانتظار)';
+  fetch(GAS_URL + '?action=get&sheet=' + encodeURIComponent(SHEET_NAME) + '&limit=1')
+    .then(function(r){ return r.text(); })
+    .then(function(text){
+      out.textContent = 'الرد الخام:\n' + text + '\n\n';
+      try {
+        var json = JSON.parse(text);
+        if(Array.isArray(json)){
+          if(json.length){
+            out.textContent += 'الأعمدة الموجودة حاليًا في الشيت:\n' + Object.keys(json[0]).join('\n');
+            var hasAcad = Object.keys(json[0]).indexOf('اسم الأكاديمية') > -1;
+            out.innerHTML += hasAcad ? '\n\n<span class="ok">✅ عمود اسم الأكاديمية موجود</span>' : '\n\n<span class="err">❌ عمود اسم الأكاديمية غير موجود بعد</span>';
+          } else {
+            out.textContent += 'الشيت لا يحتوي أي صفوف بيانات حاليًا (أو الاسم غير مطابق).';
+          }
+        } else if(json.error){
+          out.innerHTML += '<span class="err">❌ خطأ من الخادم: ' + json.error + '</span>';
+        }
+      } catch(e){
+        out.innerHTML += '<span class="err">⚠️ الرد ليس JSON صالح — يعني الرابط غير صحيح أو السكربت معطّل</span>';
+      }
+    }).catch(function(err){
+      out.innerHTML = '<span class="err">❌ فشل الاتصال: ' + err.message + '</span>';
+    });
+}
+
+function testAppend(){
+  var out = document.getElementById('out');
+  out.textContent = 'جارٍ إرسال صف اختباري...';
+  var testRow = {
+    'التاريخ': new Date().toLocaleString('ar-SA'),
+    'اسم الأكاديمية': '🧪 اختبار تشخيص',
+    'الاسم الثلاثي': '🧪 اسم اختباري',
+    'سنة الميلاد': '2013',
+    'الفئة العمرية': '2013-2014',
+    'رقم الهوية': '000000',
+    'الحالة': 'اختبار'
+  };
+  fetch(GAS_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain'},
+    body: JSON.stringify({action:'append', sheet: SHEET_NAME, data: [testRow]})
+  }).then(function(r){
+    out.textContent = 'HTTP Status: ' + r.status + '\n';
+    return r.text();
+  }).then(function(text){
+    out.textContent += 'الرد الخام من الخادم:\n' + text + '\n\n';
+    try {
+      var json = JSON.parse(text);
+      if(json.status === 'ok'){
+        out.innerHTML += '<span class="ok">✅ تمت الإضافة بنجاح — تحقق الآن من الشيت هل ظهر صف "🧪 اسم اختباري" مع اسم الأكاديمية</span>';
+      } else if(json.error){
+        out.innerHTML += '<span class="err">❌ خطأ فعلي من السكربت: ' + json.error + '</span>';
+      }
+    } catch(e){
+      out.innerHTML += '<span class="err">⚠️ الرد ليس JSON صالح (قد يكون صفحة تسجيل دخول Google أو HTML بدل JSON — هذا يعني صلاحيات النشر غير صحيحة)</span>';
+    }
+  }).catch(function(err){
+    out.innerHTML = '<span class="err">❌ فشل الطلب نفسه: ' + err.message + '\n\nهذا غالبًا يعني CORS محظور بسبب إعدادات "من له صلاحية الوصول" في النشر — يجب أن تكون "أي شخص" (Anyone).</span>';
+  });
+}
+</script>
+</body>
+</html>
