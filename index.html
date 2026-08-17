@@ -2335,7 +2335,7 @@ function _drawFestivalReg(query){
       '<div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">'+
       '<div>'+
       '<div style="font-size:13px;font-weight:900;color:#0f172a;">'+(r['الاسم الثلاثي']||'-')+'</div>'+
-      '<div style="font-size:10px;color:#94a3b8;">'+(r['التاريخ']||'')+'</div>'+
+      '<div style="font-size:10px;color:#94a3b8;">'+(r['اسم الأكاديمية']||'أكاديمية الشمالي')+' · '+(r['التاريخ']||'')+'</div>'+
       '</div>'+
       '<span style="font-size:11px;font-weight:800;background:#fff0f0;color:#b81d22;border:1px solid #fecaca;border-radius:20px;padding:3px 10px;">🎂 '+cat+'</span>'+
       '</div>'+
@@ -2402,7 +2402,7 @@ function _drawFestivalStaff(query){
       '<div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">'+
       '<div>'+
       '<div style="font-size:13px;font-weight:900;color:#0f172a;">'+(r['الاسم الثلاثي']||'-')+'</div>'+
-      '<div style="font-size:10px;color:#94a3b8;">'+(r['التاريخ']||'')+'</div>'+
+      '<div style="font-size:10px;color:#94a3b8;">'+(r['اسم الأكاديمية']||'أكاديمية الشمالي')+' · '+(r['التاريخ']||'')+'</div>'+
       '</div>'+
       '<span style="font-size:11px;font-weight:800;background:#eff6ff;color:#1e3a5f;border:1px solid #bfdbfe;border-radius:20px;padding:3px 10px;">🎂 '+cat+'</span>'+
       '</div>'+
@@ -2433,7 +2433,7 @@ function _officialFormRow(n, name, extra){
   '</tr>';
 }
 
-function _buildOfficialCategoryPdf(cat, players, staff){
+function _buildOfficialCategoryPdf(academyName, cat, players, staff){
   return new Promise(function(resolve){
     var PLAYER_ROWS = Math.max(17, players.length);
     var playerRows = '';
@@ -2465,7 +2465,7 @@ function _buildOfficialCategoryPdf(cat, players, staff){
           '<img src="future-pulse-logo.png" style="width:64px;height:64px;object-fit:contain;">'+
         '</div>'+
         '<div style="display:flex;justify-content:space-between;border-top:2px solid #0f172a;border-bottom:2px solid #0f172a;padding:9px 4px;margin-bottom:10px;font-size:13px;font-weight:800;">'+
-          '<div>أكاديمية: أكاديمية الشمالي</div>'+
+          '<div>أكاديمية: '+(academyName||'-')+'</div>'+
           '<div>الفئة: '+cat+'</div>'+
         '</div>'+
         '<table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #0f172a;">'+
@@ -2507,7 +2507,7 @@ function _buildOfficialCategoryPdf(cat, players, staff){
           if(pos < imgH) pdf.addPage();
         }
       }
-      pdf.save('قائمة-الأكاديمية-فئة-'+cat+'-نبض-المستقبل-2026.pdf');
+      pdf.save('قائمة-'+(academyName||'أكاديمية')+'-فئة-'+cat+'-نبض-المستقبل-2026.pdf');
       resolve();
     }).catch(function(){
       if(document.body.contains(wrap)) document.body.removeChild(wrap);
@@ -2523,32 +2523,51 @@ function exportFestivalRegPDF(){
   if(typeof html2canvas==='undefined' || !window.jspdf){ alert('ميزة التصدير غير متوفرة'); return; }
 
   var cats = ['2013-2014','2015-2016','2017-2018'];
-  var byCat = {}, staffByCat = {};
-  cats.forEach(function(c){ byCat[c]=[]; staffByCat[c]=[]; });
-  rows.forEach(function(r){ var c=r['الفئة العمرية']; if(byCat[c]) byCat[c].push(r); });
-  staffRows.forEach(function(r){ var c=r['الفئة']; if(staffByCat[c]) staffByCat[c].push(r); });
-  cats.forEach(function(c){
-    byCat[c].sort(function(a,b){ return (a['الاسم الثلاثي']||'').localeCompare(b['الاسم الثلاثي']||'','ar'); });
-    staffByCat[c].sort(function(a,b){ return (a['الاسم الثلاثي']||'').localeCompare(b['الاسم الثلاثي']||'','ar'); });
+  var DEFAULT_ACADEMY = 'أكاديمية الشمالي';
+  var academyName = function(r){ return r['اسم الأكاديمية'] || DEFAULT_ACADEMY; };
+
+  var academies = [];
+  rows.concat(staffRows).forEach(function(r){
+    var a = academyName(r);
+    if(academies.indexOf(a) === -1) academies.push(a);
   });
+  academies.sort(function(a,b){ return a.localeCompare(b,'ar'); });
 
   var sel = document.getElementById('festPdfCategorySel');
   var chosen = sel ? sel.value : 'all';
-  var activeCats = (chosen === 'all' ? cats : [chosen]).filter(function(c){ return byCat[c].length || staffByCat[c].length; });
-  if(!activeCats.length){ alert('لا توجد تسجيلات لتصديرها في هذه الفئة'); return; }
+  var chosenCats = chosen === 'all' ? cats : [chosen];
+
+  var jobs = [];
+  academies.forEach(function(a){
+    var byCat = {}, staffByCat = {};
+    cats.forEach(function(c){ byCat[c]=[]; staffByCat[c]=[]; });
+    rows.forEach(function(r){ if(academyName(r)!==a) return; var c=r['الفئة العمرية']; if(byCat[c]) byCat[c].push(r); });
+    staffRows.forEach(function(r){ if(academyName(r)!==a) return; var c=r['الفئة']; if(staffByCat[c]) staffByCat[c].push(r); });
+    cats.forEach(function(c){
+      byCat[c].sort(function(x,y){ return (x['الاسم الثلاثي']||'').localeCompare(y['الاسم الثلاثي']||'','ar'); });
+      staffByCat[c].sort(function(x,y){ return (x['الاسم الثلاثي']||'').localeCompare(y['الاسم الثلاثي']||'','ar'); });
+    });
+    chosenCats.forEach(function(c){
+      if(byCat[c].length || staffByCat[c].length){
+        jobs.push({academy:a, cat:c, players:byCat[c], staff:staffByCat[c]});
+      }
+    });
+  });
+
+  if(!jobs.length){ alert('لا توجد تسجيلات لتصديرها في هذه الفئة'); return; }
 
   var btn = document.getElementById('festPdfBtn');
   if(btn){ btn.disabled=true; }
 
   var i = 0;
   function next(){
-    if(i >= activeCats.length){
+    if(i >= jobs.length){
       if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-file-pdf"></i> تصدير قائمة الأكاديمية PDF'; }
       return;
     }
-    var c = activeCats[i];
-    if(btn){ btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جارٍ إنشاء قائمة '+c+' ('+(i+1)+'/'+activeCats.length+')...'; }
-    _buildOfficialCategoryPdf(c, byCat[c], staffByCat[c]).then(function(){
+    var job = jobs[i];
+    if(btn){ btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جارٍ إنشاء قائمة '+job.academy+' '+job.cat+' ('+(i+1)+'/'+jobs.length+')...'; }
+    _buildOfficialCategoryPdf(job.academy, job.cat, job.players, job.staff).then(function(){
       i++;
       next();
     });
