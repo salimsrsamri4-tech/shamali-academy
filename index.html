@@ -276,14 +276,14 @@ window.addEventListener('load',function(){
     <button class="sb-btn" style="color:#f59e0b;" data-pg="tournament_schedule" onclick="go('tournament_schedule')"><i class="fas fa-calendar-alt"></i> جدول المباريات</button>
     <button class="sb-btn danger" id="tournLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
-  <button class="sb-btn" data-pg="festlogin" style="color:#b81d22;" onclick="go('festlogin')"><i class="fas fa-trophy"></i> تسجيلات مهرجان نبض المستقبل (اللجنة)</button>
+  <button class="sb-btn" data-pg="festlogin" style="color:#d4af37;" onclick="go('festlogin')"><i class="fas fa-trophy"></i> تسجيلات مهرجان نبض المستقبل (اللجنة)</button>
   <div id="festMenu" style="display:none;">
-    <button class="sb-btn" style="color:#b81d22;" data-pg="festivalreg" onclick="go('festivalreg')"><i class="fas fa-list"></i> التسجيلات</button>
+    <button class="sb-btn" style="color:#d4af37;" data-pg="festivalreg" onclick="go('festivalreg')"><i class="fas fa-list"></i> التسجيلات</button>
     <button class="sb-btn danger" id="festLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
-  <button class="sb-btn" data-pg="festacadlogin" style="color:#1e3a5f;" onclick="go('festacadlogin')"><i class="fas fa-shield-halved"></i> مراجعة تسجيلات أكاديميتي</button>
+  <button class="sb-btn" data-pg="festacadlogin" style="color:#d4af37;" onclick="go('festacadlogin')"><i class="fas fa-shield-halved"></i> مراجعة تسجيلات أكاديميتي</button>
   <div id="festAcadMenu" style="display:none;">
-    <button class="sb-btn" style="color:#1e3a5f;" data-pg="festacadview" onclick="go('festacadview')"><i class="fas fa-list"></i> تسجيلات أكاديميتي</button>
+    <button class="sb-btn" style="color:#d4af37;" data-pg="festacadview" onclick="go('festacadview')"><i class="fas fa-list"></i> تسجيلات أكاديميتي</button>
     <button class="sb-btn danger" id="festAcadLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
   <div class="sb-foot">
@@ -2282,7 +2282,7 @@ function _festivalTabsHtml(){
   var tab = window._festivalTab || 'players';
   function tabBtn(id, label, icon){
     var on = tab===id;
-    return '<button onclick="_setFestivalTab(\''+id+'\')" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid '+(on?'#b81d22':'#e2e8f0')+';background:'+(on?'#fff0f0':'#fff')+';color:'+(on?'#b81d22':'#475569')+';font-weight:800;font-size:12px;cursor:pointer;font-family:Cairo,sans-serif;">'+icon+' '+label+'</button>';
+    return '<button onclick="_setFestivalTab(\''+id+'\')" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid '+(on?'#d4af37':'#e2e8f0')+';background:'+(on?'#fdf8ec':'#fff')+';color:'+(on?'#b8962f':'#475569')+';font-weight:800;font-size:12px;cursor:pointer;font-family:Cairo,sans-serif;">'+icon+' '+label+'</button>';
   }
   return '<div style="display:flex;gap:8px;padding:12px 12px 0;">'+
     tabBtn('players','اللاعبون','🧒')+
@@ -2330,8 +2330,8 @@ function _festivalAcademySummaryHtml(){
       '<span style="color:#64748b;font-weight:700;">'+pCount+' لاعب · '+sCount+' إداري</span>'+
       '</div>';
   }).join('');
-  return '<div style="background:#fff;border-radius:10px;margin:0 12px 12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);">'+
-    '<div style="background:#0f172a;color:#fff;font-weight:800;font-size:12px;padding:8px 12px;">ملخص الأكاديميات المشاركة</div>'+
+  return '<div style="background:#fff;border-radius:10px;margin:0 12px 12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid #e2e8f0;">'+
+    '<div style="background:#fff;border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:800;font-size:12px;padding:8px 12px;">ملخص الأكاديميات المشاركة</div>'+
     rows+
     '</div>';
 }
@@ -2346,7 +2346,7 @@ function _drawFestivalReg(query){
   var el = document.getElementById('content');
   var rows = window._festivalRows || [];
   if(!rows.length){
-    el.innerHTML='<div style="background:linear-gradient(135deg,#1e3a5f,#b81d22);padding:20px;text-align:center;color:#fff;">'+
+    el.innerHTML='<div style="background:#fff;border-bottom:1px solid #e2e8f0;padding:20px;text-align:center;color:#0f172a;">'+
       '<div style="font-size:28px;">🏆</div><div style="font-weight:900;margin-top:6px;">لا توجد تسجيلات بعد</div></div>'+
       _festivalTabsHtml();
     return;
@@ -2365,18 +2365,18 @@ function _drawFestivalReg(query){
   }) : sorted;
 
   var html =
-    '<div style="background:linear-gradient(135deg,#1e3a5f,#b81d22);padding:20px 16px;text-align:center;color:#fff;">'+
+    '<div style="background:#fff;border-bottom:1px solid #e2e8f0;padding:20px 16px;text-align:center;color:#0f172a;">'+
     '<div style="font-size:28px;margin-bottom:4px;">🏆</div>'+
     '<div style="font-size:17px;font-weight:900;">تسجيلات مهرجان نبض المستقبل الثالث 2026</div>'+
     '<div style="display:flex;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap;">'+
-    '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;">'+
-    '<div style="font-size:17px;font-weight:900;">'+sorted.length+'</div><div style="font-size:9px;opacity:.8;">إجمالي</div></div>'+
-    '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;">'+
-    '<div style="font-size:17px;font-weight:900;">'+counts['2013-2014']+'</div><div style="font-size:9px;opacity:.8;">2013-2014</div></div>'+
-    '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;">'+
-    '<div style="font-size:17px;font-weight:900;">'+counts['2015-2016']+'</div><div style="font-size:9px;opacity:.8;">2015-2016</div></div>'+
-    '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;">'+
-    '<div style="font-size:17px;font-weight:900;">'+counts['2017-2018']+'</div><div style="font-size:9px;opacity:.8;">2017-2018</div></div>'+
+    '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 14px;text-align:center;">'+
+    '<div style="font-size:17px;font-weight:900;">'+sorted.length+'</div><div style="font-size:9px;color:#64748b;">إجمالي</div></div>'+
+    '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 14px;text-align:center;">'+
+    '<div style="font-size:17px;font-weight:900;">'+counts['2013-2014']+'</div><div style="font-size:9px;color:#64748b;">2013-2014</div></div>'+
+    '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 14px;text-align:center;">'+
+    '<div style="font-size:17px;font-weight:900;">'+counts['2015-2016']+'</div><div style="font-size:9px;color:#64748b;">2015-2016</div></div>'+
+    '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 14px;text-align:center;">'+
+    '<div style="font-size:17px;font-weight:900;">'+counts['2017-2018']+'</div><div style="font-size:9px;color:#64748b;">2017-2018</div></div>'+
     '</div></div>'+
     _festivalTabsHtml()+
     _festivalAcademySummaryHtml()+
@@ -2388,11 +2388,11 @@ function _drawFestivalReg(query){
     '<option value="2015-2016">🎂 فئة 2015-2016 فقط</option>'+
     '<option value="2017-2018">🎂 فئة 2017-2018 فقط</option>'+
     '</select>'+
-    '<button id="festPdfBtn" onclick="exportFestivalRegPDF()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;">'+
+    '<button id="festPdfBtn" onclick="exportFestivalRegPDF()" style="width:100%;background:linear-gradient(135deg,#d4af37,#b8962f);color:#1e293b;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;">'+
     '<i class="fas fa-file-pdf"></i> تصدير قائمة الأكاديمية PDF</button>'+
-    '<button onclick="printFestivalIds()" style="width:100%;background:#0f172a;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">'+
+    '<button onclick="printFestivalIds()" style="width:100%;background:#fff;border:1.5px solid #cbd5e1;color:#334155;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">'+
     '<i class="fas fa-id-card"></i> طباعة نسخ الهويات</button>'+
-    '<div class="sbar"><input id="festSearch" placeholder="ابحث بالاسم أو رقم الهوية..." value="'+(query||'')+'"><button onclick="_drawFestivalReg(document.getElementById(\'festSearch\').value)"><i class="fas fa-search"></i></button></div>';
+    '<div style="display:flex;gap:8px;margin-bottom:14px;"><input id="festSearch" style="flex:1;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px 13px;font-family:Cairo,sans-serif;font-size:13px;background:#fff;" placeholder="ابحث بالاسم أو رقم الهوية..." value="'+(query||'')+'"><button onclick="_drawFestivalReg(document.getElementById(\'festSearch\').value)" style="background:#d4af37;color:#1e293b;border:none;border-radius:8px;padding:10px 15px;cursor:pointer;"><i class="fas fa-search"></i></button></div>';
 
   if(!filtered.length){
     html += '<div class="al al-warn">لا توجد نتائج مطابقة</div>';
@@ -2403,13 +2403,13 @@ function _drawFestivalReg(query){
     var thumb = _driveThumb(r['صورة الهوية']);
     var phone = (r['واتساب ولي الأمر']||'').replace(/\D/g,'');
     html +=
-      '<div style="background:#fff;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border-right:4px solid #b81d22;">'+
+      '<div style="background:#fff;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border-right:4px solid #d4af37;">'+
       '<div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">'+
       '<div>'+
       '<div style="font-size:13px;font-weight:900;color:#0f172a;">'+(r['الاسم الثلاثي']||'-')+'</div>'+
       '<div style="font-size:10px;color:#94a3b8;">'+(r['اسم الأكاديمية']||'أكاديمية الشمالي')+' · '+(r['التاريخ']||'')+'</div>'+
       '</div>'+
-      '<span style="font-size:11px;font-weight:800;background:#fff0f0;color:#b81d22;border:1px solid #fecaca;border-radius:20px;padding:3px 10px;">🎂 '+cat+'</span>'+
+      '<span style="font-size:11px;font-weight:800;background:#fdf8ec;color:#b8962f;border:1px solid #ecd692;border-radius:20px;padding:3px 10px;">🎂 '+cat+'</span>'+
       '</div>'+
       '<div style="padding:12px 14px;display:flex;gap:12px;">'+
       (thumb?'<a href="'+r['صورة الهوية']+'" target="_blank"><img src="'+thumb+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;flex-shrink:0;"></a>':
@@ -2446,27 +2446,27 @@ function _drawFestivalStaff(query){
   }) : sorted;
 
   var html =
-    '<div style="background:linear-gradient(135deg,#1e3a5f,#b81d22);padding:20px 16px;text-align:center;color:#fff;">'+
+    '<div style="background:#fff;border-bottom:1px solid #e2e8f0;padding:20px 16px;text-align:center;color:#0f172a;">'+
     '<div style="font-size:28px;margin-bottom:4px;">🧑‍💼</div>'+
     '<div style="font-size:17px;font-weight:900;">الجهاز الفني والإداري — مهرجان نبض المستقبل</div>'+
-    (academyFilter==='all' ? '<div style="font-size:10px;opacity:.75;margin-top:4px;">الحد 3 أعضاء لكل فئة لكل أكاديمية — اختر أكاديمية لعرض حالة الحد</div>' : '')+
+    (academyFilter==='all' ? '<div style="font-size:10px;color:#64748b;margin-top:4px;">الحد 3 أعضاء لكل فئة لكل أكاديمية — اختر أكاديمية لعرض حالة الحد</div>' : '')+
     '<div style="display:flex;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap;">'+
     cats.map(function(c){
       var n = counts[c];
       if(academyFilter==='all'){
-        return '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;">'+
-          '<div style="font-size:17px;font-weight:900;">'+n+'</div><div style="font-size:9px;opacity:.8;">'+c+'</div></div>';
+        return '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 14px;text-align:center;">'+
+          '<div style="font-size:17px;font-weight:900;">'+n+'</div><div style="font-size:9px;color:#64748b;">'+c+'</div></div>';
       }
       var full = n>=3;
-      return '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;border-bottom:3px solid '+(full?'#4ade80':'#fca5a5')+';">'+
-        '<div style="font-size:17px;font-weight:900;">'+n+'/3</div><div style="font-size:9px;opacity:.8;">'+c+'</div></div>';
+      return '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 14px;text-align:center;border-bottom:3px solid '+(full?'#4ade80':'#fca5a5')+';">'+
+        '<div style="font-size:17px;font-weight:900;">'+n+'/3</div><div style="font-size:9px;color:#64748b;">'+c+'</div></div>';
     }).join('')+
     '</div></div>'+
     _festivalTabsHtml()+
     _festivalAcademySummaryHtml()+
     '<div style="padding:12px;">'+
     _festivalAcademyFilterHtml()+
-    '<div class="sbar"><input id="festStaffSearch" placeholder="ابحث بالاسم أو رقم الهوية..." value="'+(query||'')+'"><button onclick="_drawFestivalStaff(document.getElementById(\'festStaffSearch\').value)"><i class="fas fa-search"></i></button></div>';
+    '<div style="display:flex;gap:8px;margin-bottom:14px;"><input id="festStaffSearch" style="flex:1;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px 13px;font-family:Cairo,sans-serif;font-size:13px;background:#fff;" placeholder="ابحث بالاسم أو رقم الهوية..." value="'+(query||'')+'"><button onclick="_drawFestivalStaff(document.getElementById(\'festStaffSearch\').value)" style="background:#d4af37;color:#1e293b;border:none;border-radius:8px;padding:10px 15px;cursor:pointer;"><i class="fas fa-search"></i></button></div>';
 
   if(!rows.length){
     html += '<div class="al al-warn">لا توجد تسجيلات للجهاز الفني والإداري بعد</div>';
@@ -2479,13 +2479,13 @@ function _drawFestivalStaff(query){
     var thumb = _driveThumb(r['صورة الهوية']);
     var phone = (r['رقم التواصل']||'').replace(/\D/g,'');
     html +=
-      '<div style="background:#fff;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border-right:4px solid #1e3a5f;">'+
+      '<div style="background:#fff;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border-right:4px solid #64748b;">'+
       '<div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">'+
       '<div>'+
       '<div style="font-size:13px;font-weight:900;color:#0f172a;">'+(r['الاسم الثلاثي']||'-')+'</div>'+
       '<div style="font-size:10px;color:#94a3b8;">'+(r['اسم الأكاديمية']||'أكاديمية الشمالي')+' · '+(r['التاريخ']||'')+'</div>'+
       '</div>'+
-      '<span style="font-size:11px;font-weight:800;background:#eff6ff;color:#1e3a5f;border:1px solid #bfdbfe;border-radius:20px;padding:3px 10px;">🎂 '+cat+'</span>'+
+      '<span style="font-size:11px;font-weight:800;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:20px;padding:3px 10px;">🎂 '+cat+'</span>'+
       '</div>'+
       '<div style="padding:12px 14px;display:flex;gap:12px;">'+
       (thumb?'<a href="'+r['صورة الهوية']+'" target="_blank"><img src="'+thumb+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;flex-shrink:0;"></a>':
@@ -2684,10 +2684,10 @@ function _buildIdCardsWindowHtml(cat, players, staff){
     '<style>'+
     '*{box-sizing:border-box;margin:0;padding:0;}'+
     'body{font-family:Cairo,sans-serif;direction:rtl;background:#f1f5f9;color:#0f172a;padding:20px;}'+
-    '.hdr{background:linear-gradient(135deg,#0f172a,#7a1015);color:#fff;padding:16px 20px;border-radius:10px;text-align:center;margin-bottom:16px;}'+
+    '.hdr{background:#fff;border:1.5px solid #e2e8f0;color:#0f172a;padding:16px 20px;border-radius:10px;text-align:center;margin-bottom:16px;}'+
     '.hdr .t{font-size:16px;font-weight:900;}'+
-    '.hdr .s{font-size:11px;opacity:.7;margin-top:4px;}'+
-    '.cat-title{background:#0f172a;color:#fff;border-radius:8px;padding:8px 14px;margin:16px 0 10px;font-size:13px;font-weight:900;}'+
+    '.hdr .s{font-size:11px;color:#64748b;margin-top:4px;}'+
+    '.cat-title{background:#fdf8ec;border:1px solid #ecd692;color:#b8962f;border-radius:8px;padding:8px 14px;margin:16px 0 10px;font-size:13px;font-weight:900;}'+
     '.id-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}'+
     '.id-card{background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;break-inside:avoid;}'+
     '.id-card img{width:100%;max-height:220px;object-fit:contain;border-radius:6px;background:#f8fafc;margin-bottom:8px;}'+
@@ -2701,7 +2701,7 @@ function _buildIdCardsWindowHtml(cat, players, staff){
     '<div class="s">'+players.length+' هوية لاعب · '+staff.length+' هوية من الجهاز الفني والإداري</div></div>'+
     cardsHtml+staffCardsHtml+
     '<div class="no-print">'+
-    '<button onclick="window.print()" style="background:#b81d22;">🖨️ طباعة / حفظ PDF</button>'+
+    '<button onclick="window.print()" style="background:#b8962f;">🖨️ طباعة / حفظ PDF</button>'+
     '<button onclick="window.close()" style="background:#64748b;">✕ إغلاق</button>'+
     '</div>'+
     '</body></html>';
@@ -5963,7 +5963,7 @@ function renderFestLogin(){
       '<div class="mb"><label class="lbl">رقم الدخول</label>'+
       '<input type="password" inputmode="numeric" class="inp" id="festPass" placeholder="أدخل رقم الدخول" onkeydown="if(event.key===\'Enter\')doFestLogin()"></div>'+
       '<div id="festErr" style="display:none;color:#b91c1c;font-size:12px;margin-bottom:10px;font-weight:700;"></div>'+
-      '<button onclick="doFestLogin()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">دخول</button>'+
+      '<button onclick="doFestLogin()" style="width:100%;background:linear-gradient(135deg,#d4af37,#b8962f);color:#1e293b;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">دخول</button>'+
     '</div></div>';
   setTimeout(function(){ var i=document.getElementById('festPass'); if(i)i.focus(); },300);
 }
@@ -6001,7 +6001,7 @@ function renderFestAcadLogin(){
       '<div class="mb"><label class="lbl">رمز الأكاديمية</label>'+
       '<input type="password" inputmode="numeric" class="inp" id="festAcadPass" placeholder="أدخل رمز أكاديميتك" onkeydown="if(event.key===\'Enter\')doFestAcadLogin()"></div>'+
       '<div id="festAcadErr" style="display:none;color:#b91c1c;font-size:12px;margin-bottom:10px;font-weight:700;"></div>'+
-      '<button onclick="doFestAcadLogin()" style="width:100%;background:linear-gradient(135deg,#1e3a5f,#0f172a);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">دخول</button>'+
+      '<button onclick="doFestAcadLogin()" style="width:100%;background:linear-gradient(135deg,#d4af37,#b8962f);color:#1e293b;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">دخول</button>'+
     '</div></div>';
   setTimeout(function(){ var i=document.getElementById('festAcadPass'); if(i)i.focus(); },300);
 }
