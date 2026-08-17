@@ -2281,6 +2281,52 @@ function _setFestivalTab(tab){
   else _drawFestivalStaff('');
 }
 
+function _festivalAcademies(){
+  var names = [];
+  (window._festivalRows||[]).concat(window._festivalStaffRows||[]).forEach(function(r){
+    var a = r['اسم الأكاديمية'] || 'أكاديمية الشمالي';
+    if(names.indexOf(a)===-1) names.push(a);
+  });
+  names.sort(function(a,b){ return a.localeCompare(b,'ar'); });
+  return names;
+}
+
+function _festivalAcademyFilterHtml(){
+  var academies = _festivalAcademies();
+  if(academies.length<2) return '';
+  var current = window._festivalAcademyFilter || 'all';
+  return '<select id="festAcademySel" onchange="_setFestivalAcademy(this.value)" style="width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:11px;font-size:13px;font-weight:700;font-family:Cairo,sans-serif;color:#1e293b;margin-bottom:8px;">'+
+    '<option value="all"'+(current==='all'?' selected':'')+'>🏫 جميع الأكاديميات ('+academies.length+')</option>'+
+    academies.map(function(a){
+      return '<option value="'+a.replace(/"/g,'&quot;')+'"'+(current===a?' selected':'')+'>'+a+'</option>';
+    }).join('')+
+    '</select>';
+}
+
+function _festivalAcademySummaryHtml(){
+  var academies = _festivalAcademies();
+  if(academies.length<2) return '';
+  var players = window._festivalRows||[], staff = window._festivalStaffRows||[];
+  var rows = academies.map(function(a){
+    var pCount = players.filter(function(r){ return (r['اسم الأكاديمية']||'أكاديمية الشمالي')===a; }).length;
+    var sCount = staff.filter(function(r){ return (r['اسم الأكاديمية']||'أكاديمية الشمالي')===a; }).length;
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:12px;">'+
+      '<span style="font-weight:800;color:#0f172a;">🏫 '+a+'</span>'+
+      '<span style="color:#64748b;font-weight:700;">'+pCount+' لاعب · '+sCount+' إداري</span>'+
+      '</div>';
+  }).join('');
+  return '<div style="background:#fff;border-radius:10px;margin:0 12px 12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);">'+
+    '<div style="background:#0f172a;color:#fff;font-weight:800;font-size:12px;padding:8px 12px;">ملخص الأكاديميات المشاركة</div>'+
+    rows+
+    '</div>';
+}
+
+function _setFestivalAcademy(a){
+  window._festivalAcademyFilter = a;
+  if((window._festivalTab||'players')==='players') _drawFestivalReg('');
+  else _drawFestivalStaff('');
+}
+
 function _drawFestivalReg(query){
   var el = document.getElementById('content');
   var rows = window._festivalRows || [];
@@ -2291,6 +2337,10 @@ function _drawFestivalReg(query){
     return;
   }
   var sorted = rows.slice().reverse();
+  var academyFilter = window._festivalAcademyFilter || 'all';
+  if(academyFilter !== 'all'){
+    sorted = sorted.filter(function(r){ return (r['اسم الأكاديمية']||'أكاديمية الشمالي')===academyFilter; });
+  }
   var counts = {'2013-2014':0,'2015-2016':0,'2017-2018':0};
   sorted.forEach(function(r){ var c=r['الفئة العمرية']; if(counts[c]!==undefined) counts[c]++; });
 
@@ -2314,7 +2364,9 @@ function _drawFestivalReg(query){
     '<div style="font-size:17px;font-weight:900;">'+counts['2017-2018']+'</div><div style="font-size:9px;opacity:.8;">2017-2018</div></div>'+
     '</div></div>'+
     _festivalTabsHtml()+
+    _festivalAcademySummaryHtml()+
     '<div style="padding:12px;">'+
+    _festivalAcademyFilterHtml()+
     '<select id="festPdfCategorySel" style="width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:11px;font-size:13px;font-weight:700;font-family:Cairo,sans-serif;color:#1e293b;margin-bottom:8px;">'+
     '<option value="all">📋 جميع الفئات (ملف PDF لكل فئة)</option>'+
     '<option value="2013-2014">🎂 فئة 2013-2014 فقط</option>'+
@@ -2367,10 +2419,12 @@ function _drawFestivalStaff(query){
   var el = document.getElementById('content');
   var rows = window._festivalStaffRows || [];
   var cats = ['2013-2014','2015-2016','2017-2018'];
+  var academyFilter = window._festivalAcademyFilter || 'all';
+  var scoped = academyFilter === 'all' ? rows : rows.filter(function(r){ return (r['اسم الأكاديمية']||'أكاديمية الشمالي')===academyFilter; });
   var counts = {'2013-2014':0,'2015-2016':0,'2017-2018':0};
-  rows.forEach(function(r){ var c=r['الفئة']; if(counts[c]!==undefined) counts[c]++; });
+  scoped.forEach(function(r){ var c=r['الفئة']; if(counts[c]!==undefined) counts[c]++; });
 
-  var sorted = rows.slice().reverse();
+  var sorted = scoped.slice().reverse();
   var filtered = query ? sorted.filter(function(r){
     return (r['الاسم الثلاثي']||'').toLowerCase().indexOf(query.toLowerCase())>-1 ||
            (r['رقم الهوية']||'').indexOf(query)>-1;
@@ -2380,16 +2434,23 @@ function _drawFestivalStaff(query){
     '<div style="background:linear-gradient(135deg,#1e3a5f,#b81d22);padding:20px 16px;text-align:center;color:#fff;">'+
     '<div style="font-size:28px;margin-bottom:4px;">🧑‍💼</div>'+
     '<div style="font-size:17px;font-weight:900;">الجهاز الفني والإداري — مهرجان نبض المستقبل</div>'+
+    (academyFilter==='all' ? '<div style="font-size:10px;opacity:.75;margin-top:4px;">الحد 3 أعضاء لكل فئة لكل أكاديمية — اختر أكاديمية لعرض حالة الحد</div>' : '')+
     '<div style="display:flex;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap;">'+
     cats.map(function(c){
       var n = counts[c];
+      if(academyFilter==='all'){
+        return '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;">'+
+          '<div style="font-size:17px;font-weight:900;">'+n+'</div><div style="font-size:9px;opacity:.8;">'+c+'</div></div>';
+      }
       var full = n>=3;
       return '<div style="background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;border-bottom:3px solid '+(full?'#4ade80':'#fca5a5')+';">'+
         '<div style="font-size:17px;font-weight:900;">'+n+'/3</div><div style="font-size:9px;opacity:.8;">'+c+'</div></div>';
     }).join('')+
     '</div></div>'+
     _festivalTabsHtml()+
+    _festivalAcademySummaryHtml()+
     '<div style="padding:12px;">'+
+    _festivalAcademyFilterHtml()+
     '<div class="sbar"><input id="festStaffSearch" placeholder="ابحث بالاسم أو رقم الهوية..." value="'+(query||'')+'"><button onclick="_drawFestivalStaff(document.getElementById(\'festStaffSearch\').value)"><i class="fas fa-search"></i></button></div>';
 
   if(!rows.length){
