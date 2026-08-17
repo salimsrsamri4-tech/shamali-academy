@@ -276,10 +276,15 @@ window.addEventListener('load',function(){
     <button class="sb-btn" style="color:#f59e0b;" data-pg="tournament_schedule" onclick="go('tournament_schedule')"><i class="fas fa-calendar-alt"></i> جدول المباريات</button>
     <button class="sb-btn danger" id="tournLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
-  <button class="sb-btn" data-pg="festlogin" style="color:#b81d22;" onclick="go('festlogin')"><i class="fas fa-trophy"></i> تسجيلات مهرجان نبض المستقبل</button>
+  <button class="sb-btn" data-pg="festlogin" style="color:#b81d22;" onclick="go('festlogin')"><i class="fas fa-trophy"></i> تسجيلات مهرجان نبض المستقبل (اللجنة)</button>
   <div id="festMenu" style="display:none;">
     <button class="sb-btn" style="color:#b81d22;" data-pg="festivalreg" onclick="go('festivalreg')"><i class="fas fa-list"></i> التسجيلات</button>
     <button class="sb-btn danger" id="festLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
+  </div>
+  <button class="sb-btn" data-pg="festacadlogin" style="color:#1e3a5f;" onclick="go('festacadlogin')"><i class="fas fa-shield-halved"></i> مراجعة تسجيلات أكاديميتي</button>
+  <div id="festAcadMenu" style="display:none;">
+    <button class="sb-btn" style="color:#1e3a5f;" data-pg="festacadview" onclick="go('festacadview')"><i class="fas fa-list"></i> تسجيلات أكاديميتي</button>
+    <button class="sb-btn danger" id="festAcadLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
   <div class="sb-foot">
     <a href="services.html" target="_blank" style="color:#d4af37;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
@@ -468,6 +473,16 @@ var CONFIG = {
   ADMIN_PASS: ['98555987'],
   COACH_PASS: ['92126558'],
   FESTIVAL_PASS: ['1234'],
+  FESTIVAL_ACADEMY_CODES: {
+    '1111': 'أكاديمية المحترف',
+    '2222': 'أكاديمية الشمالي',
+    '3331': 'أكاديمية نبض المستقبل (أ)',
+    '3332': 'أكاديمية نبض المستقبل (ب)',
+    '4441': 'أكاديمية الجوهرة (أ)',
+    '4442': 'أكاديمية الجوهرة (ب)',
+    '5555': 'المدرسة الكروية لفريق الساحل الرياضي',
+    '6666': 'مدرسة النسور الكروية'
+  },
   WA_NUM: '96892126558'
 };
 
@@ -2834,6 +2849,8 @@ function renderPage(page) {
     case 'teamsuggestions': renderTeamSuggestions(); break;
     case 'festlogin': renderFestLogin(); break;
     case 'festivalreg': if(!sessionStorage.getItem('festAuth')){ go('festlogin'); return; } renderFestivalReg(); break;
+    case 'festacadlogin': renderFestAcadLogin(); break;
+    case 'festacadview': if(!sessionStorage.getItem('festAcadAuth')){ go('festacadlogin'); return; } renderFestAcadView(); break;
     case 'coachreport': renderCoachReport(); break;
     case 'matchlist': renderMatchList(); break;
     case 'matchresult': renderMatchResult(); break;
@@ -5968,6 +5985,65 @@ document.addEventListener('click', function(e){
   if(e.target && e.target.id==='festLogoutBtn'){
     sessionStorage.removeItem('festAuth');
     document.getElementById('festMenu').style.display='none';
+    go('reg');
+  }
+});
+
+function renderFestAcadLogin(){
+  document.getElementById('content').innerHTML =
+    '<div style="padding:40px 16px;max-width:360px;margin:0 auto;">'+
+    '<div style="text-align:center;margin-bottom:28px;">'+
+      '<div style="font-size:52px;margin-bottom:8px;">🏫</div>'+
+      '<div style="font-size:20px;font-weight:900;color:#0f172a;">مراجعة تسجيلات أكاديميتي</div>'+
+      '<div style="font-size:12px;color:#64748b;margin-top:4px;">أدخل الرمز الخاص بأكاديميتك</div>'+
+    '</div>'+
+    '<div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.08);">'+
+      '<div class="mb"><label class="lbl">رمز الأكاديمية</label>'+
+      '<input type="password" inputmode="numeric" class="inp" id="festAcadPass" placeholder="أدخل رمز أكاديميتك" onkeydown="if(event.key===\'Enter\')doFestAcadLogin()"></div>'+
+      '<div id="festAcadErr" style="display:none;color:#b91c1c;font-size:12px;margin-bottom:10px;font-weight:700;"></div>'+
+      '<button onclick="doFestAcadLogin()" style="width:100%;background:linear-gradient(135deg,#1e3a5f,#0f172a);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">دخول</button>'+
+    '</div></div>';
+  setTimeout(function(){ var i=document.getElementById('festAcadPass'); if(i)i.focus(); },300);
+}
+
+function doFestAcadLogin(){
+  var pass = (document.getElementById('festAcadPass').value||'').trim();
+  var err = document.getElementById('festAcadErr');
+  var academyName = CONFIG.FESTIVAL_ACADEMY_CODES[pass];
+  if(!academyName){
+    err.style.display='block'; err.textContent='الرمز غير صحيح';
+    return;
+  }
+  sessionStorage.setItem('festAcadAuth', academyName);
+  document.getElementById('festAcadMenu').style.display='block';
+  go('festacadview');
+}
+
+function renderFestAcadView(){
+  var academyName = sessionStorage.getItem('festAcadAuth');
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ تحميل تسجيلات '+academyName+'...</div>';
+  Promise.all([
+    apiGet('تسجيل مهرجان نبض المستقبل 2026'),
+    apiGet('الجهاز الفني والإداري - مهرجان نبض المستقبل 2026')
+  ]).then(function(results){
+    var players = Array.isArray(results[0]) ? results[0] : [];
+    var staff = Array.isArray(results[1]) ? results[1] : [];
+    window._festivalRows = players.filter(function(r){ return (r['اسم الأكاديمية']||'أكاديمية الشمالي')===academyName; });
+    window._festivalStaffRows = staff.filter(function(r){ return (r['اسم الأكاديمية']||'أكاديمية الشمالي')===academyName; });
+    window._festivalAcademyFilter = 'all';
+    window._festivalTab = 'players';
+    _drawFestivalReg('');
+  }).catch(function(){
+    el.innerHTML='<div class="card"><div class="al al-warn">تعذّر تحميل التسجيلات</div></div>';
+  });
+}
+
+// تسجيل خروج مراجعة تسجيلات الأكاديمية
+document.addEventListener('click', function(e){
+  if(e.target && e.target.id==='festAcadLogoutBtn'){
+    sessionStorage.removeItem('festAcadAuth');
+    document.getElementById('festAcadMenu').style.display='none';
     go('reg');
   }
 });
