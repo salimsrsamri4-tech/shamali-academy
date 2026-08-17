@@ -258,7 +258,6 @@ window.addEventListener('load',function(){
     <button class="sb-btn gold" data-page="reports" data-pg="reports"><i class="fas fa-file-alt"></i> التقارير</button>
     <button class="sb-btn gold" data-page="suggestions" data-pg="suggestions"><i class="fas fa-inbox"></i> صندوق المقترحات</button>
     <button class="sb-btn gold" data-page="teamsuggestions" data-pg="teamsuggestions"><i class="fas fa-bullhorn"></i> مقترحات فريق الشمالي</button>
-    <button class="sb-btn gold" data-page="festivalreg" data-pg="festivalreg"><i class="fas fa-trophy"></i> تسجيلات مهرجان نبض المستقبل</button>
     <button class="sb-btn gold" data-page="birthdays" data-pg="birthdays"><i class="fas fa-birthday-cake"></i> أعياد الميلاد</button>
     <button class="sb-btn gold" data-page="groupmsg" data-pg="groupmsg"><i class="fas fa-paper-plane"></i> إشعار جماعي</button>
     <button class="sb-btn gold" data-page="substrack" data-pg="substrack"><i class="fas fa-bell"></i> متابعة الاشتراكات <span id="subsBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
@@ -276,6 +275,11 @@ window.addEventListener('load',function(){
     <button class="sb-btn" style="color:#f59e0b;" onclick="go('tourn_notifications')"><i class="fas fa-bell"></i> الإشعارات <span id="tournNotifBadge2" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
     <button class="sb-btn" style="color:#f59e0b;" data-pg="tournament_schedule" onclick="go('tournament_schedule')"><i class="fas fa-calendar-alt"></i> جدول المباريات</button>
     <button class="sb-btn danger" id="tournLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
+  </div>
+  <button class="sb-btn" data-pg="festlogin" style="color:#b81d22;" onclick="go('festlogin')"><i class="fas fa-trophy"></i> تسجيلات مهرجان نبض المستقبل</button>
+  <div id="festMenu" style="display:none;">
+    <button class="sb-btn" style="color:#b81d22;" data-pg="festivalreg" onclick="go('festivalreg')"><i class="fas fa-list"></i> التسجيلات</button>
+    <button class="sb-btn danger" id="festLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
   <div class="sb-foot">
     <a href="services.html" target="_blank" style="color:#d4af37;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
@@ -463,6 +467,7 @@ var CONFIG = {
   SHEETDB_URL: 'https://sheetdb.io/api/v1/19dnaxf04au5l',
   ADMIN_PASS: ['98555987'],
   COACH_PASS: ['92126558'],
+  FESTIVAL_PASS: ['1234'],
   WA_NUM: '96892126558'
 };
 
@@ -2766,7 +2771,8 @@ function renderPage(page) {
     case 'suggest': renderSuggest(); break;
     case 'suggestions': renderSuggestions(); break;
     case 'teamsuggestions': renderTeamSuggestions(); break;
-    case 'festivalreg': renderFestivalReg(); break;
+    case 'festlogin': renderFestLogin(); break;
+    case 'festivalreg': if(!sessionStorage.getItem('festAuth')){ go('festlogin'); return; } renderFestivalReg(); break;
     case 'coachreport': renderCoachReport(); break;
     case 'matchlist': renderMatchList(); break;
     case 'matchresult': renderMatchResult(); break;
@@ -5863,6 +5869,44 @@ document.addEventListener('click', function(e){
   if(e.target && e.target.id==='tournLogoutBtn'){
     sessionStorage.removeItem('tournAuth');
     document.getElementById('tournMenu').style.display='none';
+    go('reg');
+  }
+});
+
+function renderFestLogin(){
+  document.getElementById('content').innerHTML =
+    '<div style="padding:40px 16px;max-width:360px;margin:0 auto;">'+
+    '<div style="text-align:center;margin-bottom:28px;">'+
+      '<div style="font-size:52px;margin-bottom:8px;">🏆</div>'+
+      '<div style="font-size:20px;font-weight:900;color:#0f172a;">تسجيلات مهرجان نبض المستقبل</div>'+
+      '<div style="font-size:12px;color:#64748b;margin-top:4px;">أدخل رقم الدخول الخاص</div>'+
+    '</div>'+
+    '<div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.08);">'+
+      '<div class="mb"><label class="lbl">رقم الدخول</label>'+
+      '<input type="password" inputmode="numeric" class="inp" id="festPass" placeholder="أدخل رقم الدخول" onkeydown="if(event.key===\'Enter\')doFestLogin()"></div>'+
+      '<div id="festErr" style="display:none;color:#b91c1c;font-size:12px;margin-bottom:10px;font-weight:700;"></div>'+
+      '<button onclick="doFestLogin()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">دخول</button>'+
+    '</div></div>';
+  setTimeout(function(){ var i=document.getElementById('festPass'); if(i)i.focus(); },300);
+}
+
+function doFestLogin(){
+  var pass = (document.getElementById('festPass').value||'').trim();
+  var err = document.getElementById('festErr');
+  if(CONFIG.FESTIVAL_PASS.indexOf(pass)===-1){
+    err.style.display='block'; err.textContent='رقم الدخول غير صحيح';
+    return;
+  }
+  sessionStorage.setItem('festAuth','1');
+  document.getElementById('festMenu').style.display='block';
+  go('festivalreg');
+}
+
+// تسجيل خروج تسجيلات المهرجان
+document.addEventListener('click', function(e){
+  if(e.target && e.target.id==='festLogoutBtn'){
+    sessionStorage.removeItem('festAuth');
+    document.getElementById('festMenu').style.display='none';
     go('reg');
   }
 });
