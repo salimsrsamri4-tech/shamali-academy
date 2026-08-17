@@ -514,8 +514,8 @@ function apiGet(sheetName, forceRefresh) {
     return Promise.resolve(cached.data);
   }
   var url = CONFIG.GAS_URL
-    ? CONFIG.GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheetName) + '&limit=500'
-    : CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName) + '&limit=500';
+    ? CONFIG.GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheetName) + '&limit=2000'
+    : CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName) + '&limit=2000';
   return _fetchWithRetry(url).then(function(r){ return r.json(); }).then(function(data){
     _apiCache[sheetName] = { data: data, ts: Date.now() };
     return data;

@@ -348,7 +348,7 @@ function uploadIdImage(name, attempt){
 }
 
 function apiGetSheet(sheet){
-  return fetch(GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheet) + '&limit=500')
+  return fetch(GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheet) + '&limit=2000')
     .then(function(r){ return r.json(); })
     .then(function(data){ return Array.isArray(data) ? data : []; })
     .catch(function(){ return []; });
