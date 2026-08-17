@@ -2310,8 +2310,14 @@ function _drawFestivalReg(query){
     '</div></div>'+
     _festivalTabsHtml()+
     '<div style="padding:12px;">'+
+    '<select id="festPdfCategorySel" style="width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:11px;font-size:13px;font-weight:700;font-family:Cairo,sans-serif;color:#1e293b;margin-bottom:8px;">'+
+    '<option value="all">📋 جميع الفئات (ملف PDF لكل فئة)</option>'+
+    '<option value="2013-2014">🎂 فئة 2013-2014 فقط</option>'+
+    '<option value="2015-2016">🎂 فئة 2015-2016 فقط</option>'+
+    '<option value="2017-2018">🎂 فئة 2017-2018 فقط</option>'+
+    '</select>'+
     '<button id="festPdfBtn" onclick="exportFestivalRegPDF()" style="width:100%;background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;">'+
-    '<i class="fas fa-file-pdf"></i> تصدير قائمة الأكاديمية PDF لكل فئة</button>'+
+    '<i class="fas fa-file-pdf"></i> تصدير قائمة الأكاديمية PDF</button>'+
     '<button onclick="printFestivalIds()" style="width:100%;background:#0f172a;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">'+
     '<i class="fas fa-id-card"></i> طباعة نسخ الهويات</button>'+
     '<div class="sbar"><input id="festSearch" placeholder="ابحث بالاسم أو رقم الهوية..." value="'+(query||'')+'"><button onclick="_drawFestivalReg(document.getElementById(\'festSearch\').value)"><i class="fas fa-search"></i></button></div>';
@@ -2526,8 +2532,10 @@ function exportFestivalRegPDF(){
     staffByCat[c].sort(function(a,b){ return (a['الاسم الثلاثي']||'').localeCompare(b['الاسم الثلاثي']||'','ar'); });
   });
 
-  var activeCats = cats.filter(function(c){ return byCat[c].length || staffByCat[c].length; });
-  if(!activeCats.length){ alert('لا توجد تسجيلات لتصديرها'); return; }
+  var sel = document.getElementById('festPdfCategorySel');
+  var chosen = sel ? sel.value : 'all';
+  var activeCats = (chosen === 'all' ? cats : [chosen]).filter(function(c){ return byCat[c].length || staffByCat[c].length; });
+  if(!activeCats.length){ alert('لا توجد تسجيلات لتصديرها في هذه الفئة'); return; }
 
   var btn = document.getElementById('festPdfBtn');
   if(btn){ btn.disabled=true; }
@@ -2535,7 +2543,7 @@ function exportFestivalRegPDF(){
   var i = 0;
   function next(){
     if(i >= activeCats.length){
-      if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-file-pdf"></i> تصدير قائمة الأكاديمية PDF لكل فئة'; }
+      if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-file-pdf"></i> تصدير قائمة الأكاديمية PDF'; }
       return;
     }
     var c = activeCats[i];
