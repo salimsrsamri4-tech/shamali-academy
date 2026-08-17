@@ -2575,61 +2575,30 @@ function exportFestivalRegPDF(){
   next();
 }
 
-function printFestivalIds(){
-  var rows = (window._festivalRows || []).filter(function(r){ return r['صورة الهوية']; });
-  var staffRows = (window._festivalStaffRows || []).filter(function(r){ return r['صورة الهوية']; });
-  if(!rows.length && !staffRows.length){ alert('لا توجد صور هويات مرفقة للطباعة'); return; }
+function _idCardsHtml(list){
+  return '<div class="id-grid">'+
+    list.map(function(r){
+      var img = _driveThumb(r['صورة الهوية'], 900) || r['صورة الهوية'];
+      var meta = r['الصفة'] ?
+        (r['الصفة']||'-')+' &nbsp;·&nbsp; رقم الهوية: '+(r['رقم الهوية']||'-') :
+        'رقم الهوية: '+(r['رقم الهوية']||'-')+' &nbsp;·&nbsp; سنة الميلاد: '+(r['سنة الميلاد']||'-');
+      return '<div class="id-card">'+
+        '<img src="'+img+'" alt="هوية">'+
+        '<div class="id-name">'+(r['الاسم الثلاثي']||'-')+'</div>'+
+        '<div class="id-meta">'+meta+'</div>'+
+        '</div>';
+    }).join('')+
+    '</div>';
+}
 
-  var cats = ['2013-2014','2015-2016','2017-2018'];
-  var byCat = {};
-  cats.forEach(function(c){ byCat[c]=[]; });
-  rows.forEach(function(r){ var c=r['الفئة العمرية']; if(byCat[c]) byCat[c].push(r); });
-  cats.forEach(function(c){
-    byCat[c].sort(function(a,b){ return (a['الاسم الثلاثي']||'').localeCompare(b['الاسم الثلاثي']||'','ar'); });
-  });
+function _buildIdCardsWindowHtml(cat, players, staff){
+  var cardsHtml = players.length ?
+    '<div class="cat-title">الفئة العمرية '+cat+' — ('+players.length+' لاعب)</div>'+_idCardsHtml(players) : '';
+  var staffCardsHtml = staff.length ?
+    '<div class="cat-title">الجهاز الفني والإداري — فئة '+cat+' — ('+staff.length+' من 3)</div>'+_idCardsHtml(staff) : '';
 
-  var cardsHtml = cats.map(function(c){
-    var list = byCat[c];
-    if(!list.length) return '';
-    return '<div class="cat-title">الفئة العمرية '+c+' — ('+list.length+' لاعب)</div>'+
-      '<div class="id-grid">'+
-      list.map(function(r){
-        var img = _driveThumb(r['صورة الهوية'], 900) || r['صورة الهوية'];
-        return '<div class="id-card">'+
-          '<img src="'+img+'" alt="هوية">'+
-          '<div class="id-name">'+(r['الاسم الثلاثي']||'-')+'</div>'+
-          '<div class="id-meta">رقم الهوية: '+(r['رقم الهوية']||'-')+' &nbsp;·&nbsp; سنة الميلاد: '+(r['سنة الميلاد']||'-')+'</div>'+
-          '</div>';
-      }).join('')+
-      '</div>';
-  }).join('');
-
-  var staffByCat = {};
-  cats.forEach(function(c){ staffByCat[c]=[]; });
-  staffRows.forEach(function(r){ var c=r['الفئة']; if(staffByCat[c]) staffByCat[c].push(r); });
-  cats.forEach(function(c){
-    staffByCat[c].sort(function(a,b){ return (a['الاسم الثلاثي']||'').localeCompare(b['الاسم الثلاثي']||'','ar'); });
-  });
-
-  var staffCardsHtml = cats.map(function(c){
-    var list = staffByCat[c];
-    if(!list.length) return '';
-    return '<div class="cat-title">الجهاز الفني والإداري — فئة '+c+' — ('+list.length+' من 3)</div>'+
-      '<div class="id-grid">'+
-      list.map(function(r){
-        var img = _driveThumb(r['صورة الهوية'], 900) || r['صورة الهوية'];
-        return '<div class="id-card">'+
-          '<img src="'+img+'" alt="هوية">'+
-          '<div class="id-name">'+(r['الاسم الثلاثي']||'-')+'</div>'+
-          '<div class="id-meta">'+(r['الصفة']||'-')+' &nbsp;·&nbsp; رقم الهوية: '+(r['رقم الهوية']||'-')+'</div>'+
-          '</div>';
-      }).join('')+
-      '</div>';
-  }).join('');
-
-  var html =
-    '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'+
-    '<title>نسخ هويات المشاركين — مهرجان نبض المستقبل 2026</title>'+
+  return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'+
+    '<title>نسخ هويات فئة '+cat+' — مهرجان نبض المستقبل 2026</title>'+
     '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800;900&display=swap" rel="stylesheet">'+
     '<style>'+
     '*{box-sizing:border-box;margin:0;padding:0;}'+
@@ -2647,20 +2616,43 @@ function printFestivalIds(){
     '.no-print button{padding:12px 28px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;color:#fff;}'+
     '@media print{body{background:#fff;padding:0;}.no-print{display:none!important;}.id-grid{grid-template-columns:1fr 1fr;}}'+
     '</style></head><body>'+
-    '<div class="hdr"><div class="t">نسخ هويات المشاركين — مهرجان نبض المستقبل الثالث 2026</div>'+
-    '<div class="s">أكاديمية الشمالي لكرة القدم · '+rows.length+' هوية لاعب · '+staffRows.length+' هوية من الجهاز الفني والإداري</div></div>'+
-    cardsHtml+
-    (staffCardsHtml?staffCardsHtml:'')+
+    '<div class="hdr"><div class="t">نسخ هويات المشاركين — فئة '+cat+' — مهرجان نبض المستقبل الثالث 2026</div>'+
+    '<div class="s">'+players.length+' هوية لاعب · '+staff.length+' هوية من الجهاز الفني والإداري</div></div>'+
+    cardsHtml+staffCardsHtml+
     '<div class="no-print">'+
     '<button onclick="window.print()" style="background:#b81d22;">🖨️ طباعة / حفظ PDF</button>'+
     '<button onclick="window.close()" style="background:#64748b;">✕ إغلاق</button>'+
     '</div>'+
     '</body></html>';
+}
 
-  var w = window.open('','_blank','width=900,height=750');
-  if(!w){ alert('يرجى السماح بالنوافذ المنبثقة في المتصفح ثم المحاولة مرة أخرى'); return; }
-  w.document.write(html);
-  w.document.close();
+function printFestivalIds(){
+  var rows = (window._festivalRows || []).filter(function(r){ return r['صورة الهوية']; });
+  var staffRows = (window._festivalStaffRows || []).filter(function(r){ return r['صورة الهوية']; });
+  if(!rows.length && !staffRows.length){ alert('لا توجد صور هويات مرفقة للطباعة'); return; }
+
+  var cats = ['2013-2014','2015-2016','2017-2018'];
+  var byCat = {}, staffByCat = {};
+  cats.forEach(function(c){ byCat[c]=[]; staffByCat[c]=[]; });
+  rows.forEach(function(r){ var c=r['الفئة العمرية']; if(byCat[c]) byCat[c].push(r); });
+  staffRows.forEach(function(r){ var c=r['الفئة']; if(staffByCat[c]) staffByCat[c].push(r); });
+  cats.forEach(function(c){
+    byCat[c].sort(function(a,b){ return (a['الاسم الثلاثي']||'').localeCompare(b['الاسم الثلاثي']||'','ar'); });
+    staffByCat[c].sort(function(a,b){ return (a['الاسم الثلاثي']||'').localeCompare(b['الاسم الثلاثي']||'','ar'); });
+  });
+
+  var sel = document.getElementById('festPdfCategorySel');
+  var chosen = sel ? sel.value : 'all';
+  var activeCats = (chosen === 'all' ? cats : [chosen]).filter(function(c){ return byCat[c].length || staffByCat[c].length; });
+  if(!activeCats.length){ alert('لا توجد صور هويات مرفقة للطباعة في هذه الفئة'); return; }
+
+  activeCats.forEach(function(c){
+    var html = _buildIdCardsWindowHtml(c, byCat[c], staffByCat[c]);
+    var w = window.open('','_blank','width=900,height=750');
+    if(!w){ alert('يرجى السماح بالنوافذ المنبثقة في المتصفح ثم المحاولة مرة أخرى'); return; }
+    w.document.write(html);
+    w.document.close();
+  });
 }
 
 // ===== REPORTS =====
