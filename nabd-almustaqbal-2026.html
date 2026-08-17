@@ -146,6 +146,11 @@ footer a{color:#25d366;text-decoration:none;font-weight:700;}
         <label class="lbl"><i class="fas fa-id-card"></i> رقم الهوية / البطاقة الشخصية <span class="req">*</span></label>
         <input id="pId" type="text" inputmode="numeric" class="inp" placeholder="رقم الهوية كما هو مدوّن في البطاقة">
       </div>
+
+      <div class="fld">
+        <label class="lbl"><i class="fas fa-shirt"></i> رقم قميص اللاعب <span style="color:#94a3b8;font-weight:600;">(اختياري)</span></label>
+        <input id="pNumber" type="text" inputmode="numeric" class="inp" placeholder="اتركه فارغًا إذا لم يكن لدى الأكاديمية قمصان مرقمة">
+      </div>
     </div>
 
     <!-- حقول الجهاز الفني والإداري -->
@@ -321,6 +326,7 @@ function submitPlayerReg(){
   var name = document.getElementById('pName').value.trim();
   var year = document.getElementById('pYear').value;
   var idNum = document.getElementById('pId').value.trim();
+  var shirtNumber = document.getElementById('pNumber').value.trim();
   var parentName = document.getElementById('parentName').value.trim();
   var parentPhone = document.getElementById('parentPhone').value.trim();
   var resultEl = document.getElementById('resultMsg');
@@ -343,6 +349,7 @@ function submitPlayerReg(){
       'سنة الميلاد': year,
       'الفئة العمرية': categoryByYear[year] || '-',
       'رقم الهوية': idNum,
+      'رقم القميص': shirtNumber,
       'صورة الهوية': idImageUrl,
       'اسم ولي الأمر': parentName,
       'واتساب ولي الأمر': parentPhone,
