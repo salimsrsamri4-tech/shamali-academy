@@ -115,7 +115,27 @@ footer a{color:#25d366;text-decoration:none;font-weight:700;}
 
     <div class="fld">
       <label class="lbl"><i class="fas fa-shield-halved"></i> اسم الأكاديمية <span class="req">*</span></label>
-      <input id="academyName" type="text" class="inp" placeholder="مثال: أكاديمية الشمالي" value="أكاديمية الشمالي">
+      <select id="academyName" class="sel" onchange="toggleAcademyOther()">
+        <option value="">اختر الأكاديمية</option>
+        <optgroup label="المجموعة الأولى">
+          <option value="أكاديمية المحترف">أكاديمية المحترف</option>
+          <option value="أكاديمية الشمالي" selected>أكاديمية الشمالي</option>
+        </optgroup>
+        <optgroup label="المجموعة الثانية">
+          <option value="أكاديمية نبض المستقبل (أ)">أكاديمية نبض المستقبل (أ)</option>
+          <option value="أكاديمية نبض المستقبل (ب)">أكاديمية نبض المستقبل (ب)</option>
+        </optgroup>
+        <optgroup label="المجموعة الثالثة">
+          <option value="أكاديمية الجوهرة (أ)">أكاديمية الجوهرة (أ)</option>
+          <option value="أكاديمية الجوهرة (ب)">أكاديمية الجوهرة (ب)</option>
+        </optgroup>
+        <optgroup label="المجموعة الرابعة">
+          <option value="المدرسة الكروية لفريق الساحل الرياضي">المدرسة الكروية لفريق الساحل الرياضي</option>
+          <option value="مدرسة النسور الكروية">مدرسة النسور الكروية</option>
+        </optgroup>
+        <option value="__other__">أخرى (اكتب اسم الأكاديمية)</option>
+      </select>
+      <input id="academyNameOther" type="text" class="inp" placeholder="اكتب اسم الأكاديمية" style="display:none;margin-top:8px;">
     </div>
 
     <div class="fld">
@@ -254,6 +274,17 @@ var categoryByYear = {
 var idFileB64 = '';
 var regType = 'player';
 
+function toggleAcademyOther(){
+  var sel = document.getElementById('academyName');
+  document.getElementById('academyNameOther').style.display = sel.value === '__other__' ? 'block' : 'none';
+}
+
+function getAcademyName(){
+  var sel = document.getElementById('academyName');
+  if(sel.value === '__other__') return document.getElementById('academyNameOther').value.trim();
+  return sel.value;
+}
+
 function setRegType(t){
   regType = t;
   document.getElementById('typeBtnPlayer').classList.toggle('on', t==='player');
@@ -329,7 +360,7 @@ function submitFestivalReg(){
 }
 
 function submitPlayerReg(){
-  var academyName = document.getElementById('academyName').value.trim();
+  var academyName = getAcademyName();
   var name = document.getElementById('pName').value.trim();
   var year = document.getElementById('pYear').value;
   var idNum = document.getElementById('pId').value.trim();
@@ -397,7 +428,7 @@ function submitPlayerReg(){
 }
 
 function submitStaffReg(){
-  var academyName = document.getElementById('academyName').value.trim();
+  var academyName = getAcademyName();
   var name = document.getElementById('sName').value.trim();
   var role = document.getElementById('sRole').value;
   var category = document.getElementById('sCategory').value;
