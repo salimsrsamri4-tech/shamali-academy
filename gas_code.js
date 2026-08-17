@@ -60,10 +60,22 @@ function doPost(e) {
       var rows = Array.isArray(body.data) ? body.data : [body.data];
       var headers = getHeaders(sheet);
 
-      // Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø£Ø¹Ù…Ø¯Ø© ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹ Ø¥Ø°Ø§ Ù„Ù… ØªÙˆØ¬Ø¯
+      // إنشاء الأعمدة تلقائياً إذا لم توجد
       if (headers.length === 0) {
         headers = Object.keys(rows[0]);
         sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      } else {
+        // إضافة أي أعمدة جديدة موجودة في البيانات المُرسلة وغير موجودة في رأس الجدول
+        var newKeys = [];
+        rows.forEach(function(row) {
+          Object.keys(row).forEach(function(k) {
+            if (headers.indexOf(k) === -1 && newKeys.indexOf(k) === -1) newKeys.push(k);
+          });
+        });
+        if (newKeys.length > 0) {
+          sheet.getRange(1, headers.length + 1, 1, newKeys.length).setValues([newKeys]);
+          headers = headers.concat(newKeys);
+        }
       }
 
       rows.forEach(function(row) {
