@@ -2423,7 +2423,9 @@ function _drawFestivalReg(query){
       '<div style="font-size:12px;font-weight:800;color:#1e293b;">'+(r['اسم ولي الأمر']||'-')+
       (phone?' · <a href="https://wa.me/'+phone+'" target="_blank" style="color:#16a34a;text-decoration:none;"><i class="fab fa-whatsapp"></i> '+r['واتساب ولي الأمر']+'</a>':'')+
       '</div>'+
-      '</div></div></div>';
+      '</div></div>'+
+      '<button onclick="deleteFestivalReg(\''+(r['رقم الهوية']||'').replace(/'/g,"\\'")+'\',\'player\',this)" style="width:100%;background:#fef2f2;border:none;border-top:1px solid #fee2e2;color:#dc2626;padding:9px;font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fas fa-trash"></i> حذف التسجيل</button>'+
+      '</div>';
   });
 
   html += '</div>';
@@ -2496,11 +2498,32 @@ function _drawFestivalStaff(query){
       '<div><div style="font-size:9px;color:#94a3b8;font-weight:700;">رقم الهوية</div><div style="font-size:12px;font-weight:800;color:#1e293b;">'+(r['رقم الهوية']||'-')+'</div></div>'+
       '</div>'+
       (phone?'<a href="https://wa.me/'+phone+'" target="_blank" style="color:#16a34a;text-decoration:none;font-size:12px;font-weight:800;"><i class="fab fa-whatsapp"></i> '+r['رقم التواصل']+'</a>':'')+
-      '</div></div></div>';
+      '</div></div>'+
+      '<button onclick="deleteFestivalReg(\''+(r['رقم الهوية']||'').replace(/'/g,"\\'")+'\',\'staff\',this)" style="width:100%;background:#fef2f2;border:none;border-top:1px solid #fee2e2;color:#dc2626;padding:9px;font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fas fa-trash"></i> حذف التسجيل</button>'+
+      '</div>';
   });
 
   html += '</div>';
   el.innerHTML = html;
+}
+
+function deleteFestivalReg(idNum, type, btn){
+  if(!idNum){ alert('لا يوجد رقم هوية لهذا التسجيل'); return; }
+  if(!confirm('هل أنت متأكد من حذف هذا التسجيل؟ لا يمكن التراجع.')) return;
+  var sheetName = type==='player' ? 'تسجيل مهرجان نبض المستقبل 2026' : 'الجهاز الفني والإداري - مهرجان نبض المستقبل 2026';
+  if(btn){ btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...'; }
+  apiDelete(sheetName, 'رقم الهوية', idNum).then(function(){
+    if(type==='player'){
+      window._festivalRows = (window._festivalRows||[]).filter(function(r){ return r['رقم الهوية']!==idNum; });
+      _drawFestivalReg(document.getElementById('festSearch') ? document.getElementById('festSearch').value : '');
+    } else {
+      window._festivalStaffRows = (window._festivalStaffRows||[]).filter(function(r){ return r['رقم الهوية']!==idNum; });
+      _drawFestivalStaff(document.getElementById('festStaffSearch') ? document.getElementById('festStaffSearch').value : '');
+    }
+  }).catch(function(){
+    alert('تعذّر الحذف، تحقق من الاتصال بالإنترنت وحاول مجدداً');
+    if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-trash"></i> حذف التسجيل'; }
+  });
 }
 
 function _officialFormRow(n, name, extra){
