@@ -2394,6 +2394,8 @@ function _drawFestivalReg(query){
     '<i class="fab fa-whatsapp"></i> مشاركة القائمة عبر واتساب</button>'+
     '<button onclick="printFestivalIds()" style="width:100%;background:#fff;border:1.5px solid #cbd5e1;color:#334155;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">'+
     '<i class="fas fa-id-card"></i> طباعة نسخ الهويات</button>'+
+    '<button id="festIdsImgBtn" onclick="exportFestivalIdsImage()" style="width:100%;background:#fff;border:1.5px solid #cbd5e1;color:#334155;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">'+
+    '<i class="fas fa-images"></i> تصدير صور الهويات (ملف لكل فئة)</button>'+
     '<button onclick="shareFestivalIdsWhatsApp()" style="width:100%;background:#25d366;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">'+
     '<i class="fab fa-whatsapp"></i> مشاركة روابط الهويات عبر واتساب</button>'+
     '<div style="display:flex;gap:8px;margin-bottom:14px;"><input id="festSearch" style="flex:1;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px 13px;font-family:Cairo,sans-serif;font-size:13px;background:#fff;" placeholder="ابحث بالاسم أو رقم الهوية..." value="'+(query||'')+'"><button onclick="_drawFestivalReg(document.getElementById(\'festSearch\').value)" style="background:#d4af37;color:#1e293b;border:none;border-radius:8px;padding:10px 15px;cursor:pointer;"><i class="fas fa-search"></i></button></div>';
@@ -2753,6 +2755,89 @@ function _idCardsHtml(list){
         '</div>';
     }).join('')+
     '</div>';
+}
+
+function _buildIdCardsImage(cat, players, staff){
+  return new Promise(function(resolve){
+    var cardsHtml = players.length ?
+      '<div style="background:#fdf8ec;border:1px solid #ecd692;color:#b8962f;border-radius:8px;padding:8px 14px;margin:16px 0 10px;font-size:13px;font-weight:900;">الفئة العمرية '+cat+' — ('+players.length+' لاعب)</div>'+_idCardsHtml(players) : '';
+    var staffCardsHtml = staff.length ?
+      '<div style="background:#fdf8ec;border:1px solid #ecd692;color:#b8962f;border-radius:8px;padding:8px 14px;margin:16px 0 10px;font-size:13px;font-weight:900;">الجهاز الفني والإداري — فئة '+cat+' — ('+staff.length+' من 3)</div>'+_idCardsHtml(staff) : '';
+
+    var pageHtml =
+      '<div style="width:820px;background:#f1f5f9;font-family:Cairo,sans-serif;direction:rtl;color:#0f172a;padding:20px;">'+
+        '<div style="background:#fff;border:1.5px solid #e2e8f0;color:#0f172a;padding:16px 20px;border-radius:10px;text-align:center;margin-bottom:16px;">'+
+          '<div style="font-size:16px;font-weight:900;">نسخ هويات المشاركين — فئة '+cat+' — مهرجان نبض المستقبل الثالث 2026</div>'+
+          '<div style="font-size:11px;color:#64748b;margin-top:4px;">'+players.length+' هوية لاعب · '+staff.length+' هوية من الجهاز الفني والإداري</div>'+
+        '</div>'+
+        cardsHtml+staffCardsHtml+
+      '</div>';
+
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;';
+    wrap.innerHTML = '<style>.id-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}.id-card{background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;}.id-card img{width:100%;max-height:220px;object-fit:contain;border-radius:6px;background:#f8fafc;margin-bottom:8px;}.id-name{font-size:13px;font-weight:800;}.id-meta{font-size:10px;color:#64748b;margin-top:3px;}</style>'+pageHtml;
+    document.body.appendChild(wrap);
+
+    setTimeout(function(){
+      html2canvas(wrap.firstChild, {scale:2, useCORS:true, allowTaint:false, backgroundColor:'#f1f5f9'}).then(function(canvas){
+        document.body.removeChild(wrap);
+        resolve({dataUrl: canvas.toDataURL('image/png'), filename: 'هويات-فئة-'+cat+'-نبض-المستقبل-2026.png'});
+      }).catch(function(err){
+        if(document.body.contains(wrap)) document.body.removeChild(wrap);
+        resolve({error: err});
+      });
+    }, 400);
+  });
+}
+
+function exportFestivalIdsImage(){
+  var rows = (window._festivalRows || []).filter(function(r){ return r['صورة الهوية']; });
+  var staffRows = (window._festivalStaffRows || []).filter(function(r){ return r['صورة الهوية']; });
+  if(!rows.length && !staffRows.length){ alert('لا توجد صور هويات مرفقة للتصدير'); return; }
+  if(typeof html2canvas==='undefined'){ alert('ميزة التصدير غير متوفرة'); return; }
+
+  var cats = ['2013-2014','2015-2016','2017-2018'];
+  var byCat = {}, staffByCat = {};
+  cats.forEach(function(c){ byCat[c]=[]; staffByCat[c]=[]; });
+  rows.forEach(function(r){ var c=r['الفئة العمرية']; if(byCat[c]) byCat[c].push(r); });
+  staffRows.forEach(function(r){ var c=r['الفئة']; if(staffByCat[c]) staffByCat[c].push(r); });
+  cats.forEach(function(c){
+    byCat[c].sort(function(a,b){ return (a['الاسم الثلاثي']||'').localeCompare(b['الاسم الثلاثي']||'','ar'); });
+    staffByCat[c].sort(function(a,b){ return (a['الاسم الثلاثي']||'').localeCompare(b['الاسم الثلاثي']||'','ar'); });
+  });
+
+  var sel = document.getElementById('festPdfCategorySel');
+  var chosen = sel ? sel.value : 'all';
+  var activeCats = (chosen === 'all' ? cats : [chosen]).filter(function(c){ return byCat[c].length || staffByCat[c].length; });
+  if(!activeCats.length){ alert('لا توجد صور هويات مرفقة للتصدير في هذه الفئة'); return; }
+
+  var btn = document.getElementById('festIdsImgBtn');
+  if(btn){ btn.disabled=true; }
+
+  var i = 0;
+  function next(){
+    if(i >= activeCats.length){
+      if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-images"></i> تصدير صور الهويات (ملف لكل فئة)'; }
+      return;
+    }
+    var c = activeCats[i];
+    if(btn){ btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جارٍ إنشاء صورة فئة '+c+' ('+(i+1)+'/'+activeCats.length+')...'; }
+    _buildIdCardsImage(c, byCat[c], staffByCat[c]).then(function(result){
+      if(result.error){
+        alert('تعذّر إنشاء صورة فئة '+c+' (قد يكون بسبب قيود Google Drive على الصور). جرّب زر "طباعة نسخ الهويات" بدلاً من ذلك.');
+      } else {
+        var a = document.createElement('a');
+        a.href = result.dataUrl;
+        a.download = result.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+      i++;
+      next();
+    });
+  }
+  next();
 }
 
 function _buildIdCardsWindowHtml(cat, players, staff){
