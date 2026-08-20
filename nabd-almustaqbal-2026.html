@@ -256,7 +256,7 @@ var UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbzt0ZSA68BHMkAvtrMZsI_
 var SHEET_NAME = 'تسجيل مهرجان نبض المستقبل 2026';
 var STAFF_SHEET_NAME = 'الجهاز الفني والإداري - مهرجان نبض المستقبل 2026';
 var STAFF_CAP_PER_CATEGORY = 3;
-var PLAYER_CAP_PER_CATEGORY = 19;
+var PLAYER_CAP_PER_CATEGORY = 20;
 
 var categoryByYear = {
   '2013':'2013-2014', '2014':'2013-2014',
@@ -386,7 +386,7 @@ function submitPlayerReg(){
     if(countInCategory >= PLAYER_CAP_PER_CATEGORY){
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
-      resultEl.innerHTML = '<div class="al al-warn"><i class="fas fa-triangle-exclamation"></i> تم الوصول للحد الأقصى (19 لاعبًا) لفئة '+category+' لهذه الأكاديمية. يرجى التواصل مع إدارة الأكاديمية.</div>';
+      resultEl.innerHTML = '<div class="al al-warn"><i class="fas fa-triangle-exclamation"></i> تم الوصول للحد الأقصى (20 لاعبًا) لفئة '+category+' لهذه الأكاديمية. يرجى التواصل مع إدارة الأكاديمية.</div>';
       return;
     }
     var isDuplicate = existing.some(function(r){ return _normId(r['رقم الهوية']) === _normId(idNum) && r['اسم الأكاديمية'] === academyName; });
