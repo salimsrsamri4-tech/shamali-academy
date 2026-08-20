@@ -405,7 +405,7 @@ function submitPlayerReg(){
         body: JSON.stringify({action:'append', sheet: SHEET_NAME, data: [row]})
       });
     }).then(function(){
-      resultEl.innerHTML = '<div class="al al-ok"><i class="fas fa-circle-check"></i> تم إرسال التسجيل بنجاح! سيتم التواصل معكم قريبًا من إدارة الأكاديمية 🦅</div>';
+      resultEl.innerHTML = '<div class="al al-ok"><i class="fas fa-circle-check"></i> تم إرسال التسجيل بنجاح! سيتم التواصل معكم قريبًا من إدارة الأكاديمية 🦅</div>'+_shareIdBtnHtml();
       btn.style.display = 'none';
     }).catch(function(err){
       btn.disabled = false;
@@ -417,6 +417,30 @@ function submitPlayerReg(){
       resultEl.innerHTML = '<div class="al al-err"><i class="fas fa-circle-exclamation"></i> '+msg+'</div>';
     });
   });
+}
+
+function _shareIdBtnHtml(){
+  return '<button onclick="shareIdPhotoWhatsApp()" style="width:100%;background:#25d366;color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;"><i class="fab fa-whatsapp"></i> إرسال صورة الهوية عبر واتساب</button>';
+}
+
+function shareIdPhotoWhatsApp(){
+  if(!idFileB64){ alert('لا توجد صورة هوية لمشاركتها'); return; }
+  if(!navigator.share){
+    alert('مشاركة الصورة مباشرة متوفرة فقط من الجوال. افتح واتساب يدويًا وأرفق صورة الهوية من الاستوديو/المعرض، وأرسلها على الرقم 96892126558');
+    return;
+  }
+  var blob = dataURLtoBlob(idFileB64);
+  var file = new File([blob], 'صورة_الهوية.jpg', {type: blob.type || 'image/jpeg'});
+  var shareData = {
+    files: [file],
+    title: 'صورة الهوية — مهرجان نبض المستقبل 2026',
+    text: 'صورة الهوية — يرجى إرسالها لأكاديمية الشمالي على واتساب: 96892126558'
+  };
+  if(navigator.canShare && !navigator.canShare(shareData)){
+    alert('متصفحك لا يدعم مشاركة الصور مباشرة. افتح واتساب يدويًا وأرسل صورة الهوية على الرقم 96892126558');
+    return;
+  }
+  navigator.share(shareData).catch(function(){});
 }
 
 function submitStaffReg(){
@@ -468,7 +492,7 @@ function submitStaffReg(){
         body: JSON.stringify({action:'append', sheet: STAFF_SHEET_NAME, data: [row]})
       });
     }).then(function(){
-      resultEl.innerHTML = '<div class="al al-ok"><i class="fas fa-circle-check"></i> تم إرسال التسجيل بنجاح! سيتم التواصل معكم قريبًا من إدارة الأكاديمية 🦅</div>';
+      resultEl.innerHTML = '<div class="al al-ok"><i class="fas fa-circle-check"></i> تم إرسال التسجيل بنجاح! سيتم التواصل معكم قريبًا من إدارة الأكاديمية 🦅</div>'+_shareIdBtnHtml();
       btn.style.display = 'none';
     }).catch(function(err){
       btn.disabled = false;
