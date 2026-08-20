@@ -2392,8 +2392,8 @@ function _drawFestivalReg(query){
     '<i class="fas fa-file-pdf"></i> تصدير قائمة الأكاديمية PDF</button>'+
     '<button id="festShareBtn" onclick="shareFestivalRegPDFWhatsApp()" style="width:100%;background:#25d366;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;">'+
     '<i class="fab fa-whatsapp"></i> مشاركة القائمة عبر واتساب</button>'+
-    '<button id="festIdsShareBtn" onclick="shareFestivalIdsWhatsApp()" style="width:100%;background:#25d366;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">'+
-    '<i class="fab fa-whatsapp"></i> مشاركة صور الهويات عبر واتساب</button>'+
+    '<button onclick="printFestivalIds()" style="width:100%;background:#fff;border:1.5px solid #cbd5e1;color:#334155;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">'+
+    '<i class="fas fa-id-card"></i> طباعة / حفظ PDF نسخ الهويات</button>'+
     '<div style="display:flex;gap:8px;margin-bottom:14px;"><input id="festSearch" style="flex:1;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px 13px;font-family:Cairo,sans-serif;font-size:13px;background:#fff;" placeholder="ابحث بالاسم أو رقم الهوية..." value="'+(query||'')+'"><button onclick="_drawFestivalReg(document.getElementById(\'festSearch\').value)" style="background:#d4af37;color:#1e293b;border:none;border-radius:8px;padding:10px 15px;cursor:pointer;"><i class="fas fa-search"></i></button></div>';
 
   if(!filtered.length){
@@ -2772,101 +2772,53 @@ function _festivalIdsCatData(){
   return {hasAny: rows.length>0 || staffRows.length>0, byCat: byCat, staffByCat: staffByCat, activeCats: activeCats};
 }
 
-function _buildIdCardsPdf(cat, players, staff, mode){
-  mode = mode || 'save';
-  return new Promise(function(resolve){
-    var cardsHtml = players.length ?
-      '<div style="background:#fdf8ec;border:1px solid #ecd692;color:#b8962f;border-radius:8px;padding:8px 14px;margin:16px 0 10px;font-size:13px;font-weight:900;">الفئة العمرية '+cat+' — ('+players.length+' لاعب)</div>'+_idCardsHtml(players) : '';
-    var staffCardsHtml = staff.length ?
-      '<div style="background:#fdf8ec;border:1px solid #ecd692;color:#b8962f;border-radius:8px;padding:8px 14px;margin:16px 0 10px;font-size:13px;font-weight:900;">الجهاز الفني والإداري — فئة '+cat+' — ('+staff.length+' من 3)</div>'+_idCardsHtml(staff) : '';
+function _buildIdCardsWindowHtml(cat, players, staff){
+  var cardsHtml = players.length ?
+    '<div class="cat-title">الفئة العمرية '+cat+' — ('+players.length+' لاعب)</div>'+_idCardsHtml(players) : '';
+  var staffCardsHtml = staff.length ?
+    '<div class="cat-title">الجهاز الفني والإداري — فئة '+cat+' — ('+staff.length+' من 3)</div>'+_idCardsHtml(staff) : '';
 
-    var pageHtml =
-      '<div style="width:820px;background:#f1f5f9;font-family:Cairo,sans-serif;direction:rtl;color:#0f172a;padding:20px;">'+
-        '<div style="background:#fff;border:1.5px solid #e2e8f0;color:#0f172a;padding:16px 20px;border-radius:10px;text-align:center;margin-bottom:16px;">'+
-          '<div style="font-size:16px;font-weight:900;">نسخ هويات المشاركين — فئة '+cat+' — مهرجان نبض المستقبل الثالث 2026</div>'+
-          '<div style="font-size:11px;color:#64748b;margin-top:4px;">'+players.length+' هوية لاعب · '+staff.length+' هوية من الجهاز الفني والإداري</div>'+
-        '</div>'+
-        cardsHtml+staffCardsHtml+
-      '</div>';
-
-    var wrap = document.createElement('div');
-    wrap.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;';
-    wrap.innerHTML = '<style>.id-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}.id-card{background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;}.id-card img{width:100%;max-height:220px;object-fit:contain;border-radius:6px;background:#f8fafc;margin-bottom:8px;}.id-name{font-size:13px;font-weight:800;}.id-meta{font-size:10px;color:#64748b;margin-top:3px;}</style>'+pageHtml;
-    document.body.appendChild(wrap);
-
-    setTimeout(function(){
-      html2canvas(wrap.firstChild, {scale:2, useCORS:true, backgroundColor:'#f1f5f9'}).then(function(canvas){
-        document.body.removeChild(wrap);
-        var img = canvas.toDataURL('image/png');
-        var pdf = new window.jspdf.jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
-        var pw = 210, ph = 297;
-        var imgH = (canvas.height * pw) / canvas.width;
-        if(imgH <= ph){
-          pdf.addImage(img,'PNG',0,0,pw,imgH);
-        } else {
-          var pos = 0;
-          while(pos < imgH){
-            pdf.addImage(img,'PNG',0,-pos,pw,imgH);
-            pos += ph;
-            if(pos < imgH) pdf.addPage();
-          }
-        }
-        var filename = 'هويات-فئة-'+cat+'-نبض-المستقبل-2026.pdf';
-        if(mode === 'blob'){
-          resolve({blob: pdf.output('blob'), filename: filename});
-        } else {
-          pdf.save(filename);
-          resolve({});
-        }
-      }).catch(function(err){
-        if(document.body.contains(wrap)) document.body.removeChild(wrap);
-        resolve({error: err});
-      });
-    }, 400);
-  });
+  return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'+
+    '<title>نسخ هويات فئة '+cat+' — مهرجان نبض المستقبل 2026</title>'+
+    '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800;900&display=swap" rel="stylesheet">'+
+    '<style>'+
+    '*{box-sizing:border-box;margin:0;padding:0;}'+
+    'body{font-family:Cairo,sans-serif;direction:rtl;background:#f1f5f9;color:#0f172a;padding:20px;}'+
+    '.hdr{background:#fff;border:1.5px solid #e2e8f0;color:#0f172a;padding:16px 20px;border-radius:10px;text-align:center;margin-bottom:16px;}'+
+    '.hdr .t{font-size:16px;font-weight:900;}'+
+    '.hdr .s{font-size:11px;color:#64748b;margin-top:4px;}'+
+    '.cat-title{background:#fdf8ec;border:1px solid #ecd692;color:#b8962f;border-radius:8px;padding:8px 14px;margin:16px 0 10px;font-size:13px;font-weight:900;}'+
+    '.id-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}'+
+    '.id-card{background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center;break-inside:avoid;}'+
+    '.id-card img{width:100%;max-height:220px;object-fit:contain;border-radius:6px;background:#f8fafc;margin-bottom:8px;}'+
+    '.id-name{font-size:13px;font-weight:800;}'+
+    '.id-meta{font-size:10px;color:#64748b;margin-top:3px;}'+
+    '.no-print{text-align:center;padding:20px;background:#f8fafc;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}'+
+    '.no-print button{padding:12px 28px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;color:#fff;}'+
+    '@media print{body{background:#fff;padding:0;}.no-print{display:none!important;}.id-grid{grid-template-columns:1fr 1fr;}}'+
+    '</style></head><body>'+
+    '<div class="hdr"><div class="t">نسخ هويات المشاركين — فئة '+cat+' — مهرجان نبض المستقبل الثالث 2026</div>'+
+    '<div class="s">'+players.length+' هوية لاعب · '+staff.length+' هوية من الجهاز الفني والإداري</div></div>'+
+    cardsHtml+staffCardsHtml+
+    '<div class="no-print">'+
+    '<button onclick="window.print()" style="background:#b8962f;">🖨️ طباعة / حفظ PDF</button>'+
+    '<button onclick="window.close()" style="background:#64748b;">✕ إغلاق</button>'+
+    '</div>'+
+    '</body></html>';
 }
 
-function shareFestivalIdsWhatsApp(){
-  if(typeof html2canvas==='undefined' || !window.jspdf){ alert('ميزة المشاركة غير متوفرة'); return; }
+function printFestivalIds(){
   var data = _festivalIdsCatData();
-  if(!data.hasAny){ alert('لا توجد صور هويات مرفقة للمشاركة'); return; }
-  if(!data.activeCats.length){ alert('لا توجد صور هويات مرفقة للمشاركة في هذه الفئة'); return; }
+  if(!data.hasAny){ alert('لا توجد صور هويات مرفقة للطباعة'); return; }
+  if(!data.activeCats.length){ alert('لا توجد صور هويات مرفقة للطباعة في هذه الفئة'); return; }
 
-  var useShare = !!navigator.share;
-  if(!useShare){
-    alert('مشاركة الملف مباشرة عبر واتساب متوفرة فقط من الجوال. راح يتم تنزيل ملف PDF لكل فئة بدلاً من ذلك، أرفقه يدويًا بواتساب.');
-  }
-
-  var btn = document.getElementById('festIdsShareBtn');
-  if(btn){ btn.disabled=true; }
-  var files = [];
-  var i = 0;
-  function next(){
-    if(i >= data.activeCats.length){
-      if(btn){ btn.disabled=false; btn.innerHTML='<i class="fab fa-whatsapp"></i> مشاركة صور الهويات عبر واتساب'; }
-      if(!files.length){ return; }
-      if(useShare){
-        var shareData = {files: files, title: 'صور هويات المشاركين — مهرجان نبض المستقبل 2026'};
-        if(navigator.canShare && !navigator.canShare(shareData)){
-          shareData = {files: [files[0]], title: 'صور هويات المشاركين — مهرجان نبض المستقبل 2026'};
-        }
-        navigator.share(shareData).catch(function(){});
-      }
-      return;
-    }
-    var c = data.activeCats[i];
-    if(btn){ btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جارٍ التجهيز فئة '+c+' ('+(i+1)+'/'+data.activeCats.length+')...'; }
-    _buildIdCardsPdf(c, data.byCat[c], data.staffByCat[c], useShare ? 'blob' : 'save').then(function(result){
-      if(result.error){
-        alert('تعذّر إنشاء ملف هويات فئة '+c+' (قد يكون بسبب قيود Google Drive على الصور).');
-      } else if(result.blob){
-        files.push(new File([result.blob], result.filename, {type:'application/pdf'}));
-      }
-      i++;
-      next();
-    });
-  }
-  next();
+  data.activeCats.forEach(function(c){
+    var html = _buildIdCardsWindowHtml(c, data.byCat[c], data.staffByCat[c]);
+    var w = window.open('','_blank','width=900,height=750');
+    if(!w){ alert('يرجى السماح بالنوافذ المنبثقة في المتصفح ثم المحاولة مرة أخرى'); return; }
+    w.document.write(html);
+    w.document.close();
+  });
 }
 
 // ===== REPORTS =====
