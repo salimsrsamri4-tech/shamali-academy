@@ -313,6 +313,10 @@ function previewId(input){
   reader.readAsDataURL(file);
 }
 
+function _normId(v){
+  return (v||'').toString().replace(/[\s\-–—_.]/g,'').trim();
+}
+
 function _genRegId(){
   return Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
 }
@@ -385,7 +389,7 @@ function submitPlayerReg(){
       resultEl.innerHTML = '<div class="al al-warn"><i class="fas fa-triangle-exclamation"></i> تم الوصول للحد الأقصى (19 لاعبًا) لفئة '+category+' لهذه الأكاديمية. يرجى التواصل مع إدارة الأكاديمية.</div>';
       return;
     }
-    var isDuplicate = existing.some(function(r){ return r['رقم الهوية'] === idNum && r['اسم الأكاديمية'] === academyName; });
+    var isDuplicate = existing.some(function(r){ return _normId(r['رقم الهوية']) === _normId(idNum) && r['اسم الأكاديمية'] === academyName; });
     if(isDuplicate){
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
@@ -482,7 +486,7 @@ function submitStaffReg(){
       resultEl.innerHTML = '<div class="al al-warn"><i class="fas fa-triangle-exclamation"></i> تم الوصول للحد الأقصى (3 أعضاء) من الجهاز الفني والإداري لفئة '+category+' لهذه الأكاديمية. يرجى التواصل مع إدارة الأكاديمية.</div>';
       return;
     }
-    var isDuplicate = rows.some(function(r){ return r['رقم الهوية'] === idNum && r['اسم الأكاديمية'] === academyName; });
+    var isDuplicate = rows.some(function(r){ return _normId(r['رقم الهوية']) === _normId(idNum) && r['اسم الأكاديمية'] === academyName; });
     if(isDuplicate){
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
