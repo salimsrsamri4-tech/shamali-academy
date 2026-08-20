@@ -313,6 +313,10 @@ function previewId(input){
   reader.readAsDataURL(file);
 }
 
+function _genRegId(){
+  return Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+}
+
 function dataURLtoBlob(dataURL){
   var arr = dataURL.split(','), mime = arr[0].match(/:(.*?);/)[1];
   var bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
@@ -381,11 +385,19 @@ function submitPlayerReg(){
       resultEl.innerHTML = '<div class="al al-warn"><i class="fas fa-triangle-exclamation"></i> تم الوصول للحد الأقصى (19 لاعبًا) لفئة '+category+' لهذه الأكاديمية. يرجى التواصل مع إدارة الأكاديمية.</div>';
       return;
     }
+    var isDuplicate = existing.some(function(r){ return r['رقم الهوية'] === idNum && r['اسم الأكاديمية'] === academyName; });
+    if(isDuplicate){
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
+      resultEl.innerHTML = '<div class="al al-warn"><i class="fas fa-triangle-exclamation"></i> هذا اللاعب مسجَّل مسبقًا برقم الهوية نفسه لهذه الأكاديمية.</div>';
+      return;
+    }
 
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
     uploadIdImage('هوية_' + name.replace(/\s+/g,'_') + '_' + Date.now()).then(function(uploadRes){
       var idImageUrl = uploadRes.url || (uploadRes.id ? 'https://drive.google.com/file/d/' + uploadRes.id + '/view' : '');
       var row = {
+        'معرف التسجيل': _genRegId(),
         'التاريخ': new Date().toLocaleString('ar-SA'),
         'اسم الأكاديمية': academyName,
         'الاسم الثلاثي': name,
@@ -470,11 +482,19 @@ function submitStaffReg(){
       resultEl.innerHTML = '<div class="al al-warn"><i class="fas fa-triangle-exclamation"></i> تم الوصول للحد الأقصى (3 أعضاء) من الجهاز الفني والإداري لفئة '+category+' لهذه الأكاديمية. يرجى التواصل مع إدارة الأكاديمية.</div>';
       return;
     }
+    var isDuplicate = rows.some(function(r){ return r['رقم الهوية'] === idNum && r['اسم الأكاديمية'] === academyName; });
+    if(isDuplicate){
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال التسجيل';
+      resultEl.innerHTML = '<div class="al al-warn"><i class="fas fa-triangle-exclamation"></i> هذا العضو مسجَّل مسبقًا برقم الهوية نفسه لهذه الأكاديمية.</div>';
+      return;
+    }
 
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
     uploadIdImage('هوية_' + name.replace(/\s+/g,'_') + '_' + Date.now()).then(function(uploadRes){
       var idImageUrl = uploadRes.url || (uploadRes.id ? 'https://drive.google.com/file/d/' + uploadRes.id + '/view' : '');
       var row = {
+        'معرف التسجيل': _genRegId(),
         'التاريخ': new Date().toLocaleString('ar-SA'),
         'اسم الأكاديمية': academyName,
         'الاسم الثلاثي': name,
