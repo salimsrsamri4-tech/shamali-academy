@@ -2607,12 +2607,10 @@ function _buildOfficialCategoryPdf(academyName, cat, players, staff, mode){
       if(imgH <= ph){
         pdf.addImage(img,'PNG',0,0,pw,imgH);
       } else {
-        var pos = 0;
-        while(pos < imgH){
-          pdf.addImage(img,'PNG',0,-pos,pw,imgH);
-          pos += ph;
-          if(pos < imgH) pdf.addPage();
-        }
+        // اضغط المحتوى ليدخل بصفحة واحدة فقط بدل التقسيم لصفحتين
+        var scale = ph / imgH;
+        var drawW = pw * scale, drawH = ph;
+        pdf.addImage(img,'PNG',(pw-drawW)/2,0,drawW,drawH);
       }
       var filename = 'قائمة-'+(academyName||'أكاديمية')+'-فئة-'+cat+'-نبض-المستقبل-2026.pdf';
       if(mode === 'blob'){
