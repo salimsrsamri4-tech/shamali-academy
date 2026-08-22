@@ -192,14 +192,14 @@ textarea.inp{resize:vertical;min-height:110px;line-height:1.7;}
       <div class="sec-label">سيصلنا عبر</div>
       <div class="channels">
         <div class="channel">
-          <span class="ch-icon">💬</span>
-          <div class="ch-name">واتساب</div>
-          <div>الإدارة مباشرة</div>
+          <span class="ch-icon">📊</span>
+          <div class="ch-name">Google Sheets</div>
+          <div>سجل الأكاديمية</div>
         </div>
         <div class="channel">
-          <span class="ch-icon">📊</span>
-          <div class="ch-name">سجل الأكاديمية</div>
-          <div>للمتابعة والتحليل</div>
+          <span class="ch-icon">📋</span>
+          <div class="ch-name">تراكم ومتابعة</div>
+          <div>للتحليل والتطوير</div>
         </div>
         <div class="channel">
           <span class="ch-icon">🔒</span>
@@ -256,8 +256,6 @@ function submitFeedback() {
   xhr.setRequestHeader('Content-Type','application/json');
   xhr.timeout = 12000;
   xhr.onload = xhr.onerror = xhr.ontimeout = function() {
-    var waText = encodeURIComponent('💬 '+catLabel+' جديد — أكاديمية الشمالي\n👤 '+roleLabel+': '+name+'\n📝 '+msg+'\n🦅 أكاديمية الشمالي');
-    window.open('https://api.whatsapp.com/send?phone='+WA_NUM+'&text='+waText,'_blank');
     showSuccess();
   };
   xhr.send(JSON.stringify({data:[row]}));
