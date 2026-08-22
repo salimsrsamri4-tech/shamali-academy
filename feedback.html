@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ملاحظات ومقترحات — أكاديمية الشمالي</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap">
+<style>
+:root {
+  --bg:       #f4f6fb;
+  --surface:  #ffffff;
+  --surface2: #f0f3f9;
+  --border:   #dde3ef;
+  --text:     #0b1a2e;
+  --sub:      #546480;
+  --red:      #b81d22;
+  --red-soft: #fff0f0;
+  --gold:     #c9980a;
+  --gold-soft:#fdf6dc;
+  --green:    #16a34a;
+  --green-soft:#f0fdf4;
+  --header-bg:#0b1a2e;
+  --card-shadow: 0 2px 14px rgba(11,26,46,.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:       #081222;
+    --surface:  #0f1e35;
+    --surface2: #162540;
+    --border:   #1e3050;
+    --text:     #e8eef8;
+    --sub:      #7a92b4;
+    --red-soft: rgba(184,29,34,.15);
+    --gold-soft:rgba(201,152,10,.12);
+    --green-soft:rgba(22,163,74,.12);
+    --card-shadow: 0 2px 18px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"] {
+  --bg:       #081222;
+  --surface:  #0f1e35;
+  --surface2: #162540;
+  --border:   #1e3050;
+  --text:     #e8eef8;
+  --sub:      #7a92b4;
+  --red-soft: rgba(184,29,34,.15);
+  --gold-soft:rgba(201,152,10,.12);
+  --green-soft:rgba(22,163,74,.12);
+  --card-shadow: 0 2px 18px rgba(0,0,0,.3);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);direction:rtl;min-height:100vh;-webkit-font-smoothing:antialiased;}
+.hdr{background:var(--header-bg);padding:0 20px;position:relative;overflow:hidden;}
+.hdr::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-55deg,transparent,transparent 28px,rgba(184,29,34,.06) 28px,rgba(184,29,34,.06) 30px);pointer-events:none;}
+.hdr-inner{max-width:520px;margin:0 auto;padding:22px 0 20px;display:flex;align-items:center;gap:14px;position:relative;}
+.hdr-logo{width:48px;height:48px;border-radius:12px;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;box-shadow:0 0 0 3px rgba(184,29,34,.3);}
+.hdr-name h1{font-size:17px;font-weight:900;color:#fff;line-height:1.2;}
+.hdr-name p{font-size:11px;color:rgba(255,255,255,.45);font-weight:600;margin-top:2px;}
+.hdr-accent{width:100%;height:3px;background:linear-gradient(90deg,var(--red),var(--gold),transparent);}
+.hero{background:var(--header-bg);padding:28px 20px 32px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:32px;background:var(--bg);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-icon{font-size:40px;margin-bottom:12px;display:block;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4));}
+.hero h2{font-size:22px;font-weight:900;color:#fff;text-wrap:balance;margin-bottom:8px;}
+.hero p{font-size:12px;color:rgba(255,255,255,.5);font-weight:600;max-width:280px;margin:0 auto;line-height:1.7;}
+.main{max-width:520px;margin:0 auto;padding:28px 16px 48px;display:flex;flex-direction:column;gap:20px;}
+.sec-label{font-size:10px;font-weight:800;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.cat-tile{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:18px 12px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s,transform .1s;user-select:none;-webkit-tap-highlight-color:transparent;box-shadow:var(--card-shadow);}
+.cat-tile:active{transform:scale(.97);}
+.cat-tile .icon{font-size:28px;margin-bottom:8px;display:block;}
+.cat-tile .label{font-size:13px;font-weight:800;color:var(--text);}
+.cat-tile .desc{font-size:10px;color:var(--sub);margin-top:3px;font-weight:600;}
+.cat-tile[data-type="note"].active{border-color:var(--red);background:var(--red-soft);}
+.cat-tile[data-type="note"].active .label{color:var(--red);}
+.cat-tile[data-type="suggest"].active{border-color:var(--green);background:var(--green-soft);}
+.cat-tile[data-type="suggest"].active .label{color:var(--green);}
+.cat-tile[data-type="thanks"].active{border-color:var(--gold);background:var(--gold-soft);}
+.cat-tile[data-type="thanks"].active .label{color:var(--gold);}
+.cat-tile[data-type="complaint"].active{border-color:#e67e22;background:rgba(230,126,34,.1);}
+.cat-tile[data-type="complaint"].active .label{color:#c96a10;}
+.form-card{background:var(--surface);border-radius:16px;border:1px solid var(--border);padding:20px 18px;box-shadow:var(--card-shadow);}
+.role-row{display:flex;gap:8px;margin-bottom:16px;}
+.role-btn{flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 8px;font-family:'Cairo',sans-serif;font-size:12px;font-weight:800;color:var(--sub);cursor:pointer;text-align:center;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.role-btn.active{border-color:var(--red);background:var(--red-soft);color:var(--red);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:11px;font-weight:800;color:var(--sub);margin-bottom:6px;}
+.inp{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-family:'Cairo',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .15s;}
+.inp:focus{border-color:var(--red);background:var(--surface);}
+.inp::placeholder{color:var(--sub);opacity:.6;}
+textarea.inp{resize:vertical;min-height:110px;line-height:1.7;}
+.btn-submit{width:100%;background:linear-gradient(135deg,#b81d22,#8c1215);color:#fff;border:none;border-radius:12px;padding:15px;font-family:'Cairo',sans-serif;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .15s,transform .1s;box-shadow:0 4px 20px rgba(184,29,34,.35);}
+.btn-submit:active{transform:scale(.98);}
+.btn-submit:disabled{opacity:.5;cursor:default;}
+.channels{display:flex;gap:8px;align-items:stretch;}
+.channel{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 10px;text-align:center;font-size:11px;font-weight:700;color:var(--sub);}
+.channel .ch-icon{font-size:20px;margin-bottom:5px;display:block;}
+.channel .ch-name{font-weight:800;color:var(--text);margin-bottom:2px;}
+.success-box{display:none;background:var(--surface);border-radius:16px;border:1px solid var(--border);padding:32px 20px;text-align:center;box-shadow:var(--card-shadow);}
+.success-box.show{display:block;}
+.success-box .big{font-size:52px;margin-bottom:14px;}
+.success-box h3{font-size:18px;font-weight:900;color:var(--green);margin-bottom:8px;}
+.success-box p{font-size:13px;color:var(--sub);line-height:1.7;}
+.btn-again{margin-top:18px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px 20px;font-family:'Cairo',sans-serif;font-size:13px;font-weight:800;color:var(--text);cursor:pointer;}
+.sp{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.footer{text-align:center;padding:0 16px 32px;font-size:10px;color:var(--sub);font-weight:600;opacity:.7;}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.5);font-size:12px;font-weight:700;text-decoration:none;margin-top:4px;}
+.back-link:hover{color:#fff;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-logo">🦅</div>
+    <div class="hdr-name">
+      <h1>أكاديمية الشمالي</h1>
+      <p>كرة القدم · سلطنة عُمان 🇴🇲</p>
+    </div>
+    <a href="index.html" class="back-link">← الرئيسية</a>
+  </div>
+  <div class="hdr-accent"></div>
+</div>
+
+<div class="hero">
+  <span class="hero-icon">💬</span>
+  <h2>ملاحظات ومقترحات</h2>
+  <p>رأيك يهمنا · تواصل مباشر مع إدارة الأكاديمية</p>
+</div>
+
+<div class="main">
+
+  <div>
+    <div class="sec-label">نوع الرسالة</div>
+    <div class="cat-grid">
+      <div class="cat-tile" data-type="note" onclick="selectCat(this)">
+        <span class="icon">📝</span>
+        <div class="label">ملاحظة</div>
+        <div class="desc">شيء لاحظته</div>
+      </div>
+      <div class="cat-tile active" data-type="suggest" onclick="selectCat(this)">
+        <span class="icon">💡</span>
+        <div class="label">اقتراح</div>
+        <div class="desc">فكرة للتطوير</div>
+      </div>
+      <div class="cat-tile" data-type="thanks" onclick="selectCat(this)">
+        <span class="icon">🏅</span>
+        <div class="label">شكر وتقدير</div>
+        <div class="desc">كلمة إيجابية</div>
+      </div>
+      <div class="cat-tile" data-type="complaint" onclick="selectCat(this)">
+        <span class="icon">⚠️</span>
+        <div class="label">شكوى</div>
+        <div class="desc">مشكلة تحتاج حل</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="formArea">
+    <div class="form-card">
+      <div class="sec-label" style="margin-bottom:12px;">بياناتك</div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:800;color:var(--sub);margin-bottom:6px;">أنت</div>
+        <div class="role-row">
+          <button class="role-btn active" data-role="parent" onclick="selectRole(this)">👨‍👦 ولي أمر</button>
+          <button class="role-btn" data-role="coach" onclick="selectRole(this)">⚽ مدرب</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>الاسم الكامل <span style="color:var(--sub);font-weight:600;">(اختياري)</span></label>
+        <input type="text" class="inp" id="senderName" placeholder="يمكنك الإرسال بشكل مجهول">
+      </div>
+
+      <div class="field">
+        <label>رسالتك <span style="color:var(--red);">*</span></label>
+        <textarea class="inp" id="msgText" placeholder="اكتب ملاحظتك أو اقتراحك هنا..."></textarea>
+      </div>
+
+      <div id="errMsg" style="display:none;font-size:12px;color:var(--red);font-weight:700;margin-bottom:12px;padding:10px;background:var(--red-soft);border-radius:8px;">
+        يرجى كتابة رسالتك أولاً
+      </div>
+
+      <button class="btn-submit" id="submitBtn" onclick="submitFeedback()">
+        <span id="btnLabel">📤 إرسال الرسالة</span>
+      </button>
+    </div>
+
+    <div>
+      <div class="sec-label">سيصلنا عبر</div>
+      <div class="channels">
+        <div class="channel">
+          <span class="ch-icon">💬</span>
+          <div class="ch-name">واتساب</div>
+          <div>الإدارة مباشرة</div>
+        </div>
+        <div class="channel">
+          <span class="ch-icon">📊</span>
+          <div class="ch-name">سجل الأكاديمية</div>
+          <div>للمتابعة والتحليل</div>
+        </div>
+        <div class="channel">
+          <span class="ch-icon">🔒</span>
+          <div class="ch-name">سري تماماً</div>
+          <div>إن اخترت المجهول</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="success-box" id="successBox">
+    <div class="big">✅</div>
+    <h3>وصلت رسالتك!</h3>
+    <p>شكراً على تواصلك مع أكاديمية الشمالي.<br>سنأخذ ملاحظتك بعين الاعتبار.</p>
+    <button class="btn-again" onclick="resetForm()">إرسال رسالة أخرى</button>
+  </div>
+
+</div>
+
+<div class="footer">🦅 أكاديمية الشمالي لكرة القدم · سلطنة عُمان</div>
+
+<script>
+var WA_NUM = '96892126558';
+var SHEETDB_URL = 'https://sheetdb.io/api/v1/19dnaxf04au5l';
+var catLabels = {note:'ملاحظة',suggest:'اقتراح',thanks:'شكر وتقدير',complaint:'شكوى'};
+var roleLabels = {parent:'ولي أمر',coach:'مدرب'};
+var selectedCat = 'suggest';
+var selectedRole = 'parent';
+
+function selectCat(tile) {
+  document.querySelectorAll('.cat-tile').forEach(function(t){ t.classList.remove('active'); });
+  tile.classList.add('active');
+  selectedCat = tile.getAttribute('data-type');
+}
+function selectRole(btn) {
+  document.querySelectorAll('.role-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  selectedRole = btn.getAttribute('data-role');
+}
+function submitFeedback() {
+  var msg = document.getElementById('msgText').value.trim();
+  var name = document.getElementById('senderName').value.trim() || 'مجهول';
+  var err = document.getElementById('errMsg');
+  if (!msg) { err.style.display='block'; document.getElementById('msgText').focus(); return; }
+  err.style.display = 'none';
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="sp"></span> جارٍ الإرسال...';
+  var catLabel = catLabels[selectedCat] || selectedCat;
+  var roleLabel = roleLabels[selectedRole] || selectedRole;
+  var row = {'التاريخ':new Date().toISOString(),'النوع':catLabel,'الدور':roleLabel,'الاسم':name,'الرسالة':msg};
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', SHEETDB_URL + '?sheet=' + encodeURIComponent('ملاحظات ومقترحات'), true);
+  xhr.setRequestHeader('Content-Type','application/json');
+  xhr.timeout = 12000;
+  xhr.onload = xhr.onerror = xhr.ontimeout = function() {
+    var waText = encodeURIComponent('💬 '+catLabel+' جديد — أكاديمية الشمالي\n👤 '+roleLabel+': '+name+'\n📝 '+msg+'\n🦅 أكاديمية الشمالي');
+    window.open('https://api.whatsapp.com/send?phone='+WA_NUM+'&text='+waText,'_blank');
+    showSuccess();
+  };
+  xhr.send(JSON.stringify({data:[row]}));
+}
+function showSuccess() {
+  document.getElementById('formArea').style.display='none';
+  document.getElementById('successBox').classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function resetForm() {
+  document.getElementById('msgText').value='';
+  document.getElementById('senderName').value='';
+  document.getElementById('errMsg').style.display='none';
+  var btn=document.getElementById('submitBtn');
+  btn.disabled=false;
+  btn.innerHTML='<span id="btnLabel">📤 إرسال الرسالة</span>';
+  document.getElementById('successBox').classList.remove('show');
+  document.getElementById('formArea').style.display='block';
+}
+</script>
+</body>
+</html>
