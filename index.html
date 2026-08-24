@@ -677,9 +677,9 @@ function getStats() {
 function saveRegistration(data) {
   var id = 'SH-' + Math.floor(1000 + Math.random() * 9000);
   var now = new Date().toISOString();
-  var parentIdUrl = data.parentIdFileId ? 'https://drive.google.com/file/d/'+data.parentIdFileId+'/view' : '';
-  var playerPhotoUrl = data.playerPhotoId ? 'https://drive.google.com/file/d/'+data.playerPhotoId+'/view' : '';
-  var playerDocUrl = data.playerDocId ? 'https://drive.google.com/file/d/'+data.playerDocId+'/view' : '';
+  var parentIdUrl = data.parentIdFileId || '';
+  var playerPhotoUrl = data.playerPhotoId || '';
+  var playerDocUrl = data.playerDocId || '';
   var row = {
     'التاريخ': now, 'رقم الملف': id,
     'اسم ولي الأمر': data.parentName, 'الرقم المدني': data.parentCivilId,
