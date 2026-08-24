@@ -753,18 +753,14 @@ function uploadFiles(files) {
       fileData.forEach(function(f) {
         if(f && f.base64) body[f.key] = f.base64;
       });
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', CONFIG.UPLOAD_URL, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.timeout = 60000;
-      xhr.onload = function() {
-        try {
-          var data = JSON.parse(xhr.responseText);
-          resolve(data.status === 'success' ? (data.files || {}) : {});
-        } catch(e) { resolve({}); }
-      };
-      xhr.onerror = xhr.ontimeout = function() { resolve({}); };
-      xhr.send(JSON.stringify(body));
+      fetch(CONFIG.UPLOAD_URL, {
+        method: 'POST',
+        redirect: 'follow',
+        headers: {'Content-Type': 'text/plain'},
+        body: JSON.stringify(body)
+      }).then(function(r){ return r.json(); }).then(function(data){
+        resolve(data.status === 'success' ? (data.files || {}) : {});
+      }).catch(function(){ resolve({}); });
     }).catch(function() { resolve({}); });
   });
 }
