@@ -5069,7 +5069,11 @@ function renderMatchList(){
       '<div id="matchPlayerItems"></div>'+
       '</div>'+
       '<div id="matchSelectedCount" style="font-size:12px;color:#b81d22;font-weight:800;margin-bottom:10px;display:none;"></div>'+
+      '<div style="display:flex;flex-direction:column;gap:8px;">'+
       '<button class="btn-sub" onclick="sendMatchList()">📲 إرسال القائمة عبر واتساب</button>'+
+      '<button class="btn-sub" style="background:#1e3a5f;" onclick="exportMatchPDF()">📄 تصدير قائمة اللاعبين PDF</button>'+
+      '<button class="btn-sub" style="background:#166534;" onclick="exportPlayerIdsPDF()">🪪 تصدير هويات اللاعبين PDF</button>'+
+      '</div>'+
       '</div>';
 
     document.getElementById('content').innerHTML = html;
@@ -5137,6 +5141,109 @@ function sendMatchList(){
   msg += '🇴🇲 بالتوفيق للجميع!';
 
   window.open('https://api.whatsapp.com/send?phone='+CONFIG.WA_NUM+'&text='+encodeURIComponent(msg),'_blank');
+}
+
+function getMatchSelection() {
+  var opponent = document.getElementById('matchOpponent').value.trim();
+  var date = document.getElementById('matchDate').value;
+  var time = document.getElementById('matchTime').value;
+  var venue = document.getElementById('matchVenue').value.trim();
+  var selected = [];
+  document.querySelectorAll('.match-chk:checked').forEach(function(c){
+    var parts = c.value.split('|');
+    var name = parts[0];
+    var year = parts[1];
+    var allP = window._matchPlayers || [];
+    var p = allP.find(function(x){ return x.playerName === name && x.birthYear === year; });
+    if(p) selected.push(p);
+  });
+  return {opponent: opponent, date: date, time: time, venue: venue, selected: selected};
+}
+
+function exportMatchPDF() {
+  var sel = getMatchSelection();
+  if(!sel.opponent){ alert('أدخل اسم الفريق المنافس'); return; }
+  if(!sel.selected.length){ alert('اختر لاعباً واحداً على الأقل'); return; }
+
+  var dateStr = sel.date ? new Date(sel.date).toLocaleDateString('ar-SA') : '';
+  var win = window.open('', '_blank');
+  var rows = sel.selected.map(function(p, i){
+    var age = new Date().getFullYear() - parseInt(p.birthYear || 0);
+    var cat = age<=8?'U8':age<=10?'U10':age<=12?'U12':age<=14?'U14':'U16+';
+    return '<tr><td>'+(i+1)+'</td><td>'+p.playerName+'</td><td>'+p.id+'</td><td>'+p.birthYear+'</td><td>'+cat+'</td><td style="width:60px;"></td></tr>';
+  }).join('');
+
+  win.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">'+
+    '<style>body{font-family:Arial,sans-serif;margin:20px;direction:rtl;}'+
+    'h2{text-align:center;color:#b81d22;} h3{text-align:center;color:#333;}'+
+    'table{width:100%;border-collapse:collapse;margin-top:16px;}'+
+    'th{background:#b81d22;color:#fff;padding:8px;font-size:13px;}'+
+    'td{border:1px solid #ddd;padding:8px;text-align:center;font-size:12px;}'+
+    'tr:nth-child(even){background:#f9f9f9;}'+
+    '.info{text-align:center;color:#555;margin:4px 0;font-size:13px;}'+
+    '.footer{text-align:center;margin-top:20px;font-size:11px;color:#999;}'+
+    '</style></head><body>'+
+    '<h2>🦅 أكاديمية الشمالي لكرة القدم</h2>'+
+    '<h3>قائمة مباراة: الشمالي vs '+sel.opponent+'</h3>'+
+    (dateStr ? '<p class="info">📅 '+dateStr+(sel.time?' &nbsp;⏰ '+sel.time:'')+'</p>' : '')+
+    (sel.venue ? '<p class="info">📍 '+sel.venue+'</p>' : '')+
+    '<p class="info">عدد اللاعبين: '+sel.selected.length+'</p>'+
+    '<table><thead><tr><th>#</th><th>اسم اللاعب</th><th>رقم الملف</th><th>المواليد</th><th>الفئة</th><th>التوقيع</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody></table>'+
+    '<div class="footer">أكاديمية الشمالي · '+new Date().toLocaleDateString('ar-SA')+'</div>'+
+    '</body></html>');
+  win.document.close();
+  setTimeout(function(){ win.print(); }, 500);
+}
+
+function exportPlayerIdsPDF() {
+  var sel = getMatchSelection();
+  if(!sel.selected.length){ alert('اختر لاعباً واحداً على الأقل'); return; }
+
+  var win = window.open('', '_blank');
+  var cards = sel.selected.map(function(p){
+    var age = new Date().getFullYear() - parseInt(p.birthYear || 0);
+    var cat = age<=8?'U8':age<=10?'U10':age<=12?'U12':age<=14?'U14':'U16+';
+    var photoUrl = p.photo ? 'https://drive.google.com/thumbnail?id='+p.photo+'&sz=w150' : '';
+    var initials = p.playerName.trim().split(' ').map(function(w){return w[0];}).slice(0,2).join('');
+    return '<div class="card">'+
+      '<div class="card-header">'+
+        '<div style="font-size:7px;color:#d4af37;letter-spacing:2px;">SHAMALI FOOTBALL ACADEMY</div>'+
+        '<div style="font-size:13px;font-weight:900;color:#fff;">🦅 أكاديمية الشمالي</div>'+
+      '</div>'+
+      '<div class="card-body">'+
+        '<div class="photo-area">'+(photoUrl
+          ? '<img src="'+photoUrl+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\';" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid #d4af37;">'+
+            '<div style="display:none;width:70px;height:70px;border-radius:50%;background:#d4af37;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#3b0a0a;">'+initials+'</div>'
+          : '<div style="width:70px;height:70px;border-radius:50%;background:#d4af37;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#3b0a0a;">'+initials+'</div>'
+        )+'</div>'+
+        '<div class="info-area">'+
+          '<div class="player-name">'+p.playerName+'</div>'+
+          '<div class="detail">رقم: <strong>'+p.id+'</strong></div>'+
+          '<div class="detail">المواليد: '+p.birthYear+'</div>'+
+          '<div class="detail">الفئة: <strong>'+cat+'</strong></div>'+
+          '<div class="detail">الجنسية: '+(p.nationality||'عُماني')+'</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  win.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">'+
+    '<style>body{font-family:Arial,sans-serif;margin:10px;direction:rtl;background:#eee;}'+
+    '.grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;}'+
+    '.card{width:240px;border-radius:12px;overflow:hidden;border:2px solid #d4af37;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.2);}'+
+    '.card-header{background:linear-gradient(135deg,#3b0a0a,#b81d22);padding:10px;text-align:center;}'+
+    '.card-body{padding:12px;display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#b81d22,#3b0a0a);}'+
+    '.photo-area{flex-shrink:0;}'+
+    '.info-area{flex:1;}'+
+    '.player-name{font-size:13px;font-weight:900;color:#fff;margin-bottom:4px;}'+
+    '.detail{font-size:10px;color:rgba(255,255,255,.85);margin:1px 0;}'+
+    '@media print{body{background:#fff;}.card{break-inside:avoid;}}'+
+    '</style></head><body>'+
+    '<div class="grid">'+cards+'</div>'+
+    '</body></html>');
+  win.document.close();
+  setTimeout(function(){ win.print(); }, 800);
 }
 
 // ===== COACH REPORT =====
