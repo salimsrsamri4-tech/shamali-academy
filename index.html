@@ -1648,6 +1648,7 @@ function showPlayerCard(idx){
       '</div>'+
     '</div>'+
     '<div style="padding:12px 16px;background:#fff;">'+
+      idRow('🪪','رقم الهوية', p.civilId || p['رقم هوية اللاعب'] || '—')+
       idRow('🗓️','تاريخ الميلاد', p.birthDate || p.birthYear)+
       idRow('🌍','الجنسية', p.nationality)+
       idRow('❤️','الحالة الصحية', p.health||'لا يوجد')+
@@ -5390,6 +5391,7 @@ function showSuccess(id, data) {
     '</div>'+
     // Details
     '<div style="padding:14px 16px;background:#fff;">'+
+      idRow('🪪','رقم الهوية', data.playerCivilId || '—')+
       idRow('🗓️','تاريخ الميلاد', data.playerBirthDate || data.playerBirthYear)+
       idRow('🌍','الجنسية', data.playerNationality)+
       idRow('👨‍👦','ولي الأمر', data.parentName)+
