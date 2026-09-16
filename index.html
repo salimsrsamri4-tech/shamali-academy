@@ -217,6 +217,14 @@ window.addEventListener('load',function(){
     // تحديث hero
     var heroTitle = document.getElementById('heroTitle');
     if(heroTitle) heroTitle.textContent = '🦅 البوابة الإلكترونية ل' + acad.NAME;
+    // إخفاء الأقسام غير المطلوبة
+    if(acad.HIDE_SECTIONS && acad.HIDE_SECTIONS.length){
+      acad.HIDE_SECTIONS.forEach(function(sec){
+        document.querySelectorAll('.sb-hide-'+sec).forEach(function(el){
+          el.style.display='none';
+        });
+      });
+    }
     // تحديث عنوان الصفحة
     document.title = 'بوابة ' + acad.NAME;
   }
@@ -307,21 +315,21 @@ window.addEventListener('load',function(){
     <button class="sb-btn danger" id="logoutBtn" data-act="logout"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
   <hr class="sb-hr">
-  <button class="sb-btn" data-pg="tournlogin" style="color:#f59e0b;" onclick="go('tournlogin')"><i class="fas fa-shield-alt"></i> بوابة البطولات <span id="tournNotifBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
-  <button class="sb-btn" style="color:#d4af37;" onclick="go('acad_list')"><i class="fas fa-users"></i> الأكاديميات المشاركة</button>
-  <div id="tournMenu" style="display:none;">
+  <button class="sb-btn sb-hide-tournaments" data-pg="tournlogin" style="color:#f59e0b;" onclick="go('tournlogin')"><i class="fas fa-shield-alt"></i> بوابة البطولات <span id="tournNotifBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
+  <button class="sb-btn sb-hide-tournaments" style="color:#d4af37;" onclick="go('acad_list')"><i class="fas fa-users"></i> الأكاديميات المشاركة</button>
+  <div id="tournMenu" class="sb-hide-tournaments" style="display:none;">
     <button class="sb-btn" style="color:#f59e0b;" data-pg="tournaments" onclick="go('tournaments')"><i class="fas fa-list"></i> البطولات</button>
     <button class="sb-btn" style="color:#f59e0b;" onclick="go('tourn_notifications')"><i class="fas fa-bell"></i> الإشعارات <span id="tournNotifBadge2" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
     <button class="sb-btn" style="color:#f59e0b;" data-pg="tournament_schedule" onclick="go('tournament_schedule')"><i class="fas fa-calendar-alt"></i> جدول المباريات</button>
     <button class="sb-btn danger" id="tournLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
-  <button class="sb-btn" data-pg="festlogin" style="color:#d4af37;" onclick="go('festlogin')"><i class="fas fa-trophy"></i> تسجيلات مهرجان نبض المستقبل (اللجنة)</button>
-  <div id="festMenu" style="display:none;">
+  <button class="sb-btn sb-hide-festival" data-pg="festlogin" style="color:#d4af37;" onclick="go('festlogin')"><i class="fas fa-trophy"></i> تسجيلات مهرجان نبض المستقبل (اللجنة)</button>
+  <div id="festMenu" class="sb-hide-festival" style="display:none;">
     <button class="sb-btn" style="color:#d4af37;" data-pg="festivalreg" onclick="go('festivalreg')"><i class="fas fa-list"></i> التسجيلات</button>
     <button class="sb-btn danger" id="festLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
-  <button class="sb-btn" data-pg="festacadlogin" style="color:#d4af37;" onclick="go('festacadlogin')"><i class="fas fa-shield-halved"></i> مراجعة تسجيلات أكاديميتي</button>
-  <div id="festAcadMenu" style="display:none;">
+  <button class="sb-btn sb-hide-festival" data-pg="festacadlogin" style="color:#d4af37;" onclick="go('festacadlogin')"><i class="fas fa-shield-halved"></i> مراجعة تسجيلات أكاديميتي</button>
+  <div id="festAcadMenu" class="sb-hide-festival" style="display:none;">
     <button class="sb-btn" style="color:#d4af37;" data-pg="festacadview" onclick="go('festacadview')"><i class="fas fa-list"></i> تسجيلات أكاديميتي</button>
     <button class="sb-btn danger" id="festAcadLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
@@ -555,7 +563,8 @@ var ACADEMIES = {
     SHEETDB_URL: '',
     ADMIN_PASS: ['1234'],
     COACH_PASS: ['1234'],
-    WA_NUM: '96892126558'
+    WA_NUM: '96892126558',
+    HIDE_SECTIONS: ['tournaments', 'festival']
   }
   // أكاديميات جديدة تُضاف هنا:
   // mypro: { NAME: 'أكاديمية المحترف', PRIMARY_COLOR: '#1a5276', ... }
