@@ -384,6 +384,20 @@ window.addEventListener('load',function(){
 <div><label class="lbl">الهاتف (واتساب) *</label><input type="tel" class="inp" name="parentPhone" required></div>
 <div><label class="lbl">رقم الطوارئ *</label><input type="tel" class="inp" name="emergencyPhone" required></div>
 </div>
+<div class="r2 mb">
+<div><label class="lbl">هاتف ثانٍ <span style="color:#94a3b8;font-size:11px;">(اختياري)</span></label><input type="tel" class="inp" name="parentPhone2"></div>
+<div><label class="lbl">صلة القرابة *</label>
+<select class="inp" name="parentRelation" required>
+<option value="">اختر...</option>
+<option>أب</option>
+<option>أم</option>
+<option>أخ</option>
+<option>أخت</option>
+<option>جد</option>
+<option>عم</option>
+<option>وصي قانوني</option>
+</select></div>
+</div>
 <div class="mb"><label class="lbl">بطاقة ولي الأمر</label><input type="file" class="inp" id="parentIdFile" accept="image/*,.pdf"></div>
 <div class="sec-banner"><i class="fas fa-running"></i> بيانات اللاعب</div>
 <div class="mb"><label class="lbl">اسم اللاعب كاملاً *</label><input type="text" class="inp" name="playerName" required></div>
@@ -684,7 +698,9 @@ function saveRegistration(data) {
   var row = {
     'التاريخ': now, 'رقم الملف': id,
     'اسم ولي الأمر': data.parentName, 'الرقم المدني': data.parentCivilId,
+    'صلة القرابة': data.parentRelation || '',
     'البريد': data.parentEmail, 'الهاتف': data.parentPhone,
+    'هاتف ثانٍ': data.parentPhone2 || '',
     'الطوارئ': data.emergencyPhone, 'بطاقة ولي الأمر': parentIdUrl,
     'اسم اللاعب': data.playerName, 'رقم هوية اللاعب': data.playerCivilId || '', 'تاريخ الميلاد': data.playerBirthDate,
     'وثيقة اللاعب': playerDocUrl, 'صورة اللاعب': playerPhotoUrl,
@@ -5337,6 +5353,8 @@ function submitReg() {
       parentCivilId: f.parentCivilId.value,
       parentEmail: f.parentEmail.value,
       parentPhone: f.parentPhone.value,
+      parentPhone2: f.parentPhone2 ? f.parentPhone2.value : '',
+      parentRelation: f.parentRelation ? f.parentRelation.value : '',
       emergencyPhone: f.emergencyPhone.value,
       parentIdFileId: fileIds.parentIdUrl || '',
       playerName: f.playerName.value,
