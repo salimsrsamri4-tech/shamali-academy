@@ -549,7 +549,8 @@ var ACADEMIES = {
 // قراءة معامل الأكاديمية من الرابط (?academy=shamali)
 (function(){
   var urlParam = new URLSearchParams(window.location.search).get('academy') || 'shamali';
-  var acad = ACADEMIES[urlParam] || ACADEMIES['shamali'];
+  var acad = ACADEMIES[urlParam];
+  if(!acad){ urlParam = 'shamali'; acad = ACADEMIES['shamali']; }
   // حفظ الأكاديمية الحالية
   window.CURRENT_ACADEMY = acad;
   window.CURRENT_ACADEMY_KEY = urlParam;
