@@ -387,6 +387,7 @@ window.addEventListener('load',function(){
 <div class="mb"><label class="lbl">بطاقة ولي الأمر</label><input type="file" class="inp" id="parentIdFile" accept="image/*,.pdf"></div>
 <div class="sec-banner"><i class="fas fa-running"></i> بيانات اللاعب</div>
 <div class="mb"><label class="lbl">اسم اللاعب كاملاً *</label><input type="text" class="inp" name="playerName" required></div>
+<div class="mb"><label class="lbl">رقم هوية اللاعب *</label><input type="text" class="inp" name="playerCivilId" placeholder="أدخل رقم الهوية..." required></div>
 <div class="r2 mb">
 <div><label class="lbl">تاريخ الميلاد *</label><input type="date" class="inp" name="playerBirthDate" min="2005-01-01" max="2022-12-31" required></div>
 <div><label class="lbl">الجنسية *</label>
@@ -685,7 +686,7 @@ function saveRegistration(data) {
     'اسم ولي الأمر': data.parentName, 'الرقم المدني': data.parentCivilId,
     'البريد': data.parentEmail, 'الهاتف': data.parentPhone,
     'الطوارئ': data.emergencyPhone, 'بطاقة ولي الأمر': parentIdUrl,
-    'اسم اللاعب': data.playerName, 'تاريخ الميلاد': data.playerBirthDate,
+    'اسم اللاعب': data.playerName, 'رقم هوية اللاعب': data.playerCivilId || '', 'تاريخ الميلاد': data.playerBirthDate,
     'وثيقة اللاعب': playerDocUrl, 'صورة اللاعب': playerPhotoUrl,
     'الدفع': data.paymentMethod, 'ملاحظات': '',
     'الحالة': 'موافق', 'الجنسية': data.playerNationality,
@@ -852,6 +853,7 @@ function renderReg(){
   
   html += '<div class="sec-banner"><i class="fas fa-running"></i> بيانات اللاعب</div>';
   html += '<div class="mb"><label class="lbl">اسم اللاعب كاملاً *</label><input type="text" class="inp" name="playerName" required></div>';
+  html += '<div class="mb"><label class="lbl">رقم هوية اللاعب *</label><input type="text" class="inp" name="playerCivilId" placeholder="أدخل رقم الهوية..." required></div>';
   html += '<div class="r2 mb">';
   html += '<div><label class="lbl">تاريخ الميلاد *</label><input type="date" class="inp" name="playerBirthDate" min="2005-01-01" max="2022-12-31" required></div>';
   html += '<div><label class="lbl">الجنسية *</label>';
@@ -5337,6 +5339,7 @@ function submitReg() {
       emergencyPhone: f.emergencyPhone.value,
       parentIdFileId: fileIds.parentIdUrl || '',
       playerName: f.playerName.value,
+      playerCivilId: f.playerCivilId ? f.playerCivilId.value : '',
       playerBirthDate: f.playerBirthDate ? f.playerBirthDate.value : '',
       playerNationality: f.playerNationality.value,
       playerPhotoId: fileIds.playerPhotoUrl || '',
