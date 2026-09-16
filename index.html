@@ -169,7 +169,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
   <img src="hero.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;opacity:.7;">
   <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.85) 0%,rgba(0,0,0,.3) 50%,rgba(0,0,0,.1) 100%);"></div>
   <div style="position:relative;z-index:2;text-align:center;padding:0 24px 60px;width:100%;">
-    <div style="font-size:26px;font-weight:900;color:#fff;font-family:Cairo,sans-serif;">أكاديمية الشمالي</div>
+    <div id="splashAcadName" style="font-size:26px;font-weight:900;color:#fff;font-family:Cairo,sans-serif;">أكاديمية الشمالي</div>
     <div style="font-size:12px;color:rgba(255,255,255,.6);font-family:Cairo,sans-serif;margin-top:4px;">لكرة القدم · سلطنة عُمان</div>
     <div style="width:48px;height:3px;background:linear-gradient(90deg,#b81d22,#d4af37);border-radius:2px;margin:16px auto 0;"></div>
     <div style="margin-top:28px;">
@@ -182,6 +182,44 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;color:#1e293b;}
 </style>
 <script>
 window.addEventListener('load',function(){
+  // تطبيق ألوان وبيانات الأكاديمية
+  var acad = window.CURRENT_ACADEMY;
+  if(acad){
+    // تحديث الألوان
+    var style = document.createElement('style');
+    style.textContent = [
+      '.hdr{border-bottom-color:'+acad.PRIMARY_COLOR+'!important;}',
+      '.hdr-brand span{color:'+acad.PRIMARY_COLOR+'!important;}',
+      '.menu-btn{background:'+acad.PRIMARY_COLOR+'!important;}',
+      '.btn-sub{background:linear-gradient(135deg,'+acad.PRIMARY_COLOR+','+acad.DARK_COLOR+')!important;}',
+      '.sbar button{background:'+acad.PRIMARY_COLOR+'!important;}',
+      '.sec-title i{color:'+acad.PRIMARY_COLOR+'!important;}',
+      '.sb-hd-ar{color:'+acad.PRIMARY_COLOR+'!important;}',
+      '.sidebar{background:linear-gradient(180deg,#0d0d0d 0%,'+acad.DARK_COLOR+' 50%,#0d0d0d 100%)!important;}'
+    ].join('\n');
+    document.head.appendChild(style);
+    // تحديث الاسم في الهيدر
+    var brand = document.querySelector('.hdr-brand span');
+    if(brand) brand.textContent = acad.NAME;
+    // تحديث الشعار
+    var logo = document.querySelector('.hdr-brand img');
+    if(logo) logo.src = acad.LOGO;
+    // تحديث splash
+    var splashName = document.querySelector('#splashAcadName');
+    if(splashName) splashName.textContent = acad.NAME;
+    // تحديث sidebar
+    var sbName = document.getElementById('sbAcadName');
+    if(sbName) sbName.textContent = acad.NAME;
+    var sbNameEn = document.getElementById('sbAcadNameEn');
+    if(sbNameEn) sbNameEn.textContent = acad.NAME_EN || '';
+    var sbLogo = document.getElementById('sbLogo');
+    if(sbLogo) sbLogo.src = acad.LOGO;
+    // تحديث hero
+    var heroTitle = document.getElementById('heroTitle');
+    if(heroTitle) heroTitle.textContent = '🦅 البوابة الإلكترونية ل' + acad.NAME;
+    // تحديث عنوان الصفحة
+    document.title = 'بوابة ' + acad.NAME;
+  }
   setTimeout(function(){
     var s=document.getElementById('splashScreen');
     if(s){s.style.opacity='0';setTimeout(function(){s.style.display='none';},600);}
@@ -215,9 +253,9 @@ window.addEventListener('load',function(){
   <div class="sb-hd">
     <button class="sb-close" id="sbClose" data-act="closeSb">✕</button>
     <div class="sb-hd-logo">
-      <img src="logo.jpg" alt="أكاديمية الشمالي" onerror="this.style.display='none';">
-      <div class="sb-hd-ar">أكاديمية الشمالي</div>
-      <div class="sb-hd-en">AL-SHAMALI ACADEMY</div>
+      <img id="sbLogo" src="logo.jpg" alt="شعار الأكاديمية" onerror="this.style.display='none';">
+      <div id="sbAcadName" class="sb-hd-ar">أكاديمية الشمالي</div>
+      <div id="sbAcadNameEn" class="sb-hd-en">AL-SHAMALI ACADEMY</div>
     </div>
   </div>
   <div class="sb-sec">خدمات ولي الأمر</div>
@@ -302,7 +340,7 @@ window.addEventListener('load',function(){
   <img src="hero.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%;opacity:.6;">
   <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(15,23,42,.6),rgba(140,18,21,.5));"></div>
   <div style="position:relative;z-index:1;">
-    <h1 style="font-size:18px;font-weight:900;color:#fff;margin-bottom:6px;">🦅 البوابة الإلكترونية لأكاديمية الشمالي</h1>
+    <h1 id="heroTitle" style="font-size:18px;font-weight:900;color:#fff;margin-bottom:6px;">🦅 البوابة الإلكترونية لأكاديمية الشمالي</h1>
     <p style="font-size:12px;color:rgba(255,255,255,.7);">التسجيل · الحضور · التكريم · المدربون · التقارير</p>
     <div class="gl"></div>
   </div>
@@ -487,15 +525,45 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
+// ===== نظام تعدد الأكاديميات =====
+var ACADEMIES = {
+  shamali: {
+    NAME: 'أكاديمية الشمالي',
+    NAME_EN: 'Shamali FC',
+    LOGO: 'logo.jpg',
+    PRIMARY_COLOR: '#b81d22',
+    DARK_COLOR: '#8c1215',
+    SHEET_ID: '16Qc1DUjhpbT-kIra74YeFQxzVxvBY7tSquUrHdacZKI',
+    API_KEY: 'AIzaSyBOiSr2yaHT8eWbUuQnn6hNY6w6zHzhqUo',
+    UPLOAD_URL: 'https://script.google.com/macros/s/AKfycbwg470gezg8ksh49bU_Dt63Z3pGuoHVv9elJW4vHrhVlnRs_qwW-t6n8WkIY9oneS87/exec',
+    GAS_URL: 'https://script.google.com/macros/s/AKfycbwuKiK4Jd_j8WxLcEXRPY0y9dZ_TRNWVw1MXOX_xLPOJxza4nvTXgZ2B8NL8IheHilS/exec',
+    SHEETDB_URL: 'https://sheetdb.io/api/v1/19dnaxf04au5l',
+    ADMIN_PASS: ['98555987'],
+    COACH_PASS: ['1234'],
+    WA_NUM: '96892126558'
+  }
+  // أكاديميات جديدة تُضاف هنا:
+  // mypro: { NAME: 'أكاديمية المحترف', PRIMARY_COLOR: '#1a5276', ... }
+};
+
+// قراءة معامل الأكاديمية من الرابط (?academy=shamali)
+(function(){
+  var urlParam = new URLSearchParams(window.location.search).get('academy') || 'shamali';
+  var acad = ACADEMIES[urlParam] || ACADEMIES['shamali'];
+  // حفظ الأكاديمية الحالية
+  window.CURRENT_ACADEMY = acad;
+  window.CURRENT_ACADEMY_KEY = urlParam;
+})();
+
 var CONFIG = {
-  SHEET_ID: '16Qc1DUjhpbT-kIra74YeFQxzVxvBY7tSquUrHdacZKI',
-  API_KEY: 'AIzaSyBOiSr2yaHT8eWbUuQnn6hNY6w6zHzhqUo',
+  SHEET_ID: window.CURRENT_ACADEMY.SHEET_ID,
+  API_KEY: window.CURRENT_ACADEMY.API_KEY || 'AIzaSyBOiSr2yaHT8eWbUuQnn6hNY6w6zHzhqUo',
   SHEET_URL: 'https://sheets.googleapis.com/v4/spreadsheets/',
-  UPLOAD_URL: 'https://script.google.com/macros/s/AKfycbwg470gezg8ksh49bU_Dt63Z3pGuoHVv9elJW4vHrhVlnRs_qwW-t6n8WkIY9oneS87/exec',
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbwuKiK4Jd_j8WxLcEXRPY0y9dZ_TRNWVw1MXOX_xLPOJxza4nvTXgZ2B8NL8IheHilS/exec',
-  SHEETDB_URL: 'https://sheetdb.io/api/v1/19dnaxf04au5l',
-  ADMIN_PASS: ['98555987'],
-  COACH_PASS: ['1234'],
+  UPLOAD_URL: window.CURRENT_ACADEMY.UPLOAD_URL,
+  GAS_URL: window.CURRENT_ACADEMY.GAS_URL,
+  SHEETDB_URL: window.CURRENT_ACADEMY.SHEETDB_URL,
+  ADMIN_PASS: window.CURRENT_ACADEMY.ADMIN_PASS,
+  COACH_PASS: window.CURRENT_ACADEMY.COACH_PASS,
   FESTIVAL_PASS: ['1234'],
   FESTIVAL_ACADEMY_CODES: {
     '1111': 'أكاديمية المحترف',
@@ -507,7 +575,7 @@ var CONFIG = {
     '5555': 'المدرسة الكروية لفريق الساحل الرياضي',
     '6666': 'مدرسة النسور الكروية'
   },
-  WA_NUM: '96892126558'
+  WA_NUM: window.CURRENT_ACADEMY.WA_NUM
 };
 
 // ===== API (يدعم Apps Script و SheetDB) =====
