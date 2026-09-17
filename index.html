@@ -675,25 +675,33 @@ function apiClearCache(sheetName) {
 }
 
 function apiAppend(sheetName, dataObj) {
-  var url, body;
   if(CONFIG.GAS_URL) {
-    url = CONFIG.GAS_URL;
-    body = JSON.stringify({action:'append', sheet:sheetName, data: Array.isArray(dataObj)?dataObj:[dataObj]});
+    var data = Array.isArray(dataObj) ? dataObj : [dataObj];
+    var url = CONFIG.GAS_URL
+      + '?action=append'
+      + '&sheet=' + encodeURIComponent(sheetName)
+      + '&data=' + encodeURIComponent(JSON.stringify(data));
+    return _fetchWithRetry(url).then(function(r){ return r.json(); }).then(function(){
+      apiClearCache(sheetName);
+      return {status:'ok'};
+    }).catch(function(err){
+      throw new Error(_apiErrorMsg(err));
+    });
   } else {
-    url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
-    body = JSON.stringify({data: Array.isArray(dataObj)?dataObj:[dataObj]});
+    var url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
+    var body = JSON.stringify({data: Array.isArray(dataObj)?dataObj:[dataObj]});
+    return _fetchWithRetry(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type':'text/plain'},
+      body: body
+    }).then(function(){
+      apiClearCache(sheetName);
+      return {status:'ok'};
+    }).catch(function(err){
+      throw new Error(_apiErrorMsg(err));
+    });
   }
-  return _fetchWithRetry(url, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {'Content-Type':'text/plain'},
-    body: body
-  }).then(function(){
-    apiClearCache(sheetName);
-    return {status:'ok'};
-  }).catch(function(err){
-    throw new Error(_apiErrorMsg(err));
-  });
 }
 
 function apiDelete(sheetName, column, value) {
