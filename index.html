@@ -807,14 +807,17 @@ function saveRegistration(data) {
   var parentIdUrl = data.parentIdFileId || '';
   var playerPhotoUrl = data.playerPhotoId || '';
   var playerDocUrl = data.playerDocId || '';
+  var birthYear = data.playerBirthDate ? data.playerBirthDate.split('-')[0] : '';
   var row = {
     'التاريخ': now, 'رقم الملف': id,
     'اسم ولي الأمر': data.parentName, 'الرقم المدني': data.parentCivilId,
     'صلة القرابة': data.parentRelation || '',
     'البريد': data.parentEmail, 'الهاتف': data.parentPhone,
+    'هاتف ثان': data.parentPhone2 || '',
     'هاتف ثانٍ': data.parentPhone2 || '',
     'الطوارئ': data.emergencyPhone, 'بطاقة ولي الأمر': parentIdUrl,
-    'اسم اللاعب': data.playerName, 'رقم هوية اللاعب': data.playerCivilId || '', 'تاريخ الميلاد': data.playerBirthDate,
+    'اسم اللاعب': data.playerName, 'رقم هوية اللاعب': data.playerCivilId || '',
+    'تاريخ الميلاد': data.playerBirthDate, 'سنة الميلاد': birthYear,
     'وثيقة اللاعب': playerDocUrl, 'صورة اللاعب': playerPhotoUrl,
     'الدفع': data.paymentMethod, 'ملاحظات': '',
     'الحالة': 'موافق', 'الجنسية': data.playerNationality,
