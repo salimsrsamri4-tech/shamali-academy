@@ -71,6 +71,9 @@ body{font-family:'Tajawal',sans-serif;background:var(--clr-bg);color:var(--clr-t
 .hero h1{font-weight:900;font-size:22px;margin-bottom:8px;}
 .hero p{font-size:13px;opacity:.65;}
 .gl{height:2px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:14px auto 0;width:40%;border-radius:2px;}
+@keyframes kenburns{0%{transform:scale(1) translate(0,0);}50%{transform:scale(1.08) translate(-1%,1%);}100%{transform:scale(1) translate(0,0);}}
+.hero-img-animated{animation:kenburns 14s ease-in-out infinite;}
+@media (prefers-reduced-motion:reduce){.hero-img-animated{animation:none;}}
 .card{background:var(--clr-card);border-radius:var(--radius-card);border:1px solid var(--clr-border);padding:18px;margin-bottom:16px;box-shadow:var(--shadow-card);}
 .sec-title{color:var(--clr-text);font-weight:800;font-size:15px;padding-bottom:9px;margin-bottom:13px;border-bottom:2px solid #f0f4f8;display:flex;align-items:center;gap:8px;}
 .sec-title i{color:#b81d22;}
@@ -364,7 +367,7 @@ window.addEventListener('load',function(){
 <div id="overlay" data-act="closeSb"></div>
 
 <div class="hero" style="position:relative;overflow:hidden;padding:90px 20px 80px;min-height:260px;">
-  <img src="hero.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%;opacity:.55;">
+  <img src="hero.jpg" class="hero-img-animated" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%;opacity:.55;transform-origin:center center;">
   <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(10,15,30,.75) 0%,rgba(120,14,18,.65) 60%,rgba(10,15,30,.5) 100%);"></div>
   <!-- نجوم خلفية زخرفية -->
   <div style="position:absolute;inset:0;z-index:0;overflow:hidden;">
