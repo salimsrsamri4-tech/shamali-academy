@@ -201,52 +201,44 @@ body{font-family:'Tajawal',sans-serif;background:var(--clr-bg);color:var(--clr-t
 @keyframes splSpin{to{transform:rotate(360deg);}}
 </style>
 <script>
-window.addEventListener('load',function(){
-  // تطبيق ألوان وبيانات الأكاديمية
-  var acad = window.CURRENT_ACADEMY;
-  if(acad){
-    // تحديث الألوان
-    var style = document.createElement('style');
-    style.textContent = [
-      '.hdr{border-bottom-color:'+acad.PRIMARY_COLOR+'!important;}',
-      '.hdr-brand span{color:'+acad.PRIMARY_COLOR+'!important;}',
-      '.menu-btn{background:'+acad.PRIMARY_COLOR+'!important;}',
-      '.btn-sub{background:linear-gradient(135deg,'+acad.PRIMARY_COLOR+','+acad.DARK_COLOR+')!important;}',
-      '.sbar button{background:'+acad.PRIMARY_COLOR+'!important;}',
-      '.sec-title i{color:'+acad.PRIMARY_COLOR+'!important;}',
-      '.sb-hd-ar{color:'+acad.PRIMARY_COLOR+'!important;}',
-      '.sidebar{background:linear-gradient(180deg,#0d0d0d 0%,'+acad.DARK_COLOR+' 50%,#0d0d0d 100%)!important;}'
-    ].join('\n');
-    document.head.appendChild(style);
-    // تحديث الاسم في الهيدر
-    var brand = document.querySelector('.hdr-brand span');
-    if(brand) brand.textContent = acad.NAME;
-    // تحديث الشعار
-    var logo = document.querySelector('.hdr-brand img');
-    if(logo) logo.src = acad.LOGO;
-    // تحديث splash
-    var splashName = document.querySelector('#splashAcadName');
-    if(splashName) splashName.textContent = acad.NAME;
-    // تحديث sidebar
-    var sbName = document.getElementById('sbAcadName');
-    if(sbName) sbName.textContent = acad.NAME;
-    var sbNameEn = document.getElementById('sbAcadNameEn');
-    if(sbNameEn) sbNameEn.textContent = acad.NAME_EN || '';
-    var sbLogo = document.getElementById('sbLogo');
-    if(sbLogo) sbLogo.src = acad.LOGO;
-    // تحديث hero
-    // heroTitle ثابت لاسم المنصة - لا يُغيَّر
-    // إخفاء الأقسام غير المطلوبة
-    if(acad.HIDE_SECTIONS && acad.HIDE_SECTIONS.length){
-      acad.HIDE_SECTIONS.forEach(function(sec){
-        document.querySelectorAll('.sb-hide-'+sec).forEach(function(el){
-          el.style.display='none';
-        });
+function applyAcademy(acad){
+  if(!acad) return;
+  var style = document.createElement('style');
+  style.textContent = [
+    '.hdr{border-bottom-color:'+acad.PRIMARY_COLOR+'!important;}',
+    '.hdr-brand span{color:'+acad.PRIMARY_COLOR+'!important;}',
+    '.menu-btn{background:'+acad.PRIMARY_COLOR+'!important;}',
+    '.btn-sub{background:linear-gradient(135deg,'+acad.PRIMARY_COLOR+','+acad.DARK_COLOR+')!important;}',
+    '.sbar button{background:'+acad.PRIMARY_COLOR+'!important;}',
+    '.sec-title i{color:'+acad.PRIMARY_COLOR+'!important;}',
+    '.sb-hd-ar{color:'+acad.PRIMARY_COLOR+'!important;}',
+    '.sidebar{background:linear-gradient(180deg,#0d0d0d 0%,'+acad.DARK_COLOR+' 50%,#0d0d0d 100%)!important;}'
+  ].join('\n');
+  document.head.appendChild(style);
+  var brand = document.querySelector('.hdr-brand span');
+  if(brand) brand.textContent = acad.NAME;
+  var logo = document.querySelector('.hdr-brand img');
+  if(logo) logo.src = acad.LOGO;
+  var splashName = document.querySelector('#splashAcadName');
+  if(splashName) splashName.textContent = acad.NAME;
+  var sbName = document.getElementById('sbAcadName');
+  if(sbName) sbName.textContent = acad.NAME;
+  var sbNameEn = document.getElementById('sbAcadNameEn');
+  if(sbNameEn) sbNameEn.textContent = acad.NAME_EN || '';
+  var sbLogo = document.getElementById('sbLogo');
+  if(sbLogo) sbLogo.src = acad.LOGO;
+  if(acad.HIDE_SECTIONS && acad.HIDE_SECTIONS.length){
+    acad.HIDE_SECTIONS.forEach(function(sec){
+      document.querySelectorAll('.sb-hide-'+sec).forEach(function(el){
+        el.style.display='none';
       });
-    }
-    // تحديث عنوان الصفحة
-    document.title = 'بوابة ' + acad.NAME;
+    });
   }
+  document.title = 'بوابة ' + acad.NAME;
+}
+
+window.addEventListener('load',function(){
+  applyAcademy(window.CURRENT_ACADEMY);
   setTimeout(function(){
     var s=document.getElementById('splashScreen');
     if(s){s.style.opacity='0';setTimeout(function(){s.style.display='none';},600);}
@@ -672,7 +664,31 @@ function showAcademyPicker(){
 }
 
 function selectAcademy(key){
-  window.location.href = window.location.pathname + '?academy=' + key;
+  var acad = ACADEMIES[key];
+  if(!acad) return;
+  if(key !== 'shamali' && !acad.HIDE_SECTIONS){
+    acad.HIDE_SECTIONS = ['tournaments','festival','shamali_specific'];
+  }
+  window.CURRENT_ACADEMY = acad;
+  window.CURRENT_ACADEMY_KEY = key;
+  // تحديث CONFIG
+  CONFIG.SHEET_ID   = acad.SHEET_ID;
+  CONFIG.GAS_URL    = acad.GAS_URL;
+  CONFIG.UPLOAD_URL = acad.UPLOAD_URL;
+  CONFIG.SHEETDB_URL= acad.SHEETDB_URL;
+  CONFIG.ADMIN_PASS = acad.ADMIN_PASS;
+  CONFIG.COACH_PASS = acad.COACH_PASS;
+  // تطبيق الألوان والمعلومات
+  applyAcademy(acad);
+  // إخفاء شاشة الاختيار بتأثير
+  var overlay = document.getElementById('acadPickerOverlay');
+  if(overlay){
+    overlay.style.transition = 'opacity .4s';
+    overlay.style.opacity = '0';
+    setTimeout(function(){ overlay.remove(); }, 400);
+  }
+  // تحديث الرابط بدون إعادة تحميل
+  history.replaceState(null,'', '?academy='+key);
 }
 
 var CONFIG = {
