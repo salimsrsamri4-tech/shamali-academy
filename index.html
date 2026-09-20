@@ -357,16 +357,15 @@ window.addEventListener('load',function(){
 </div>
 
 <!-- شريط الرعاة الاحترافي -->
-<div style="display:none;position:relative;background:#0f172a;border-top:1px solid rgba(212,175,55,.25);border-bottom:1px solid rgba(212,175,55,.25);height:44px;display:flex;align-items:center;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.25);">
-  <!-- تسمية ثابتة على اليمين -->
-  <div style="position:absolute;right:0;top:0;bottom:0;z-index:4;display:flex;align-items:center;padding:0 14px;background:linear-gradient(to left,#0f172a 70%,transparent);gap:6px;min-width:110px;">
-    <span style="font-size:9px;font-family:Cairo,sans-serif;font-weight:700;color:#d4af37;letter-spacing:.5px;white-space:nowrap;">شركاؤنا</span>
-    <span style="width:1px;height:18px;background:rgba(212,175,55,.4);display:inline-block;"></span>
+<div style="display:none;">
+  <div style="position:relative;background:#0f172a;border-top:1px solid rgba(212,175,55,.25);border-bottom:1px solid rgba(212,175,55,.25);height:44px;display:flex;align-items:center;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.25);">
+    <div style="position:absolute;right:0;top:0;bottom:0;z-index:4;display:flex;align-items:center;padding:0 14px;background:linear-gradient(to left,#0f172a 70%,transparent);gap:6px;min-width:110px;">
+      <span style="font-size:9px;font-family:Cairo,sans-serif;font-weight:700;color:#d4af37;letter-spacing:.5px;white-space:nowrap;">شركاؤنا</span>
+      <span style="width:1px;height:18px;background:rgba(212,175,55,.4);display:inline-block;"></span>
+    </div>
+    <div style="position:absolute;left:0;top:0;bottom:0;width:40px;background:linear-gradient(to right,#0f172a,transparent);z-index:3;pointer-events:none;"></div>
+    <div id="sponsorTrack" style="display:flex;align-items:center;white-space:nowrap;position:absolute;left:0;z-index:1;padding-right:120px;"></div>
   </div>
-  <!-- تلاشي الجانب الأيسر -->
-  <div style="position:absolute;left:0;top:0;bottom:0;width:40px;background:linear-gradient(to right,#0f172a,transparent);z-index:3;pointer-events:none;"></div>
-  <!-- مسار الإعلانات -->
-  <div id="sponsorTrack" style="display:flex;align-items:center;white-space:nowrap;position:absolute;left:0;z-index:1;padding-right:120px;"></div>
 </div>
 
 <a href="feedback.html" style="display:none;align-items:center;gap:12px;background:linear-gradient(135deg,#0d3320,#16a34a);color:#fff;padding:13px 20px;text-decoration:none;max-width:700px;margin:0 auto;">
