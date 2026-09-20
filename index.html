@@ -962,7 +962,7 @@ function saveRegistration(data) {
     'وثيقة اللاعب': playerDocUrl, 'صورة اللاعب': playerPhotoUrl,
     'الدفع': data.paymentMethod, 'ملاحظات': '',
     'الحالة': 'موافق', 'الجنسية': data.playerNationality,
-    'الصحة': data.playerHealth, 'خانة18': '', 'خانة19': '',
+    'الصحة': data.playerHealth,
     'ملاحظات صحية': data.healthNotes || ''
   };
   return apiAppend('الورقة1', row).then(function(){ return id; });
