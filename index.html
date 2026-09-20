@@ -1607,12 +1607,12 @@ function renderDashboard(){
   var todayStr = now.toISOString().slice(0,10);
 
   Promise.all([
-    getPlayers(),
-    apiGet('تجديدات الاشتراكات'),
-    apiGet('بيانات المدربين'),
-    apiGet('تقويم الأكاديمية'),
-    apiGet('نتائج المباريات'),
-    apiGet('سجل الحضور اليومي')
+    getPlayers().catch(function(){ return []; }),
+    apiGet('تجديدات الاشتراكات').catch(function(){ return []; }),
+    apiGet('بيانات المدربين').catch(function(){ return []; }),
+    apiGet('تقويم الأكاديمية').catch(function(){ return []; }),
+    apiGet('نتائج المباريات').catch(function(){ return []; }),
+    apiGet('سجل الحضور اليومي').catch(function(){ return []; })
   ]).then(function(res){
     var players  = res[0];
     var renewals = Array.isArray(res[1]) ? res[1] : [];
@@ -2557,8 +2557,8 @@ function renderFestivalReg(){
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ تحميل تسجيلات المهرجان...</div>';
   Promise.all([
-    apiGet('تسجيل مهرجان نبض المستقبل 2026'),
-    apiGet('الجهاز الفني والإداري - مهرجان نبض المستقبل 2026')
+    apiGet('تسجيل مهرجان نبض المستقبل 2026').catch(function(){ return []; }),
+    apiGet('الجهاز الفني والإداري - مهرجان نبض المستقبل 2026').catch(function(){ return []; })
   ]).then(function(results){
     window._festivalRows = Array.isArray(results[0]) ? results[0] : [];
     window._festivalStaffRows = Array.isArray(results[1]) ? results[1] : [];
@@ -3122,8 +3122,8 @@ function printFestivalIds(){
 function renderReports(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
   Promise.all([
-    apiGet('الورقة1'),
-    apiGet('تجديدات الاشتراكات')
+    apiGet('الورقة1').catch(function(){ return []; }),
+    apiGet('تجديدات الاشتراكات').catch(function(){ return []; })
   ]).then(function(results){
     var main = Array.isArray(results[0]) ? results[0] : [];
     var ren = Array.isArray(results[1]) ? results[1] : [];
@@ -3319,7 +3319,7 @@ function logout() {
 // ===== PLAYER STATS =====
 function renderPlayerStats(){
   document.getElementById('content').innerHTML='<div class="ldg"><span class="sp"></span></div>';
-  Promise.all([getPlayers(), apiGet('سجل الحضور اليومي')]).then(function(res){
+  Promise.all([getPlayers().catch(function(){ return []; }), apiGet('سجل الحضور اليومي').catch(function(){ return []; })]).then(function(res){
     var players = res[0];
     var attRows = Array.isArray(res[1]) ? res[1] : [];
     var attMap = {};
@@ -4067,11 +4067,11 @@ function generateMonthlyReport(){
   if(btn){ btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جارٍ الإنشاء...'; }
 
   Promise.all([
-    getPlayers(),
-    apiGet('تجديدات الاشتراكات'),
-    apiGet('سجل الحضور اليومي'),
-    apiGet('نتائج المباريات'),
-    apiGet('بيانات المدربين')
+    getPlayers().catch(function(){ return []; }),
+    apiGet('تجديدات الاشتراكات').catch(function(){ return []; }),
+    apiGet('سجل الحضور اليومي').catch(function(){ return []; }),
+    apiGet('نتائج المباريات').catch(function(){ return []; }),
+    apiGet('بيانات المدربين').catch(function(){ return []; })
   ]).then(function(res){
     var players  = res[0];
     var renewals = Array.isArray(res[1]) ? res[1] : [];
@@ -4827,7 +4827,7 @@ function finDeleteRecurring(id){
 }
 
 function loadSubsBadge(){
-  Promise.all([getPlayers(), apiGet('تجديدات الاشتراكات')]).then(function(res){
+  Promise.all([getPlayers().catch(function(){ return []; }), apiGet('تجديدات الاشتراكات').catch(function(){ return []; })]).then(function(res){
     var players=res[0]; var renewals=Array.isArray(res[1])?res[1]:[];
     var curMonth=MONTHS[new Date().getMonth()]+' '+new Date().getFullYear();
     var renewed={};
@@ -5101,7 +5101,7 @@ function sendGroupMsg(){
 // ===== SUBSCRIPTIONS TRACK =====
 function renderSubsTrack(){
   document.getElementById('content').innerHTML='<div class="ldg"><span class="sp"></span></div>';
-  Promise.all([getPlayers(), apiGet('تجديدات الاشتراكات')]).then(function(res){
+  Promise.all([getPlayers().catch(function(){ return []; }), apiGet('تجديدات الاشتراكات').catch(function(){ return []; })]).then(function(res){
     var players=res[0];
     var renewals=Array.isArray(res[1])?res[1]:[];
     var now=new Date();
