@@ -883,10 +883,9 @@ function getPlayers() {
     apiGet('صور اللاعبين').then(function(r){ return r; }, function(){ return []; })
   ]).then(function(results){
     var r0 = results[0]; var r1 = results[1];
-    var raw0 = Array.isArray(r0) ? r0 : (r0 && Array.isArray(r0.data) ? r0.data : []);
-    var raw1 = Array.isArray(r1) ? r1 : (r1 && Array.isArray(r1.data) ? r1.data : []);
-    var rows = _arraysToObjects(raw0);
-    var photoRows = _arraysToObjects(raw1);
+    // apiGet يُرجع مصفوفة كائنات مباشرة
+    var rows = Array.isArray(r0) ? r0 : [];
+    var photoRows = Array.isArray(r1) ? r1 : [];
     // بناء خريطة صور من ورقة صور اللاعبين (الأحدث يسبق)
     var photoMap = {};
     photoRows.forEach(function(r){
@@ -924,10 +923,8 @@ function getCoaches(forceRefresh) {
     apiGet('بيانات المدربين', forceRefresh),
     apiGet('أرقام المدربين', forceRefresh).then(function(r){ return r; }, function(){ return []; })
   ]).then(function(results){
-    var raw0 = Array.isArray(results[0]) ? results[0] : (results[0] && Array.isArray(results[0].data) ? results[0].data : []);
-    var raw1 = Array.isArray(results[1]) ? results[1] : (results[1] && Array.isArray(results[1].data) ? results[1].data : []);
-    var rows = _arraysToObjects(raw0);
-    var phones = _arraysToObjects(raw1);
+    var rows = Array.isArray(results[0]) ? results[0] : [];
+    var phones = Array.isArray(results[1]) ? results[1] : [];
     var phoneMap = {};
     phones.forEach(function(p){
       var n = (p['اسم المدرب'] || '').trim();
@@ -1787,6 +1784,7 @@ var _allYears = [];
 function renderPlayers(){
   document.getElementById('content').innerHTML = '<div class="ldg"><span class="sp"></span></div>';
   getPlayers().then(function(players){
+    if(!players || !players.length){ document.getElementById('content').innerHTML='<div class="al al-warn">لا توجد بيانات لاعبين</div>'; return; }
     window._playersList = players;
     _allPlayers = players;
     var years = [];
@@ -1798,6 +1796,8 @@ function renderPlayers(){
     _allYears = years;
     window._playersFilterYears = [];
     renderPlayersFiltered();
+  }).catch(function(err){
+    document.getElementById('content').innerHTML='<div class="al al-err">خطأ في تحميل اللاعبين: '+(err&&err.message?err.message:'')+'</div>';
   });
 }
 
