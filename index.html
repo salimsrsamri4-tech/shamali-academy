@@ -5641,6 +5641,30 @@ function submitReg() {
     photoReader.readAsDataURL(playerPhoto);
   } else { window._regPhotoDataUrl = ''; }
 
+  var playerCivilIdVal = f.playerCivilId ? f.playerCivilId.value.trim() : '';
+
+  // تحقق من تكرار رقم هوية اللاعب
+  var checkPromise = playerCivilIdVal
+    ? apiGet('ورقة1').then(function(rows){
+        var headers = rows[0] || [];
+        var cidCol = headers.indexOf('رقم هوية اللاعب');
+        if(cidCol < 0) return true;
+        for(var i=1; i<rows.length; i++){
+          if(String(rows[i][cidCol]).trim() === playerCivilIdVal){
+            return false;
+          }
+        }
+        return true;
+      }).catch(function(){ return true; })
+    : Promise.resolve(true);
+
+  checkPromise.then(function(isUnique){
+    if(!isUnique){
+      showL(false);
+      alert('⚠️ رقم هوية اللاعب مسجّل مسبقاً في المنصة.\nيرجى التواصل مع الإدارة إذا كنت تريد تحديث بيانات اللاعب.');
+      return;
+    }
+
   uploadFiles([
     {key:'parentId', file:parentIdFile, name: f.parentCivilId.value},
     {key:'playerPhoto', file:playerPhoto, name: f.playerName.value},
@@ -5673,6 +5697,8 @@ function submitReg() {
       setTimeout(function(){ window.open('https://api.whatsapp.com/send?phone='+CONFIG.WA_NUM+'&text='+msg,'_blank'); }, 1000);
     }).catch(function(e){ showL(false); alert('خطأ في الحفظ: '+e.message); });
   }).catch(function(e){ showL(false); alert('خطأ: '+e.message); });
+
+  }); // end checkPromise
 }
 
 function showSuccess(id, data) {
