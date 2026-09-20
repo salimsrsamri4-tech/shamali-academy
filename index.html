@@ -5746,51 +5746,58 @@ function showSuccess(id, data) {
   var season = new Date().getFullYear() + ' / ' + (new Date().getFullYear()+1);
   var initials = data.playerName.trim().split(' ').map(function(w){return w[0];}).slice(0,2).join('');
 
+  var acad2 = window.CURRENT_ACADEMY || ACADEMIES.shamali;
+  var pc = acad2.PRIMARY_COLOR || '#b81d22';
+  var dc = acad2.DARK_COLOR || '#3b0a0a';
+  var acadN = acad2.NAME || 'أكاديمية الشمالي';
+  var acadE = (acad2.NAME_EN || 'SHAMALI FC').toUpperCase();
+  var logoSrc = acad2.LOGO && acad2.LOGO.startsWith('http') ? acad2.LOGO : 'logo.jpg';
+
   var cardHtml =
-    '<div id="playerIdCard" style="'+
-      'width:320px;border-radius:16px;overflow:hidden;'+
-      'box-shadow:0 8px 32px rgba(0,0,0,.25);'+
-      'font-family:Cairo,sans-serif;direction:rtl;'+
-      'border:3px solid #d4af37;background:#fff;'+
-    '">'+
-    // Header
-    '<div style="background:#fff;padding:14px 16px 10px;text-align:center;position:relative;">'+
-      '<img src="logo.jpg" style="width:60px;height:60px;object-fit:contain;margin-bottom:4px;display:block;margin-left:auto;margin-right:auto;" onerror="this.style.display=\'none\'">'+
-      '<div style="font-size:17px;font-weight:900;color:#0f172a;margin-bottom:2px;">أكاديمية الشمالي</div>'+
-      '<div style="font-size:9px;color:#94a3b8;">بطاقة لاعب · '+season+'</div>'+
-      '<div style="height:3px;background:linear-gradient(90deg,transparent,#b81d22,transparent);margin:10px 0 0;"></div>'+
+    '<div id="playerIdCard" style="width:360px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(212,175,55,.3);font-family:Cairo,sans-serif;direction:rtl;background:#0a0a0f;margin:0 auto;position:relative;">'+
+    '<div style="height:3px;background:linear-gradient(90deg,#d4af37,#f5e17a,#d4af37);"></div>'+
+    '<div style="background:linear-gradient(135deg,'+dc+' 0%,'+pc+' 50%,'+dc+' 100%);padding:18px 16px 14px;text-align:center;position:relative;overflow:hidden;">'+
+      '<div style="position:absolute;inset:0;opacity:.5;background:url(\'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><circle cx=%2230%22 cy=%2230%22 r=%2228%22 fill=%22none%22 stroke=%22rgba(212,175,55,.08)%22 stroke-width=%221%22/></svg>\') repeat;"></div>'+
+      '<div style="position:relative;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;">'+
+        '<div style="height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(212,175,55,.5));"></div>'+
+        '<img src="'+logoSrc+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #d4af37;background:#fff;" onerror="this.style.display=\'none\'">'+
+        '<div style="height:1px;flex:1;background:linear-gradient(90deg,rgba(212,175,55,.5),transparent);"></div>'+
+      '</div>'+
+      '<div style="font-size:8px;color:#d4af37;font-weight:900;letter-spacing:4px;margin-bottom:2px;">'+acadE+'</div>'+
+      '<div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:2px;">'+acadN+'</div>'+
+      '<div style="font-size:8px;color:rgba(212,175,55,.7);letter-spacing:1px;">بطاقة لاعب رسمية · '+season+'</div>'+
     '</div>'+
-    // Photo + Name
-    '<div style="background:linear-gradient(180deg,#b81d22 0%,#3b0a0a 100%);padding:16px;display:flex;align-items:center;gap:14px;">'+
-      '<div style="flex-shrink:0;">'+(photo
-        ? '<img src="'+photo+'" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #d4af37;display:block;">'
-        : '<div style="width:72px;height:72px;border-radius:50%;background:#d4af37;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#3b0a0a;border:3px solid #fff;">'+initials+'</div>'
-      )+'</div>'+
-      '<div style="flex:1;">'+
-        '<div style="font-size:16px;font-weight:900;color:#fff;line-height:1.3;margin-bottom:4px;">'+data.playerName+'</div>'+
-        '<div style="display:inline-block;background:#d4af37;color:#3b0a0a;font-size:10px;font-weight:900;border-radius:20px;padding:2px 12px;letter-spacing:.5px;">'+id+'</div>'+
+    '<div style="background:linear-gradient(180deg,'+pc+'22 0%,transparent 100%);padding:20px 16px 14px;display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(212,175,55,.15);">'+
+      '<div style="flex-shrink:0;position:relative;">'+(photo
+        ? '<img src="'+photo+'" style="width:80px;height:80px;border-radius:12px;object-fit:cover;border:2px solid #d4af37;box-shadow:0 4px 16px rgba(0,0,0,.4);" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\';">'+
+          '<div style="display:none;width:80px;height:80px;border-radius:12px;background:linear-gradient(135deg,'+dc+','+pc+');align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#d4af37;border:2px solid #d4af37;">'+initials+'</div>'
+        : '<div style="width:80px;height:80px;border-radius:12px;background:linear-gradient(135deg,'+dc+','+pc+');display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#d4af37;border:2px solid #d4af37;box-shadow:0 4px 16px rgba(0,0,0,.4);">'+initials+'</div>'
+      )+
+      '</div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-size:16px;font-weight:900;color:#fff;line-height:1.3;margin-bottom:8px;">'+data.playerName+'</div>'+
+        '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:8px;padding:4px 10px;">'+
+          '<div style="width:6px;height:6px;border-radius:50%;background:#d4af37;"></div>'+
+          '<span style="color:#d4af37;font-size:11px;font-weight:900;letter-spacing:1px;">'+id+'</span>'+
+        '</div>'+
       '</div>'+
     '</div>'+
-    // Details
-    '<div style="padding:14px 16px;background:#fff;">'+
-      idRow('🪪','رقم الهوية', data.playerCivilId || '—')+
-      idRow('🗓️','تاريخ الميلاد', data.playerBirthDate || data.playerBirthYear)+
-      idRow('🌍','الجنسية', data.playerNationality)+
-      idRow('👨‍👦','ولي الأمر', data.parentName)+
-      idRow('📞','الهاتف', data.parentPhone)+
-      idRow('⚽','الموسم', season)+
+    '<div style="padding:14px 16px;display:flex;flex-direction:column;gap:8px;">'+
+      _cardRow('رقم الهوية', data.playerCivilId || '—', '#6366f1')+
+      _cardRow('تاريخ الميلاد', data.playerBirthDate || '—', '#0ea5e9')+
+      _cardRow('الجنسية', data.playerNationality || '—', '#10b981')+
+      _cardRow('ولي الأمر', data.parentName || '—', '#f59e0b')+
+      _cardRow('الهاتف', data.parentPhone || '—', '#ec4899')+
     '</div>'+
-    // Footer
-    '<div style="background:linear-gradient(135deg,#b81d22,#7a1015);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">'+
-      '<div style="flex:1;">'+
-        '<div style="font-size:11px;font-weight:900;color:#fff;">أكاديمية الشمالي</div>'+
-        '<div style="font-size:8px;color:rgba(255,255,255,.6);margin-top:2px;">🇴🇲 سلطنة عُمان · '+season+'</div>'+
+    '<div style="background:#050508;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid rgba(212,175,55,.15);">'+
+      '<div>'+
+        '<div style="font-size:7px;color:rgba(212,175,55,.8);font-weight:900;letter-spacing:2px;margin-bottom:3px;">'+acadE+'</div>'+
+        '<div style="font-size:7px;color:rgba(255,255,255,.35);letter-spacing:1px;">🇴🇲 SULTANATE OF OMAN · '+season+'</div>'+
+        '<div style="font-size:7px;color:rgba(212,175,55,.5);margin-top:4px;">امسح للتحقق من الهوية</div>'+
       '</div>'+
-      '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;">'+
-        '<div id="regCardQR" style="background:#fff;padding:3px;border-radius:5px;border:2px solid #d4af37;"></div>'+
-        '<div style="font-size:7px;color:rgba(255,255,255,.8);font-weight:700;">امسح للتحقق</div>'+
-      '</div>'+
+      '<div id="regCardQR" style="background:#fff;padding:3px;border-radius:8px;border:2px solid #d4af37;flex-shrink:0;"></div>'+
     '</div>'+
+    '<div style="height:3px;background:linear-gradient(90deg,#d4af37,#f5e17a,#d4af37);"></div>'+
     '</div>';
 
   document.getElementById('content').innerHTML =
