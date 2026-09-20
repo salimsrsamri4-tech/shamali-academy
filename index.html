@@ -867,8 +867,9 @@ function getPlayers() {
     apiGet('الورقة1'),
     apiGet('صور اللاعبين').then(function(r){ return r; }, function(){ return []; })
   ]).then(function(results){
-    var rows = Array.isArray(results[0]) ? results[0] : [];
-    var photoRows = Array.isArray(results[1]) ? results[1] : [];
+    var r0 = results[0]; var r1 = results[1];
+    var rows = Array.isArray(r0) ? r0 : (r0 && Array.isArray(r0.data) ? r0.data : []);
+    var photoRows = Array.isArray(r1) ? r1 : (r1 && Array.isArray(r1.data) ? r1.data : []);
     // بناء خريطة صور من ورقة صور اللاعبين (الأحدث يسبق)
     var photoMap = {};
     photoRows.forEach(function(r){
@@ -5636,7 +5637,7 @@ function submitReg() {
   var parentCivilIdVal = f.parentCivilId ? f.parentCivilId.value.trim() : '';
 
   // تحقق من تكرار رقم هوية اللاعب أو ولي الأمر
-  var checkPromise = apiGet('ورقة1', true).then(function(res){
+  var checkPromise = apiGet('الورقة1', true).then(function(res){
     var rows = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
     var headers = rows[0] || [];
     var playerCol = headers.indexOf('رقم هوية اللاعب');
