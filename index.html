@@ -1935,7 +1935,7 @@ function showPlayerCard(idx){
   var qrEl = document.getElementById('cardQR');
   if(qrEl && typeof QRCode !== 'undefined'){
     var verifyUrl = window.location.origin + window.location.pathname + '?verify=' + p.id;
-    new QRCode(qrEl, {text: verifyUrl, width: 64, height: 64, correctLevel: QRCode.CorrectLevel.M});
+    new QRCode(qrEl, {text: verifyUrl, width: 36, height: 36, correctLevel: QRCode.CorrectLevel.M});
   }
 }
 
@@ -5781,7 +5781,7 @@ function showSuccess(id, data) {
     var qrEl = document.getElementById('regCardQR');
     if(qrEl && typeof QRCode !== 'undefined'){
       var verifyUrl = window.location.origin + window.location.pathname + '?verify=' + id;
-      new QRCode(qrEl, {text: verifyUrl, width: 60, height: 60, correctLevel: QRCode.CorrectLevel.M});
+      new QRCode(qrEl, {text: verifyUrl, width: 36, height: 36, correctLevel: QRCode.CorrectLevel.M});
     }
   }, 100);
 }
