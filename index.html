@@ -1901,7 +1901,7 @@ function showPlayerCard(idx){
   var acadNameEn = (acad.NAME_EN || 'SHAMALI FC').toUpperCase();
 
   var cardHtml =
-    '<div id="playerIdCard" style="width:320px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(212,175,55,.3);font-family:Cairo,sans-serif;direction:rtl;background:#0a0a0f;margin:0 auto;position:relative;">'+
+    '<div id="playerIdCard" style="width:360px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(212,175,55,.3);font-family:Cairo,sans-serif;direction:rtl;background:#0a0a0f;margin:0 auto;position:relative;">'+
 
     /* شريط علوي ذهبي رفيع */
     '<div style="height:3px;background:linear-gradient(90deg,#d4af37,#f5e17a,#d4af37);"></div>'+
@@ -2000,10 +2000,22 @@ function downloadPlayerCard(){
   if(!card) return;
   var btn = event && event.target ? event.target.closest('button') : null;
   if(btn){ btn.disabled=true; btn.textContent='⏳ جارٍ التحضير...'; }
-  html2canvas(card,{scale:3,useCORS:true,backgroundColor:'#ffffff'}).then(function(canvas){
+  html2canvas(card,{scale:3,useCORS:true,backgroundColor:'#0a0a0f',logging:false}).then(function(canvas){
+    // نصدر على كانفاس 1080×1350 (نسبة 4:5 للإنستجرام وواتساب)
+    var out = document.createElement('canvas');
+    out.width = 1080; out.height = 1350;
+    var ctx = out.getContext('2d');
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fillRect(0,0,1080,1350);
+    // مركز البطاقة عمودياً
+    var imgW = canvas.width, imgH = canvas.height;
+    var scale = Math.min(1080/imgW, 1300/imgH);
+    var dw = imgW*scale, dh = imgH*scale;
+    var dx = (1080-dw)/2, dy = (1350-dh)/2;
+    ctx.drawImage(canvas, dx, dy, dw, dh);
     var a = document.createElement('a');
-    a.download = 'بطاقة-لاعب.png';
-    a.href = canvas.toDataURL('image/png');
+    a.download = 'بطاقة-لاعب-1080.png';
+    a.href = out.toDataURL('image/png');
     a.click();
     if(btn){ btn.disabled=false; btn.textContent='⬇️ تنزيل'; }
   });
