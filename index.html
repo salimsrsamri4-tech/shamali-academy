@@ -1748,6 +1748,9 @@ function renderDashboard(){
       var natColors=['#b81d22','#16a34a','#0369a1','#d97706','#7c3aed','#0891b2'];
       if(natCtx) new Chart(natCtx,{type:'doughnut',data:{labels:natLabels,datasets:[{data:natData,backgroundColor:natColors.slice(0,natLabels.length),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{family:'Cairo',size:11},padding:8}},tooltip:{callbacks:{label:function(c){return ' '+c.label+': '+c.raw+' لاعب';}}}}}});
     }, 100);
+  }).catch(function(err){
+    var el = document.getElementById('content');
+    if(el) el.innerHTML = '<div class="al al-err">خطأ في تحميل الصفحة: '+(err&&err.message?err.message:String(err))+'</div>';
   });
 }
 
