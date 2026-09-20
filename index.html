@@ -594,7 +594,7 @@ var ACADEMIES = {
     SHEET_ID: '16Qc1DUjhpbT-kIra74YeFQxzVxvBY7tSquUrHdacZKI',
     API_KEY: 'AIzaSyBOiSr2yaHT8eWbUuQnn6hNY6w6zHzhqUo',
     UPLOAD_URL: 'https://script.google.com/macros/s/AKfycbwg470gezg8ksh49bU_Dt63Z3pGuoHVv9elJW4vHrhVlnRs_qwW-t6n8WkIY9oneS87/exec',
-    GAS_URL: 'https://script.google.com/macros/s/AKfycbwuKiK4Jd_j8WxLcEXRPY0y9dZ_TRNWVw1MXOX_xLPOJxza4nvTXgZ2B8NL8IheHilS/exec',
+    GAS_URL: 'https://script.google.com/macros/s/AKfycbwg470gezg8ksh49bU_Dt63Z3pGuoHVv9elJW4vHrhVlnRs_qwW-t6n8WkIY9oneS87/exec',
     SHEETDB_URL: 'https://sheetdb.io/api/v1/19dnaxf04au5l',
     ADMIN_PASS: ['98555987'],
     COACH_PASS: ['1234'],
@@ -608,8 +608,8 @@ var ACADEMIES = {
     DARK_COLOR: '#a04000',
     SHEET_ID: '1WAUt52y17Odr4m4KFiQQceQ9tc-bpTmYrGHjjpDTnIc',
     API_KEY: 'AIzaSyBOiSr2yaHT8eWbUuQnn6hNY6w6zHzhqUo',
-    UPLOAD_URL: 'https://script.google.com/macros/s/AKfycby6n17QK4rm0Sdc9mx76Pt_jdsu_q3QRSPenVbQkd71XRSag7rvuvodV-qXa3LGz9eT/exec',
-    GAS_URL: 'https://script.google.com/macros/s/AKfycby6n17QK4rm0Sdc9mx76Pt_jdsu_q3QRSPenVbQkd71XRSag7rvuvodV-qXa3LGz9eT/exec',
+    UPLOAD_URL: 'https://script.google.com/macros/s/AKfycbwg470gezg8ksh49bU_Dt63Z3pGuoHVv9elJW4vHrhVlnRs_qwW-t6n8WkIY9oneS87/exec',
+    GAS_URL: 'https://script.google.com/macros/s/AKfycbwg470gezg8ksh49bU_Dt63Z3pGuoHVv9elJW4vHrhVlnRs_qwW-t6n8WkIY9oneS87/exec',
     SHEETDB_URL: '',
     ADMIN_PASS: ['1234'],
     COACH_PASS: ['1234'],
@@ -816,9 +816,11 @@ function apiClearCache(sheetName) {
 function apiAppend(sheetName, dataObj) {
   if(CONFIG.GAS_URL) {
     var data = Array.isArray(dataObj) ? dataObj : [dataObj];
+    var acadName = (window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) ? window.CURRENT_ACADEMY.NAME : 'غير محدد';
     var url = CONFIG.GAS_URL
       + '?action=append'
       + '&sheet=' + encodeURIComponent(sheetName)
+      + '&academy=' + encodeURIComponent(acadName)
       + '&data=' + encodeURIComponent(JSON.stringify(data));
     return _fetchWithRetry(url).then(function(r){ return r.json(); }).then(function(){
       apiClearCache(sheetName);
