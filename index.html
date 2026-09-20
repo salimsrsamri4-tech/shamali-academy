@@ -5645,7 +5645,8 @@ function submitReg() {
 
   // تحقق من تكرار رقم هوية اللاعب
   var checkPromise = playerCivilIdVal
-    ? apiGet('ورقة1').then(function(rows){
+    ? apiGet('ورقة1', true).then(function(res){
+        var rows = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
         var headers = rows[0] || [];
         var cidCol = headers.indexOf('رقم هوية اللاعب');
         if(cidCol < 0) return true;
