@@ -5642,27 +5642,29 @@ function submitReg() {
   } else { window._regPhotoDataUrl = ''; }
 
   var playerCivilIdVal = f.playerCivilId ? f.playerCivilId.value.trim() : '';
+  var parentCivilIdVal = f.parentCivilId ? f.parentCivilId.value.trim() : '';
 
-  // تحقق من تكرار رقم هوية اللاعب
-  var checkPromise = playerCivilIdVal
-    ? apiGet('ورقة1', true).then(function(res){
-        var rows = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
-        var headers = rows[0] || [];
-        var cidCol = headers.indexOf('رقم هوية اللاعب');
-        if(cidCol < 0) return true;
-        for(var i=1; i<rows.length; i++){
-          if(String(rows[i][cidCol]).trim() === playerCivilIdVal){
-            return false;
-          }
-        }
-        return true;
-      }).catch(function(){ return true; })
-    : Promise.resolve(true);
+  // تحقق من تكرار رقم هوية اللاعب أو ولي الأمر
+  var checkPromise = apiGet('ورقة1', true).then(function(res){
+    var rows = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+    var headers = rows[0] || [];
+    var playerCol = headers.indexOf('رقم هوية اللاعب');
+    var parentCol = headers.indexOf('الرقم المدني');
+    for(var i=1; i<rows.length; i++){
+      if(playerCivilIdVal && playerCol >= 0 && String(rows[i][playerCol]).trim() === playerCivilIdVal){
+        return {ok:false, msg:'⚠️ رقم هوية اللاعب مسجّل مسبقاً في المنصة.\nيرجى التواصل مع الإدارة إذا كنت تريد تحديث البيانات.'};
+      }
+      if(parentCivilIdVal && parentCol >= 0 && String(rows[i][parentCol]).trim() === parentCivilIdVal){
+        return {ok:false, msg:'⚠️ رقم هوية ولي الأمر مسجّل مسبقاً في المنصة.\nيرجى التواصل مع الإدارة إذا كنت تريد تحديث البيانات.'};
+      }
+    }
+    return {ok:true};
+  }).catch(function(){ return {ok:true}; });
 
-  checkPromise.then(function(isUnique){
-    if(!isUnique){
+  checkPromise.then(function(result){
+    if(!result.ok){
       showL(false);
-      alert('⚠️ رقم هوية اللاعب مسجّل مسبقاً في المنصة.\nيرجى التواصل مع الإدارة إذا كنت تريد تحديث بيانات اللاعب.');
+      alert(result.msg);
       return;
     }
 
