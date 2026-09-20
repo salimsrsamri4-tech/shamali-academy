@@ -1120,8 +1120,9 @@ function renderReg(){
   html += '<div><label class="lbl">الهاتف (واتساب) *</label><input type="tel" class="inp" name="parentPhone" required></div>';
   html += '<div><label class="lbl">رقم الطوارئ *</label><input type="tel" class="inp" name="emergencyPhone" required></div>';
   html += '</div>';
+  html += '<div class="mb"><label class="lbl">صلة القرابة *</label><select class="inp" name="parentRelation" required><option value="">اختر...</option><option>أب</option><option>أم</option><option>أخ</option><option>أخت</option><option>جد</option><option>عم</option><option>وصي قانوني</option></select></div>';
   html += '<div class="mb"><label class="lbl">بطاقة ولي الأمر *</label><input type="file" class="inp" id="parentIdFile" accept="image/*,.pdf"></div>';
-  
+
   html += '<div class="sec-banner"><i class="fas fa-running"></i> بيانات اللاعب</div>';
   html += '<div class="mb"><label class="lbl">اسم اللاعب كاملاً *</label><input type="text" class="inp" name="playerName" required></div>';
   html += '<div class="mb"><label class="lbl">رقم هوية اللاعب *</label><input type="text" class="inp" name="playerCivilId" placeholder="أدخل رقم الهوية..." required></div>';
