@@ -944,7 +944,7 @@ function getStats() {
 // Save registration
 function saveRegistration(data) {
   var id = 'SH-' + Math.floor(1000 + Math.random() * 9000);
-  var now = new Date().toISOString();
+  var _d = new Date(); var now = ('0'+_d.getDate()).slice(-2)+'/'+('0'+(_d.getMonth()+1)).slice(-2)+'/'+_d.getFullYear()+' '+('0'+_d.getHours()).slice(-2)+':'+('0'+_d.getMinutes()).slice(-2);
   var parentIdUrl = data.parentIdFileId || '';
   var playerPhotoUrl = data.playerPhotoId || '';
   var playerDocUrl = data.playerDocId || '';
