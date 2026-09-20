@@ -5648,7 +5648,7 @@ function submitReg() {
     var data = {
       parentName: f.parentName.value,
       parentCivilId: f.parentCivilId.value,
-      parentEmail: f.parentEmail.value,
+      parentEmail: f.parentEmail ? f.parentEmail.value : '',
       parentPhone: f.parentPhone.value,
       parentPhone2: f.parentPhone2 ? f.parentPhone2.value : '',
       parentRelation: f.parentRelation ? f.parentRelation.value : '',
