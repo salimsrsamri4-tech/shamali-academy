@@ -629,17 +629,51 @@ var ACADEMIES = {
 
 // قراءة معامل الأكاديمية من الرابط (?academy=shamali)
 (function(){
-  var urlParam = new URLSearchParams(window.location.search).get('academy') || 'shamali';
+  var urlParam = new URLSearchParams(window.location.search).get('academy');
+  // إذا لم يُحدد معامل → أظهر صفحة اختيار الأكاديمية
+  if(!urlParam){
+    document.addEventListener('DOMContentLoaded', function(){
+      showAcademyPicker();
+    });
+    urlParam = 'shamali'; // افتراضي مؤقت
+  }
   var acad = ACADEMIES[urlParam];
   if(!acad){ urlParam = 'shamali'; acad = ACADEMIES['shamali']; }
-  // الأقسام المخفية افتراضياً لغير الشمالي
   if(urlParam !== 'shamali' && !acad.HIDE_SECTIONS){
     acad.HIDE_SECTIONS = ['tournaments', 'festival', 'shamali_specific'];
   }
-  // حفظ الأكاديمية الحالية
   window.CURRENT_ACADEMY = acad;
   window.CURRENT_ACADEMY_KEY = urlParam;
 })();
+
+function showAcademyPicker(){
+  var keys = Object.keys(ACADEMIES);
+  var cards = keys.map(function(k){
+    var a = ACADEMIES[k];
+    return '<div onclick="selectAcademy(\''+k+'\')" style="background:#fff;border-radius:16px;border:2px solid #e2e8f0;padding:18px 14px;text-align:center;cursor:pointer;transition:border-color .2s,box-shadow .2s;" onmouseover="this.style.borderColor=\''+a.PRIMARY_COLOR+'\';this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.1)\'" onmouseout="this.style.borderColor=\'#e2e8f0\';this.style.boxShadow=\'none\'">'
+      +'<img src="'+a.LOGO+'" style="width:64px;height:64px;object-fit:contain;border-radius:50%;border:3px solid '+a.PRIMARY_COLOR+';margin-bottom:10px;" onerror="this.src=\'logo.jpg\'">'
+      +'<div style="font-size:14px;font-weight:900;color:#1a2332;margin-bottom:3px;">'+a.NAME+'</div>'
+      +'<div style="font-size:10px;color:#64748b;font-weight:600;">'+a.NAME_EN+'</div>'
+      +'<div style="margin-top:10px;background:'+a.PRIMARY_COLOR+';color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;">دخول ←</div>'
+      +'</div>';
+  });
+  var overlay = document.createElement('div');
+  overlay.id = 'acadPickerOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:linear-gradient(160deg,#0f172a,#1e293b);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;';
+  overlay.innerHTML = ''
+    +'<img src="logo.jpg" style="width:80px;height:80px;object-fit:contain;border-radius:50%;border:3px solid #d4af37;margin-bottom:16px;" onerror="this.style.display=\'none\'">'
+    +'<div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;">منصة توفه</div>'
+    +'<div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:6px;">الكابتن الصغير ⚽</div>'
+    +'<div style="height:2px;background:linear-gradient(90deg,transparent,#d4af37,transparent);width:120px;margin-bottom:24px;border-radius:2px;"></div>'
+    +'<div style="font-size:13px;color:rgba(255,255,255,.8);font-weight:700;margin-bottom:16px;">اختر أكاديميتك</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;width:100%;max-width:500px;">'+cards.join('')+'</div>'
+    +'<div style="margin-top:20px;font-size:11px;color:rgba(255,255,255,.35);">🇴🇲 سلطنة عُمان</div>';
+  document.body.appendChild(overlay);
+}
+
+function selectAcademy(key){
+  window.location.href = window.location.pathname + '?academy=' + key;
+}
 
 var CONFIG = {
   SHEET_ID: window.CURRENT_ACADEMY.SHEET_ID,
