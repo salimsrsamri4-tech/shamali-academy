@@ -1955,7 +1955,12 @@ function downloadPlayerCard(){
   if(!card) return;
   var btn = event && event.target ? event.target.closest('button') : null;
   if(btn){ btn.disabled=true; btn.textContent='⏳ جارٍ التحضير...'; }
-  html2canvas(card,{scale:3,useCORS:true,backgroundColor:null,logging:false}).then(function(canvas){
+  /* إزالة clip-path مؤقتاً لأن html2canvas يعكس النص معها */
+  var shield = card.querySelector('[style*="clip-path"]');
+  var savedClip = shield ? shield.style.cssText : '';
+  if(shield){ shield.style.clipPath='none'; shield.style.webkitClipPath='none'; shield.style.borderRadius='16px'; }
+  html2canvas(card,{scale:3,useCORS:true,backgroundColor:'#1a1200',logging:false}).then(function(canvas){
+    if(shield){ shield.style.cssText = savedClip; }
     // نصدر على كانفاس 1080×1350 (نسبة 4:5 للإنستجرام وواتساب)
     var out = document.createElement('canvas');
     out.width = 1080; out.height = 1350;
@@ -1981,7 +1986,11 @@ function sharePlayerCard(){
   if(!card) return;
   var btn = event && event.target ? event.target.closest('button') : null;
   if(btn){ btn.disabled=true; btn.textContent='⏳ جارٍ التحضير...'; }
-  html2canvas(card,{scale:3,useCORS:true,backgroundColor:'#ffffff'}).then(function(canvas){
+  var shield2 = card.querySelector('[style*="clip-path"]');
+  var savedClip2 = shield2 ? shield2.style.cssText : '';
+  if(shield2){ shield2.style.clipPath='none'; shield2.style.webkitClipPath='none'; shield2.style.borderRadius='16px'; }
+  html2canvas(card,{scale:3,useCORS:true,backgroundColor:'#1a1200'}).then(function(canvas){
+    if(shield2){ shield2.style.cssText = savedClip2; }
     canvas.toBlob(function(blob){
       var file = new File([blob],'بطاقة-لاعب.png',{type:'image/png'});
       if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
@@ -5854,8 +5863,8 @@ function buildFifaCard(cardId, o) {
         '</div>'+
 
         /* اسم اللاعب */
-        '<div style="text-align:center;padding:6px 28px 0;direction:rtl;">'+
-          '<div style="font-size:17px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.9);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;unicode-bidi:plaintext;">'+o.name+'</div>'+
+        '<div style="text-align:center;padding:6px 28px 0;">'+
+          '<div style="font-size:17px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.9);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+o.name+'</div>'+
         '</div>'+
 
         /* خط ذهبي */
@@ -5911,9 +5920,9 @@ function _fifaStatLine(val, label) {
 
 function _fifaDataCell(label, val) {
   var v = (val && String(val).trim()) ? val : '—';
-  return '<div style="background:rgba(0,0,0,.32);border-radius:5px;padding:4px 7px;border:1px solid rgba(212,175,55,.22);overflow:hidden;direction:rtl;text-align:right;">'+
+  return '<div style="background:rgba(0,0,0,.32);border-radius:5px;padding:4px 7px;border:1px solid rgba(212,175,55,.22);overflow:hidden;text-align:right;">'+
     '<div style="font-size:7px;color:rgba(212,175,55,.8);font-weight:700;letter-spacing:.3px;white-space:nowrap;margin-bottom:1px;">'+label+'</div>'+
-    '<div style="font-size:10px;color:#fff;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.7);unicode-bidi:plaintext;">'+v+'</div>'+
+    '<div style="font-size:10px;color:#fff;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.7);">'+v+'</div>'+
   '</div>';
 }
 
