@@ -754,6 +754,19 @@ var PLATFORM = {
 };
 
 // ===== API (يدعم Apps Script و SheetDB) =====
+function _arraysToObjects(data) {
+  if (!Array.isArray(data) || data.length < 2) return [];
+  if (Array.isArray(data[0])) {
+    var headers = data[0];
+    return data.slice(1).map(function(row) {
+      var obj = {};
+      headers.forEach(function(h, i) { obj[h] = row[i] !== undefined ? row[i] : ''; });
+      return obj;
+    });
+  }
+  return data;
+}
+
 var _apiCache = {};
 var _CACHE_TTL = 10 * 60 * 1000;
 var _API_TIMEOUT = 12000;  // 12 ثانية
@@ -798,11 +811,13 @@ function apiGet(sheetName, forceRefresh) {
   var url = CONFIG.GAS_URL
     ? CONFIG.GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheetName) + '&limit=2000'
     : CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName) + '&limit=2000';
-  return _fetchWithRetry(url).then(function(r){ return r.json(); }).then(function(data){
+  return _fetchWithRetry(url).then(function(r){ return r.json(); }).then(function(raw){
+    // تحويل الاستجابة إلى مصفوفة كائنات دائماً
+    var arr = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.data) ? raw.data : []);
+    var data = _arraysToObjects(arr);
     _apiCache[sheetName] = { data: data, ts: Date.now() };
     return data;
   }).catch(function(err){
-    // إرجاع cache قديم إن وُجد (أفضل من لا شيء)
     if(cached) return cached.data;
     throw new Error(_apiErrorMsg(err));
   });
@@ -862,21 +877,6 @@ function apiDelete(sheetName, column, value) {
 }
 
 // Get all players
-function _arraysToObjects(data) {
-  if (!Array.isArray(data) || data.length < 2) return [];
-  // إذا كان العنصر الأول مصفوفة → format [headers, row, row, ...]
-  if (Array.isArray(data[0])) {
-    var headers = data[0];
-    return data.slice(1).map(function(row) {
-      var obj = {};
-      headers.forEach(function(h, i) { obj[h] = row[i] !== undefined ? row[i] : ''; });
-      return obj;
-    });
-  }
-  // إذا كانت مصفوفة من كائنات → أرجعها كما هي
-  return data;
-}
-
 function getPlayers() {
   return Promise.all([
     apiGet('الورقة1'),
