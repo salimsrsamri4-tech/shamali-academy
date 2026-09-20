@@ -5667,23 +5667,23 @@ function submitReg() {
     }
 
   uploadFiles([
-    {key:'parentId', file:parentIdFile, name: f.parentCivilId.value},
-    {key:'playerPhoto', file:playerPhoto, name: f.playerName.value},
-    {key:'playerDoc', file:playerDoc, name: f.playerName.value}
+    {key:'parentId', file:parentIdFile, name: f.parentCivilId ? f.parentCivilId.value : ''},
+    {key:'playerPhoto', file:playerPhoto, name: f.playerName ? f.playerName.value : ''},
+    {key:'playerDoc', file:playerDoc, name: f.playerName ? f.playerName.value : ''}
   ]).then(function(fileIds){
     var data = {
-      parentName: f.parentName.value,
-      parentCivilId: f.parentCivilId.value,
+      parentName: f.parentName ? f.parentName.value : '',
+      parentCivilId: f.parentCivilId ? f.parentCivilId.value : '',
       parentEmail: f.parentEmail ? f.parentEmail.value : '',
-      parentPhone: f.parentPhone.value,
+      parentPhone: f.parentPhone ? f.parentPhone.value : '',
       parentPhone2: f.parentPhone2 ? f.parentPhone2.value : '',
       parentRelation: f.parentRelation ? f.parentRelation.value : '',
-      emergencyPhone: f.emergencyPhone.value,
+      emergencyPhone: f.emergencyPhone ? f.emergencyPhone.value : '',
       parentIdFileId: fileIds.parentIdUrl || '',
-      playerName: f.playerName.value,
+      playerName: f.playerName ? f.playerName.value : '',
       playerCivilId: f.playerCivilId ? f.playerCivilId.value : '',
       playerBirthDate: f.playerBirthDate ? f.playerBirthDate.value : '',
-      playerNationality: f.playerNationality.value,
+      playerNationality: f.playerNationality ? f.playerNationality.value : '',
       playerPhotoId: fileIds.playerPhotoUrl || '',
       playerDocId: fileIds.playerDocUrl || '',
       playerHealth: document.getElementById('hVal').value || 'لا يوجد',
