@@ -1900,66 +1900,20 @@ function showPlayerCard(idx){
   var acadNameCard = acad.NAME || 'أكاديمية الشمالي';
   var acadNameEn = (acad.NAME_EN || 'SHAMALI FC').toUpperCase();
 
-  var cardHtml =
-    '<div id="playerIdCard" style="width:360px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(212,175,55,.3);font-family:Cairo,sans-serif;direction:rtl;background:#0a0a0f;margin:0 auto;position:relative;">'+
-
-    /* شريط علوي ذهبي رفيع */
-    '<div style="height:3px;background:linear-gradient(90deg,#d4af37,#f5e17a,#d4af37);"></div>'+
-
-    /* الهيدر */
-    '<div style="background:linear-gradient(135deg,'+darkColor+' 0%,'+primaryColor+' 50%,'+darkColor+' 100%);padding:18px 16px 14px;text-align:center;position:relative;overflow:hidden;">'+
-      '<div style="position:absolute;inset:0;background:url(\'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><circle cx=%2230%22 cy=%2230%22 r=%2228%22 fill=%22none%22 stroke=%22rgba(212,175,55,.08)%22 stroke-width=%221%22/></svg>\') repeat;opacity:.5;"></div>'+
-      '<div style="position:absolute;top:-30px;left:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(212,175,55,.15),transparent 70%);border-radius:50%;"></div>'+
-      '<div style="position:absolute;bottom:-30px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(212,175,55,.1),transparent 70%);border-radius:50%;"></div>'+
-      '<div style="position:relative;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;">'+
-        '<div style="height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(212,175,55,.5));"></div>'+
-        '<img src="'+(acad.LOGO && acad.LOGO.startsWith('http') ? acad.LOGO : 'logo.jpg')+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #d4af37;background:#fff;" onerror="this.style.display=\'none\'">'+
-        '<div style="height:1px;flex:1;background:linear-gradient(90deg,rgba(212,175,55,.5),transparent);"></div>'+
-      '</div>'+
-      '<div style="font-size:8px;color:#d4af37;font-weight:900;letter-spacing:4px;margin-bottom:2px;">'+acadNameEn+'</div>'+
-      '<div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:2px;">'+acadNameCard+'</div>'+
-      '<div style="font-size:8px;color:rgba(212,175,55,.7);letter-spacing:1px;">بطاقة لاعب رسمية · '+season+'</div>'+
-    '</div>'+
-
-    /* قسم صورة اللاعب والاسم */
-    '<div style="background:linear-gradient(180deg,'+primaryColor+'22 0%,transparent 100%);padding:20px 16px 14px;display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(212,175,55,.15);">'+
-      '<div style="flex-shrink:0;position:relative;">'+(photoUrl
-        ? '<img src="'+photoUrl+'" style="width:80px;height:80px;border-radius:12px;object-fit:cover;border:2px solid #d4af37;box-shadow:0 4px 16px rgba(0,0,0,.4);" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\';">'+
-          '<div style="display:none;width:80px;height:80px;border-radius:12px;background:linear-gradient(135deg,'+darkColor+','+primaryColor+');align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#d4af37;border:2px solid #d4af37;">'+initials+'</div>'
-        : '<div style="width:80px;height:80px;border-radius:12px;background:linear-gradient(135deg,'+darkColor+','+primaryColor+');display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#d4af37;border:2px solid #d4af37;box-shadow:0 4px 16px rgba(0,0,0,.4);">'+initials+'</div>'
-      )+
-        '<div style="position:absolute;bottom:-6px;right:-6px;background:#d4af37;border-radius:6px;padding:2px 6px;font-size:8px;font-weight:900;color:#0a0a0f;letter-spacing:1px;">'+cat+'</div>'+
-      '</div>'+
-      '<div style="flex:1;min-width:0;">'+
-        '<div style="font-size:16px;font-weight:900;color:#fff;line-height:1.3;margin-bottom:8px;">'+p.playerName+'</div>'+
-        '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:8px;padding:4px 10px;">'+
-          '<div style="width:6px;height:6px;border-radius:50%;background:#d4af37;"></div>'+
-          '<span style="color:#d4af37;font-size:11px;font-weight:900;letter-spacing:1px;">'+p.id+'</span>'+
-        '</div>'+
-      '</div>'+
-    '</div>'+
-
-    /* بيانات */
-    '<div style="padding:14px 16px;display:flex;flex-direction:column;gap:8px;">'+
-      _cardRow('رقم الهوية', p.civilId || p['رقم هوية اللاعب'] || '—', '#6366f1')+
-      _cardRow('تاريخ الميلاد', p.birthDate || p.birthYear || '—', '#0ea5e9')+
-      _cardRow('الجنسية', p.nationality || '—', '#10b981')+
-      _cardRow('الحالة الصحية', p.health||'لا يوجد', '#f59e0b')+
-    '</div>'+
-
-    /* الفوتر */
-    '<div style="background:#050508;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid rgba(212,175,55,.15);">'+
-      '<div>'+
-        '<div style="font-size:7px;color:rgba(212,175,55,.8);font-weight:900;letter-spacing:2px;margin-bottom:3px;">'+acadNameEn+'</div>'+
-        '<div style="font-size:7px;color:rgba(255,255,255,.35);letter-spacing:1px;">🇴🇲 SULTANATE OF OMAN · '+season+'</div>'+
-        '<div style="font-size:7px;color:rgba(212,175,55,.5);margin-top:4px;">امسح للتحقق من الهوية</div>'+
-      '</div>'+
-      '<div id="cardQR" style="background:#fff;padding:3px;border-radius:8px;border:2px solid #d4af37;flex-shrink:0;"></div>'+
-    '</div>'+
-
-    /* شريط سفلي ذهبي */
-    '<div style="height:3px;background:linear-gradient(90deg,#d4af37,#f5e17a,#d4af37);"></div>'+
-    '</div>';
+  var logoSrc1 = acad.LOGO && acad.LOGO.startsWith('http') ? acad.LOGO : 'logo.jpg';
+  var cardHtml = buildFifaCard('playerIdCard', {
+    name: p.playerName, id: p.id, cat: cat,
+    photo: photoUrl, initials: initials,
+    civilId: p.civilId || p['رقم هوية اللاعب'] || '—',
+    birthDate: p.birthDate || p.birthYear || '—',
+    nationality: p.nationality || '—',
+    health: p.health || 'لا يوجد',
+    parentName: '', phone: '',
+    season: season,
+    primaryColor: primaryColor, darkColor: darkColor,
+    acadName: acadNameCard, acadEn: acadNameEn,
+    logo: logoSrc1, qrId: 'cardQR'
+  });
 
   var old = document.getElementById('playerCardModal');
   if(old) old.remove();
@@ -5753,52 +5707,22 @@ function showSuccess(id, data) {
   var acadE = (acad2.NAME_EN || 'SHAMALI FC').toUpperCase();
   var logoSrc = acad2.LOGO && acad2.LOGO.startsWith('http') ? acad2.LOGO : 'logo.jpg';
 
-  var cardHtml =
-    '<div id="playerIdCard" style="width:360px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(212,175,55,.3);font-family:Cairo,sans-serif;direction:rtl;background:#0a0a0f;margin:0 auto;position:relative;">'+
-    '<div style="height:3px;background:linear-gradient(90deg,#d4af37,#f5e17a,#d4af37);"></div>'+
-    '<div style="background:linear-gradient(135deg,'+dc+' 0%,'+pc+' 50%,'+dc+' 100%);padding:18px 16px 14px;text-align:center;position:relative;overflow:hidden;">'+
-      '<div style="position:absolute;inset:0;opacity:.5;background:url(\'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><circle cx=%2230%22 cy=%2230%22 r=%2228%22 fill=%22none%22 stroke=%22rgba(212,175,55,.08)%22 stroke-width=%221%22/></svg>\') repeat;"></div>'+
-      '<div style="position:relative;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;">'+
-        '<div style="height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(212,175,55,.5));"></div>'+
-        '<img src="'+logoSrc+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #d4af37;background:#fff;" onerror="this.style.display=\'none\'">'+
-        '<div style="height:1px;flex:1;background:linear-gradient(90deg,rgba(212,175,55,.5),transparent);"></div>'+
-      '</div>'+
-      '<div style="font-size:8px;color:#d4af37;font-weight:900;letter-spacing:4px;margin-bottom:2px;">'+acadE+'</div>'+
-      '<div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:2px;">'+acadN+'</div>'+
-      '<div style="font-size:8px;color:rgba(212,175,55,.7);letter-spacing:1px;">بطاقة لاعب رسمية · '+season+'</div>'+
-    '</div>'+
-    '<div style="background:linear-gradient(180deg,'+pc+'22 0%,transparent 100%);padding:20px 16px 14px;display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(212,175,55,.15);">'+
-      '<div style="flex-shrink:0;position:relative;">'+(photo
-        ? '<img src="'+photo+'" style="width:80px;height:80px;border-radius:12px;object-fit:cover;border:2px solid #d4af37;box-shadow:0 4px 16px rgba(0,0,0,.4);" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\';">'+
-          '<div style="display:none;width:80px;height:80px;border-radius:12px;background:linear-gradient(135deg,'+dc+','+pc+');align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#d4af37;border:2px solid #d4af37;">'+initials+'</div>'
-        : '<div style="width:80px;height:80px;border-radius:12px;background:linear-gradient(135deg,'+dc+','+pc+');display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#d4af37;border:2px solid #d4af37;box-shadow:0 4px 16px rgba(0,0,0,.4);">'+initials+'</div>'
-      )+
-      '</div>'+
-      '<div style="flex:1;min-width:0;">'+
-        '<div style="font-size:16px;font-weight:900;color:#fff;line-height:1.3;margin-bottom:8px;">'+data.playerName+'</div>'+
-        '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:8px;padding:4px 10px;">'+
-          '<div style="width:6px;height:6px;border-radius:50%;background:#d4af37;"></div>'+
-          '<span style="color:#d4af37;font-size:11px;font-weight:900;letter-spacing:1px;">'+id+'</span>'+
-        '</div>'+
-      '</div>'+
-    '</div>'+
-    '<div style="padding:14px 16px;display:flex;flex-direction:column;gap:8px;">'+
-      _cardRow('رقم الهوية', data.playerCivilId || '—', '#6366f1')+
-      _cardRow('تاريخ الميلاد', data.playerBirthDate || '—', '#0ea5e9')+
-      _cardRow('الجنسية', data.playerNationality || '—', '#10b981')+
-      _cardRow('ولي الأمر', data.parentName || '—', '#f59e0b')+
-      _cardRow('الهاتف', data.parentPhone || '—', '#ec4899')+
-    '</div>'+
-    '<div style="background:#050508;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid rgba(212,175,55,.15);">'+
-      '<div>'+
-        '<div style="font-size:7px;color:rgba(212,175,55,.8);font-weight:900;letter-spacing:2px;margin-bottom:3px;">'+acadE+'</div>'+
-        '<div style="font-size:7px;color:rgba(255,255,255,.35);letter-spacing:1px;">🇴🇲 SULTANATE OF OMAN · '+season+'</div>'+
-        '<div style="font-size:7px;color:rgba(212,175,55,.5);margin-top:4px;">امسح للتحقق من الهوية</div>'+
-      '</div>'+
-      '<div id="regCardQR" style="background:#fff;padding:3px;border-radius:8px;border:2px solid #d4af37;flex-shrink:0;"></div>'+
-    '</div>'+
-    '<div style="height:3px;background:linear-gradient(90deg,#d4af37,#f5e17a,#d4af37);"></div>'+
-    '</div>';
+  var age2 = data.playerBirthDate ? new Date().getFullYear() - parseInt(data.playerBirthDate.split('-')[0]) : 0;
+  var cat2 = age2<=8?'U8':age2<=10?'U10':age2<=12?'U12':age2<=14?'U14':'U16+';
+  var cardHtml = buildFifaCard('playerIdCard', {
+    name: data.playerName, id: id, cat: cat2,
+    photo: photo, initials: initials,
+    civilId: data.playerCivilId || '—',
+    birthDate: data.playerBirthDate || '—',
+    nationality: data.playerNationality || '—',
+    health: data.playerHealth || 'لا يوجد',
+    parentName: data.parentName || '—',
+    phone: data.parentPhone || '—',
+    season: season,
+    primaryColor: pc, darkColor: dc,
+    acadName: acadN, acadEn: acadE,
+    logo: logoSrc, qrId: 'regCardQR'
+  });
 
   document.getElementById('content').innerHTML =
     '<div style="text-align:center;padding:16px;">'+
@@ -5859,6 +5783,86 @@ function showSuccess(id, data) {
       new QRCode(qrEl, {text: verifyUrl, width: 60, height: 60, correctLevel: QRCode.CorrectLevel.M});
     }
   }, 100);
+}
+
+function buildFifaCard(cardId, o) {
+  var pc = o.primaryColor || '#b81d22';
+  var dc = o.darkColor || '#3b0a0a';
+  var photoHtml = o.photo
+    ? '<img src="'+o.photo+'" style="width:100%;height:100%;object-fit:cover;object-position:top;" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">' +
+      '<div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:52px;font-weight:900;color:#d4af37;">'+o.initials+'</div>'
+    : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:52px;font-weight:900;color:#d4af37;">'+o.initials+'</div>';
+
+  return (
+    '<div id="'+cardId+'" style="width:300px;font-family:Cairo,sans-serif;direction:rtl;margin:0 auto;position:relative;border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.7);">'+
+
+    /* خلفية البطاقة - تدرج FIFA */
+    '<div style="background:linear-gradient(160deg,'+dc+' 0%,'+pc+' 40%,#c8a415 100%);padding:0;position:relative;min-height:460px;">'+
+
+      /* زخرفة دوائر خلفية */
+      '<div style="position:absolute;top:-60px;left:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none;"></div>'+
+      '<div style="position:absolute;bottom:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(0,0,0,.15);pointer-events:none;"></div>'+
+
+      /* الجزء العلوي: رقم الفئة + موقع اللعب + شعار */
+      '<div style="position:relative;z-index:2;padding:14px 14px 0;display:flex;justify-content:space-between;align-items:flex-start;">'+
+        '<div style="text-align:center;">'+
+          '<div style="font-size:42px;font-weight:900;color:#fff;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,.4);">'+o.cat+'</div>'+
+          '<div style="font-size:9px;color:rgba(255,255,255,.7);font-weight:700;letter-spacing:1px;margin-top:2px;">الفئة</div>'+
+          '<div style="margin-top:8px;"><img src="'+o.logo+'" style="width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));" onerror="this.style.display=\'none\'"></div>'+
+        '</div>'+
+
+        /* صورة اللاعب */
+        '<div style="width:140px;height:160px;overflow:hidden;border-radius:12px 12px 0 0;box-shadow:0 8px 24px rgba(0,0,0,.5);border:2px solid rgba(212,175,55,.5);">'+
+          photoHtml+
+        '</div>'+
+
+        /* الجهة اليسرى: الشعار والعلم */
+        '<div style="text-align:center;">'+
+          '<div style="font-size:18px;">🇴🇲</div>'+
+          '<div style="font-size:8px;color:rgba(255,255,255,.6);font-weight:700;margin-top:4px;">OMAN</div>'+
+          '<div style="margin-top:8px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(212,175,55,.4);display:flex;align-items:center;justify-content:center;font-size:10px;color:#d4af37;font-weight:900;">⚽</div>'+
+        '</div>'+
+      '</div>'+
+
+      /* اسم اللاعب */
+      '<div style="position:relative;z-index:2;text-align:center;padding:10px 14px 0;">'+
+        '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.6),transparent);margin-bottom:8px;"></div>'+
+        '<div style="font-size:18px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5);letter-spacing:.5px;">'+o.name+'</div>'+
+        '<div style="font-size:9px;color:#d4af37;font-weight:700;letter-spacing:3px;margin-top:2px;">'+(o.acadEn||'ACADEMY')+'</div>'+
+      '</div>'+
+
+      /* شريط ذهبي فاصل */
+      '<div style="position:relative;z-index:2;margin:10px 14px;height:2px;background:linear-gradient(90deg,transparent,#d4af37,transparent);"></div>'+
+
+      /* البيانات - صفين */
+      '<div style="position:relative;z-index:2;padding:0 14px 12px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">'+
+        _fifaStat('رقم الملف', o.id)+
+        _fifaStat('رقم الهوية', o.civilId)+
+        _fifaStat('الميلاد', o.birthDate)+
+        _fifaStat('الجنسية', o.nationality)+
+        (o.parentName ? _fifaStat('ولي الأمر', o.parentName) : '')+
+        (o.phone ? _fifaStat('الهاتف', o.phone) : '')+
+      '</div>'+
+
+      /* الفوتر */
+      '<div style="position:relative;z-index:2;background:rgba(0,0,0,.35);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(212,175,55,.2);">'+
+        '<div>'+
+          '<div style="font-size:7px;color:#d4af37;font-weight:900;letter-spacing:2px;">'+o.season+'</div>'+
+          '<div style="font-size:7px;color:rgba(255,255,255,.4);margin-top:2px;">امسح للتحقق</div>'+
+        '</div>'+
+        '<div id="'+o.qrId+'" style="background:#fff;padding:3px;border-radius:6px;border:1.5px solid #d4af37;"></div>'+
+      '</div>'+
+
+    '</div>'+ /* end gradient bg */
+    '</div>'  /* end card */
+  );
+}
+
+function _fifaStat(label, val) {
+  return '<div style="background:rgba(0,0,0,.25);border-radius:8px;padding:5px 8px;border:1px solid rgba(212,175,55,.15);">'+
+    '<div style="font-size:7px;color:rgba(255,255,255,.5);font-weight:700;margin-bottom:2px;">'+label+'</div>'+
+    '<div style="font-size:10px;color:#fff;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+val+'</div>'+
+  '</div>';
 }
 
 function _cardRow(label, val, accent) {
