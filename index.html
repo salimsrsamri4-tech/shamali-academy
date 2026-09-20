@@ -5792,16 +5792,19 @@ function buildFifaCard(cardId, o) {
       '<div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:56px;font-weight:900;color:#d4af37;">'+o.initials+'</div>'
     : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:56px;font-weight:900;color:#d4af37;">'+o.initials+'</div>';
 
-  /* التقييم والمركز حسب الفئة */
-  var rating = '99'; var pos = 'ST';
-  if(o.cat){
-    var n=parseInt(String(o.cat).replace(/\D/g,''))||0;
-    if(n<=8){rating='99';pos='ST';}
-    else if(n<=10){rating='95';pos='CAM';}
-    else if(n<=12){rating='90';pos='CM';}
-    else if(n<=14){rating='85';pos='RM';}
-    else{rating='80';pos='CB';}
-  }
+  /* رمز الفئة العمرية مباشرةً */
+  var catLabel = o.cat || 'U?';
+  /* علم عُمان SVG صحيح: شريط أحمر عمودي يسار + أبيض + أخضر */
+  var omanFlag =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 20" width="30" height="20">'+
+      '<rect width="30" height="20" fill="#fff"/>'+
+      '<rect width="30" height="6.6" fill="#DB161B"/>'+
+      '<rect y="13.4" width="30" height="6.6" fill="#1DB83D"/>'+
+      '<rect width="8" height="20" fill="#DB161B"/>'+
+      '<rect x="1" y="4" width="5" height="12" fill="#fff" rx="1"/>'+
+      '<rect x="2.5" y="5.5" width="2" height="9" fill="#DB161B" rx=".5"/>'+
+      '<rect x="1.5" y="8" width="5" height="1.5" fill="#DB161B"/>'+
+    '</svg>';
 
   /* شكل الدرع بـ clip-path CSS مع تدرج ذهبي */
   var shieldPath='polygon(50% 0%,97% 7%,100% 36%,100% 62%,87% 82%,50% 100%,13% 82%,0% 62%,0% 36%,3% 7%)';
@@ -5831,12 +5834,11 @@ function buildFifaCard(cardId, o) {
         /* صف علوي: [رقم+مركز+علم+شعار] | [صورة] | [فراغ] */
         '<div style="display:flex;flex-direction:row;align-items:flex-start;padding:44px 22px 0;gap:0;">'+
 
-          /* عمود أيمن: رقم + مركز + علم + شعار */
-          '<div style="display:flex;flex-direction:column;align-items:center;width:52px;gap:3px;flex-shrink:0;">'+
-            '<div style="font-size:48px;font-weight:900;color:#fff;line-height:1;text-shadow:0 3px 10px rgba(0,0,0,.9);font-family:Arial Black,Arial,sans-serif;">'+rating+'</div>'+
-            '<div style="font-size:11px;font-weight:900;color:#fff;letter-spacing:1px;text-shadow:0 2px 6px rgba(0,0,0,.8);font-family:Arial Black,Arial,sans-serif;">'+pos+'</div>'+
-            '<div style="margin-top:6px;width:26px;height:18px;background:linear-gradient(180deg,#ee0000 33%,#fff 33%,#fff 66%,#008000 66%);border:1px solid rgba(255,255,255,.4);border-radius:2px;"></div>'+
-            '<div style="margin-top:5px;"><img src="'+o.logo+'" style="width:26px;height:26px;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,.8));" onerror="this.style.display=\'none\'"></div>'+
+          /* عمود أيمن: فئة + علم + شعار */
+          '<div style="display:flex;flex-direction:column;align-items:center;width:52px;gap:4px;flex-shrink:0;">'+
+            '<div style="font-size:30px;font-weight:900;color:#fff;line-height:1;text-shadow:0 3px 10px rgba(0,0,0,.9);font-family:Arial Black,Arial,sans-serif;letter-spacing:-1px;">'+catLabel+'</div>'+
+            '<div style="margin-top:4px;border:1px solid rgba(255,255,255,.35);border-radius:3px;overflow:hidden;line-height:0;">'+omanFlag+'</div>'+
+            '<div style="margin-top:4px;"><img src="'+o.logo+'" style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,.8));" onerror="this.style.display=\'none\'"></div>'+
           '</div>'+
 
           /* صورة اللاعب في المنتصف */
@@ -5872,12 +5874,12 @@ function buildFifaCard(cardId, o) {
         /* خط ذهبي */
         '<div style="margin:5px 40px 4px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.5),transparent);"></div>'+
 
-        /* فوتر: موسم + QR */
-        '<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 28px 48px;direction:ltr;">'+
-          '<div id="'+o.qrId+'" style="background:#fff;padding:2px;border-radius:3px;border:1px solid rgba(212,175,55,.7);"></div>'+
-          '<div style="text-align:left;">'+
-            '<div style="font-size:7px;color:rgba(212,175,55,.9);letter-spacing:1.5px;font-weight:700;">'+o.season+'</div>'+
-            '<div style="font-size:7px;color:rgba(255,255,255,.45);margin-top:1px;">'+(o.acadEn||'ACADEMY')+'</div>'+
+        /* فوتر: QR يسار + نصوص يمين */
+        '<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 30px 52px;">'+
+          '<div id="'+o.qrId+'" style="background:#fff;padding:2px;border-radius:3px;border:1px solid rgba(212,175,55,.6);flex-shrink:0;"></div>'+
+          '<div style="text-align:right;direction:rtl;">'+
+            '<div style="font-size:8px;color:rgba(212,175,55,.95);letter-spacing:1px;font-weight:700;">'+o.season+'</div>'+
+            '<div style="font-size:7px;color:rgba(255,255,255,.5);margin-top:2px;">'+(o.acadEn||'ACADEMY')+'</div>'+
           '</div>'+
         '</div>'+
 
