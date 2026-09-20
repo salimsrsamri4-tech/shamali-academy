@@ -862,14 +862,31 @@ function apiDelete(sheetName, column, value) {
 }
 
 // Get all players
+function _arraysToObjects(data) {
+  if (!Array.isArray(data) || data.length < 2) return [];
+  // إذا كان العنصر الأول مصفوفة → format [headers, row, row, ...]
+  if (Array.isArray(data[0])) {
+    var headers = data[0];
+    return data.slice(1).map(function(row) {
+      var obj = {};
+      headers.forEach(function(h, i) { obj[h] = row[i] !== undefined ? row[i] : ''; });
+      return obj;
+    });
+  }
+  // إذا كانت مصفوفة من كائنات → أرجعها كما هي
+  return data;
+}
+
 function getPlayers() {
   return Promise.all([
     apiGet('الورقة1'),
     apiGet('صور اللاعبين').then(function(r){ return r; }, function(){ return []; })
   ]).then(function(results){
     var r0 = results[0]; var r1 = results[1];
-    var rows = Array.isArray(r0) ? r0 : (r0 && Array.isArray(r0.data) ? r0.data : []);
-    var photoRows = Array.isArray(r1) ? r1 : (r1 && Array.isArray(r1.data) ? r1.data : []);
+    var raw0 = Array.isArray(r0) ? r0 : (r0 && Array.isArray(r0.data) ? r0.data : []);
+    var raw1 = Array.isArray(r1) ? r1 : (r1 && Array.isArray(r1.data) ? r1.data : []);
+    var rows = _arraysToObjects(raw0);
+    var photoRows = _arraysToObjects(raw1);
     // بناء خريطة صور من ورقة صور اللاعبين (الأحدث يسبق)
     var photoMap = {};
     photoRows.forEach(function(r){
@@ -907,8 +924,10 @@ function getCoaches(forceRefresh) {
     apiGet('بيانات المدربين', forceRefresh),
     apiGet('أرقام المدربين', forceRefresh).then(function(r){ return r; }, function(){ return []; })
   ]).then(function(results){
-    var rows = Array.isArray(results[0]) ? results[0] : [];
-    var phones = Array.isArray(results[1]) ? results[1] : [];
+    var raw0 = Array.isArray(results[0]) ? results[0] : (results[0] && Array.isArray(results[0].data) ? results[0].data : []);
+    var raw1 = Array.isArray(results[1]) ? results[1] : (results[1] && Array.isArray(results[1].data) ? results[1].data : []);
+    var rows = _arraysToObjects(raw0);
+    var phones = _arraysToObjects(raw1);
     var phoneMap = {};
     phones.forEach(function(p){
       var n = (p['اسم المدرب'] || '').trim();
