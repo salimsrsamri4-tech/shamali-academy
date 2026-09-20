@@ -5875,11 +5875,20 @@ function buildFifaCard(cardId, o) {
         '<div style="margin:5px 40px 4px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.5),transparent);"></div>'+
 
         /* فوتر: QR يسار + نصوص يمين */
-        '<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 30px 52px;">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 30px 8px;">'+
           '<div id="'+o.qrId+'" style="background:#fff;padding:2px;border-radius:3px;border:1px solid rgba(212,175,55,.6);flex-shrink:0;"></div>'+
           '<div style="text-align:right;direction:rtl;">'+
             '<div style="font-size:8px;color:rgba(212,175,55,.95);letter-spacing:1px;font-weight:700;">'+o.season+'</div>'+
             '<div style="font-size:7px;color:rgba(255,255,255,.5);margin-top:2px;">'+(o.acadEn||'ACADEMY')+'</div>'+
+          '</div>'+
+        '</div>'+
+
+        /* منصة توفة */
+        '<div style="text-align:center;padding:0 20px 48px;direction:rtl;">'+
+          '<div style="display:inline-block;border-top:1px solid rgba(212,175,55,.35);padding-top:5px;">'+
+            '<span style="font-size:7.5px;color:rgba(212,175,55,.7);font-weight:700;letter-spacing:.5px;">منصة توفة</span>'+
+            '<span style="font-size:7px;color:rgba(255,255,255,.35);margin:0 4px;">|</span>'+
+            '<span style="font-size:7.5px;color:rgba(255,255,255,.45);font-weight:600;">الكابتن الصغير</span>'+
           '</div>'+
         '</div>'+
 
