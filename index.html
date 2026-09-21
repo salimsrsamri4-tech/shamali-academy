@@ -346,6 +346,18 @@ window.addEventListener('load',function(){
     <button class="sb-btn" style="color:#d4af37;" data-pg="festacadview" onclick="go('festacadview')"><i class="fas fa-list"></i> تسجيلات أكاديميتي</button>
     <button class="sb-btn danger" id="festAcadLogoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
   </div>
+  <!-- بوابة الدعم الفني / مدير المنصة -->
+  <hr class="sb-hr">
+  <button class="sb-btn" id="superAdminBtn" style="color:#06b6d4;font-size:11px;" onclick="go('super_login')">
+    <i class="fas fa-shield-halved"></i> الدعم الفني
+  </button>
+  <div id="superAdminMenu" style="display:none;">
+    <button class="sb-btn" style="color:#06b6d4;" onclick="go('super_dashboard')"><i class="fas fa-globe"></i> لوحة المنصة المركزية</button>
+    <button class="sb-btn" style="color:#06b6d4;" onclick="go('super_loans')"><i class="fas fa-exchange-alt"></i> كل الاستعارات</button>
+    <button class="sb-btn" style="color:#06b6d4;" onclick="go('super_academies')"><i class="fas fa-users"></i> كل الأكاديميات</button>
+    <button class="sb-btn danger" onclick="superLogout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+  </div>
+
   <div class="sb-foot">
     <a href="services.html" target="_blank" style="color:#d4af37;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
       <i class="fas fa-globe"></i> خدماتنا الرقمية
@@ -750,8 +762,10 @@ var CONFIG = {
 // ===== إعدادات المنصة المركزية =====
 var PLATFORM = {
   CENTRAL_GAS: 'https://script.google.com/macros/s/AKfycbwuKiK4Jd_j8WxLcEXRPY0y9dZ_TRNWVw1MXOX_xLPOJxza4nvTXgZ2B8NL8IheHilS/exec',
-  LOAN_SHEET: 'استعارات'
+  LOAN_SHEET: 'استعارات',
+  SUPER_PASS: 'tawfah@2026'  // كلمة مرور الدعم الفني / مدير المنصة
 };
+var _isSuperAdmin = false;
 
 // ===== API (يدعم Apps Script و SheetDB) =====
 function _arraysToObjects(data) {
@@ -3319,6 +3333,10 @@ function renderPage(page) {
     case 'substrack': renderSubsTrack(); break;
     case 'admintools': renderAdminTools(); break;
     case 'finance': renderFinance(); break;
+    case 'super_login': renderSuperLogin(); break;
+    case 'super_dashboard': if(_isSuperAdmin){renderSuperDashboard();}else{renderSuperLogin();} break;
+    case 'super_loans': if(_isSuperAdmin){renderSuperLoans();}else{renderSuperLogin();} break;
+    case 'super_academies': if(_isSuperAdmin){renderSuperAcademies();}else{renderSuperLogin();} break;
     default:
       if(page && page.indexOf('verify_') === 0){ renderVerify(page.replace('verify_','')); break; }
       renderReg();
@@ -11468,6 +11486,193 @@ function renderLoanOutgoing(){
     }).join('');
     el.innerHTML = '<div style="padding:14px;"><div class="sec-banner" style="background:linear-gradient(135deg,#1e3a5f,#1e40af);border-right-color:#60a5fa;"><i class="fas fa-paper-plane" style="color:#60a5fa;"></i> طلباتي المُرسلة ('+mine.length+')</div>'+html+'</div>';
   }).catch(function(){ el.querySelector('.ldg').innerHTML='<div class="al al-err">تعذّر التحميل</div>'; });
+}
+
+// ================================================================
+// ===== مدير المنصة المركزي / الدعم الفني =====
+// ================================================================
+
+function renderSuperLogin(){
+  document.getElementById('content').innerHTML =
+    '<div style="max-width:340px;margin:40px auto;background:linear-gradient(135deg,#0c1a2e,#06b6d4);border-radius:20px;padding:32px 24px;text-align:center;color:#fff;font-family:Cairo,sans-serif;">'+
+    '<div style="font-size:42px;margin-bottom:10px;">🛡️</div>'+
+    '<div style="font-size:17px;font-weight:900;margin-bottom:4px;">بوابة الدعم الفني</div>'+
+    '<div style="font-size:11px;opacity:.6;margin-bottom:20px;">مدير منصة توفة — صلاحيات كاملة</div>'+
+    '<input type="password" id="superPass" placeholder="كلمة المرور" '+
+      'style="width:100%;padding:12px;border-radius:10px;border:none;font-family:Cairo,sans-serif;font-size:14px;text-align:center;margin-bottom:12px;direction:rtl;" '+
+      'onkeydown="if(event.key===\'Enter\')checkSuperAdmin()">'+
+    '<button onclick="checkSuperAdmin()" '+
+      'style="width:100%;background:#fff;color:#0c1a2e;border:none;border-radius:10px;padding:12px;font-family:Cairo,sans-serif;font-size:14px;font-weight:900;cursor:pointer;">'+
+      '<i class="fas fa-unlock-alt"></i> دخول</button>'+
+    '<div id="superErr" style="display:none;color:#fca5a5;font-size:12px;margin-top:10px;">❌ كلمة المرور غير صحيحة</div>'+
+    '</div>';
+}
+
+function checkSuperAdmin(){
+  var p = document.getElementById('superPass').value;
+  if(p === PLATFORM.SUPER_PASS){
+    _isSuperAdmin = true;
+    document.getElementById('superAdminMenu').style.display = 'block';
+    document.getElementById('superAdminBtn').style.display = 'none';
+    go('super_dashboard');
+  } else {
+    document.getElementById('superErr').style.display = 'block';
+  }
+}
+
+function superLogout(){
+  _isSuperAdmin = false;
+  document.getElementById('superAdminMenu').style.display = 'none';
+  document.getElementById('superAdminBtn').style.display = '';
+  go('home');
+}
+
+function renderSuperDashboard(){
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ تحميل بيانات المنصة...</div>';
+  var acadKeys = Object.keys(ACADEMIES);
+
+  // جلب عدد اللاعبين من كل أكاديمية
+  Promise.all(
+    acadKeys.map(function(k){
+      var url = ACADEMIES[k].GAS_URL + '?action=get&sheet='+encodeURIComponent('الورقة1')+'&limit=1000';
+      return fetch(url,{redirect:'follow'}).then(function(r){return r.json();})
+        .then(function(d){ var arr = Array.isArray(d)?d:(d&&Array.isArray(d.data)?d.data:[]); return _arraysToObjects(arr).length; })
+        .catch(function(){ return '—'; });
+    })
+  ).then(function(counts){
+    loanCentralFetch({action:'get', sheet: PLATFORM.LOAN_SHEET, limit:500}).catch(function(){return [];}).then(function(loans){
+      loans = Array.isArray(loans) ? loans : [];
+      var pending = loans.filter(function(r){return r['الحالة']==='انتظار';}).length;
+      var active  = loans.filter(function(r){return r['الحالة']==='موافق';}).length;
+      var total   = counts.reduce(function(s,c){return s+(typeof c==='number'?c:0);},0);
+
+      var acadCards = acadKeys.map(function(k,i){
+        var a = ACADEMIES[k];
+        return '<div style="background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1.5px solid #e2e8f0;">'+
+          '<div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:4px;">'+a.NAME+'</div>'+
+          '<div style="font-size:11px;color:#64748b;margin-bottom:8px;">'+k+'</div>'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+            '<div style="font-size:22px;font-weight:900;color:#b81d22;">'+counts[i]+'</div>'+
+            '<span style="font-size:10px;color:#64748b;">لاعب</span>'+
+          '</div>'+
+        '</div>';
+      }).join('');
+
+      el.innerHTML =
+        '<div style="background:linear-gradient(135deg,#0c1a2e,#0891b2);padding:20px 16px;color:#fff;">'+
+          '<div style="font-size:10px;color:#67e8f9;font-weight:700;margin-bottom:4px;">🛡️ مدير المنصة المركزي</div>'+
+          '<div style="font-size:18px;font-weight:900;">لوحة التحكم الكاملة</div>'+
+          '<div style="font-size:11px;opacity:.6;margin-top:3px;">منصة توفة — الكابتن الصغير</div>'+
+        '</div>'+
+        '<div style="padding:14px;">'+
+
+        /* إحصاءات */
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">'+
+          _superStatCard('👥','إجمالي اللاعبين',total,'#0891b2')+
+          _superStatCard('⏳','استعارات معلّقة',pending,'#f59e0b')+
+          _superStatCard('✅','استعارات نشطة',active,'#16a34a')+
+        '</div>'+
+
+        /* الأكاديميات */
+        '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.06);padding:14px;margin-bottom:14px;">'+
+          '<div style="font-size:12px;font-weight:900;color:#0f172a;margin-bottom:12px;">🏫 الأكاديميات ('+acadKeys.length+')</div>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+acadCards+'</div>'+
+        '</div>'+
+
+        /* روابط سريعة */
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+
+          '<button onclick="go(\'super_loans\')" style="background:linear-gradient(135deg,#312e81,#4c1d95);color:#fff;border:none;border-radius:12px;padding:16px;font-family:Cairo,sans-serif;font-size:12px;font-weight:800;cursor:pointer;text-align:center;">'+
+            '<div style="font-size:24px;margin-bottom:6px;">📋</div>كل الاستعارات</button>'+
+          '<button onclick="go(\'super_academies\')" style="background:linear-gradient(135deg,#064e3b,#065f46);color:#fff;border:none;border-radius:12px;padding:16px;font-family:Cairo,sans-serif;font-size:12px;font-weight:800;cursor:pointer;text-align:center;">'+
+            '<div style="font-size:24px;margin-bottom:6px;">🏫</div>إدارة الأكاديميات</button>'+
+        '</div>'+
+        '</div>';
+    });
+  });
+}
+
+function _superStatCard(icon, label, val, color){
+  return '<div style="background:'+color+';border-radius:12px;padding:14px 10px;text-align:center;color:#fff;">'+
+    '<div style="font-size:20px;margin-bottom:4px;">'+icon+'</div>'+
+    '<div style="font-size:20px;font-weight:900;">'+val+'</div>'+
+    '<div style="font-size:9px;opacity:.8;margin-top:2px;">'+label+'</div>'+
+  '</div>';
+}
+
+function renderSuperLoans(){
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ التحميل...</div>';
+  loanCentralFetch({action:'get', sheet: PLATFORM.LOAN_SHEET, limit:500}).then(function(rows){
+    rows = Array.isArray(rows) ? rows : [];
+    if(!rows.length){ el.innerHTML='<div class="card"><div class="al al-warn">لا توجد استعارات بعد</div></div>'; return; }
+    var statusColor = function(s){ return s==='موافق'?'#16a34a':s==='مرفوض'?'#dc2626':s==='بانتظار ولي الأمر'?'#7c3aed':'#92400e'; };
+    var html = rows.slice().reverse().map(function(r){
+      return '<div class="card" style="margin-bottom:8px;">'+
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">'+
+          '<div style="font-size:13px;font-weight:900;">'+r['اسم اللاعب']+'</div>'+
+          '<span style="background:'+statusColor(r['الحالة'])+';color:#fff;border-radius:20px;padding:2px 10px;font-size:10px;font-weight:700;">'+r['الحالة']+'</span>'+
+        '</div>'+
+        '<div style="font-size:11px;color:#64748b;">📤 '+r['أكاديمية الطالبة']+' ← '+r['أكاديمية المُعيرة']+'</div>'+
+        '<div style="font-size:10px;color:#94a3b8;margin-top:3px;">'+r['نوع الاستعارة']+(r['اسم البطولة']?' · '+r['اسم البطولة']:'')+' · '+r['تاريخ الطلب']+'</div>'+
+        (r['الحالة']==='انتظار' ?
+          '<div style="display:flex;gap:6px;margin-top:8px;">'+
+            '<button onclick="superApproveLoan(\''+r['رقم الطلب']+'\')" style="flex:1;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:8px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:12px;">✅ موافقة مركزية</button>'+
+            '<button onclick="superRejectLoan(\''+r['رقم الطلب']+'\')" style="flex:1;background:#dc2626;color:#fff;border:none;border-radius:8px;padding:8px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:12px;">❌ رفض</button>'+
+          '</div>' : '')+
+      '</div>';
+    }).join('');
+    el.innerHTML = '<div style="padding:14px;">'+
+      '<div class="sec-banner" style="background:linear-gradient(135deg,#0c1a2e,#0891b2);border-right-color:#06b6d4;">'+
+        '<i class="fas fa-exchange-alt" style="color:#06b6d4;"></i> كل الاستعارات ('+rows.length+')</div>'+
+      html+'</div>';
+  }).catch(function(){ el.innerHTML='<div class="al al-err">تعذّر التحميل</div>'; });
+}
+
+function superApproveLoan(reqId){
+  if(!confirm('موافقة مركزية على الطلب '+reqId+'؟')) return;
+  showL(true);
+  loanCentralPost({action:'update', sheet:PLATFORM.LOAN_SHEET, column:'رقم الطلب', value:reqId,
+    data:{'الحالة':'موافق','حالة المُعيرة':'موافق','حالة ولي الأمر':'موافق (مركزي)'}
+  }).then(function(){ showL(false); alert('✅ تمت الموافقة المركزية'); go('super_loans'); })
+  .catch(function(){ showL(false); alert('خطأ'); });
+}
+
+function superRejectLoan(reqId){
+  if(!confirm('رفض الطلب '+reqId+'؟')) return;
+  showL(true);
+  loanCentralPost({action:'update', sheet:PLATFORM.LOAN_SHEET, column:'رقم الطلب', value:reqId,
+    data:{'الحالة':'مرفوض (مركزي)','حالة المُعيرة':'مرفوض'}
+  }).then(function(){ showL(false); alert('❌ تم الرفض'); go('super_loans'); })
+  .catch(function(){ showL(false); alert('خطأ'); });
+}
+
+function renderSuperAcademies(){
+  var el = document.getElementById('content');
+  var acadKeys = Object.keys(ACADEMIES);
+  var html = acadKeys.map(function(k){
+    var a = ACADEMIES[k];
+    return '<div class="card" style="margin-bottom:10px;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'+
+        '<div style="font-size:14px;font-weight:900;color:#0f172a;">'+a.NAME+'</div>'+
+        '<span style="background:#0891b2;color:#fff;border-radius:20px;padding:2px 10px;font-size:10px;font-weight:700;">'+k+'</span>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;color:#64748b;">'+
+        '<div>📱 واتساب: '+a.WA_NUM+'</div>'+
+        '<div>🔑 كلمة الإدارة: '+(a.ADMIN_PASS?a.ADMIN_PASS[0]:'—')+'</div>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;margin-top:10px;">'+
+        '<a href="?acad='+k+'" target="_blank" style="flex:1;background:#0891b2;color:#fff;border-radius:8px;padding:8px;font-family:Cairo,sans-serif;font-size:11px;font-weight:800;text-align:center;text-decoration:none;">🔗 فتح المنصة</a>'+
+        '<a href="https://api.whatsapp.com/send?phone='+a.WA_NUM+'&text='+encodeURIComponent('مرحباً من الدعم الفني لمنصة توفة')+'" target="_blank" '+
+          'style="flex:1;background:#16a34a;color:#fff;border-radius:8px;padding:8px;font-family:Cairo,sans-serif;font-size:11px;font-weight:800;text-align:center;text-decoration:none;">💬 واتساب</a>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  el.innerHTML =
+    '<div style="padding:14px;">'+
+    '<div class="sec-banner" style="background:linear-gradient(135deg,#0c1a2e,#0891b2);border-right-color:#06b6d4;">'+
+      '<i class="fas fa-users" style="color:#06b6d4;"></i> إدارة الأكاديميات ('+acadKeys.length+')</div>'+
+    html+'</div>';
 }
 
 </script>
