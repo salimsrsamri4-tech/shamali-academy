@@ -399,6 +399,7 @@ textarea.inp{resize:vertical;min-height:88px;}
       </div>
       <h3>تم إرسال الطلب!</h3>
       <p>شكراً لاهتمامك بمنصة توفة<br>سيتواصل معك مدير المنصة قريباً 🎯</p>
+      <p id="gasStatus" style="font-size:12px;margin-top:12px;color:var(--text2);">⏳ جارٍ الحفظ في السجل...</p>
     </div>
   </div>
 </div>
@@ -507,16 +508,33 @@ function submitForm(){
     }
   });
 
+  var gasStatus = document.getElementById('gasStatus');
+  if(gasStatus) gasStatus.textContent = '⏳ جارٍ الحفظ في السجل...';
+
   fetch(CENTRAL_GAS, {
     method: 'POST',
     headers: {'Content-Type': 'text/plain'},
     redirect: 'follow',
     body: payload
   }).then(function(r){ return r.json(); })
-    .then(function(res){ console.log('GAS response:', res); })
-    .catch(function(err){ console.error('GAS error:', err); })
+    .then(function(res){
+      if(gasStatus){
+        if(res && (res.status === 'ok' || res.result === 'success' || res.success)){
+          gasStatus.style.color = '#16a34a';
+          gasStatus.textContent = '✅ تم الحفظ في السجل بنجاح';
+        } else {
+          gasStatus.style.color = '#f59e0b';
+          gasStatus.textContent = '⚠️ رد الخادم: ' + JSON.stringify(res);
+        }
+      }
+    })
+    .catch(function(err){
+      if(gasStatus){
+        gasStatus.style.color = '#dc2626';
+        gasStatus.textContent = '❌ خطأ في الاتصال: ' + err.message;
+      }
+    })
     .finally(function(){
-      // واتساب كإشعار فوري للمدير
       window.open('https://api.whatsapp.com/send?phone=96892126558&text=' + encodeURIComponent(msg), '_blank');
       document.getElementById('formBody').style.display = 'none';
       document.getElementById('successMsg').style.display = 'block';
