@@ -636,9 +636,9 @@ var ACADEMIES = {
   // team: { NAME: 'أكاديمية تيم', PRIMARY_COLOR: '#1a5276', ADMIN_PASS: ['1234'], WA_NUM: '96891234567' }
 };
 
-// دالة مساعدة: تكمل بيانات الأكاديمية بالإعدادات المركزية
+// دالة مساعدة: تكمل بيانات الأكاديمية — تُستدعى بعد تعريف PLATFORM
 function _fillAcadDefaults(k, a){
-  var centralGAS   = PLATFORM.CENTRAL_GAS;
+  var centralGAS   = PLATFORM ? PLATFORM.CENTRAL_GAS : '';
   var centralSheet = '16Qc1DUjhpbT-kIra74YeFQxzVxvBY7tSquUrHdacZKI';
   var centralAPIKey= 'AIzaSyBOiSr2yaHT8eWbUuQnn6hNY6w6zHzhqUo';
   if(!a.GAS_URL)    a.GAS_URL    = centralGAS;
@@ -652,31 +652,6 @@ function _fillAcadDefaults(k, a){
   if(!a.COACH_PASS) a.COACH_PASS = ['1234'];
   return a;
 }
-
-// تطبيق الإعدادات المركزية على الأكاديميات الثابتة
-(function(){ Object.keys(ACADEMIES).forEach(function(k){ _fillAcadDefaults(k, ACADEMIES[k]); }); })();
-
-// تحميل الأكاديميات المقبولة من الشيت تلقائياً
-(function(){
-  var url = PLATFORM.CENTRAL_GAS + '?action=get&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET) + '&limit=200';
-  fetch(url, {redirect:'follow'}).then(function(r){ return r.json(); }).then(function(rows){
-    if(!Array.isArray(rows)) return;
-    rows.forEach(function(r){
-      if(r['الحالة'] !== 'مقبول') return;
-      var key = r['مفتاح_الأكاديمية'];
-      var pass = r['كلمة_المرور'];
-      if(!key || !pass) return;
-      if(ACADEMIES[key]) return; // موجودة مسبقاً
-      var acad = {
-        NAME: r['اسم الأكاديمية'] || key,
-        PRIMARY_COLOR: '#1e3a5f',
-        ADMIN_PASS: [pass],
-        WA_NUM: r['رقم الواتساب'] || ''
-      };
-      ACADEMIES[key] = _fillAcadDefaults(key, acad);
-    });
-  }).catch(function(){});
-})();
 
 // قراءة معامل الأكاديمية من الرابط (?academy=shamali)
 (function(){
@@ -814,6 +789,30 @@ var PLATFORM = {
   SUPER_PASS: '1234'  // كلمة مرور الدعم الفني / مدير المنصة
 };
 var _isSuperAdmin = false;
+
+// تطبيق الإعدادات المركزية على الأكاديميات الثابتة
+(function(){ Object.keys(ACADEMIES).forEach(function(k){ _fillAcadDefaults(k, ACADEMIES[k]); }); })();
+
+// تحميل الأكاديميات المقبولة من الشيت تلقائياً
+(function(){
+  var url = PLATFORM.CENTRAL_GAS + '?action=get&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET) + '&limit=200';
+  fetch(url, {redirect:'follow'}).then(function(r){ return r.json(); }).then(function(rows){
+    if(!Array.isArray(rows)) return;
+    rows.forEach(function(r){
+      if(r['الحالة'] !== 'مقبول') return;
+      var key  = r['مفتاح_الأكاديمية'];
+      var pass = r['كلمة_المرور'];
+      if(!key || !pass) return;
+      if(ACADEMIES[key]) return;
+      ACADEMIES[key] = _fillAcadDefaults(key, {
+        NAME: r['اسم الأكاديمية'] || key,
+        PRIMARY_COLOR: '#1e3a5f',
+        ADMIN_PASS: [pass],
+        WA_NUM: r['رقم الواتساب'] || ''
+      });
+    });
+  }).catch(function(){});
+})();
 
 // ===== API (يدعم Apps Script و SheetDB) =====
 function _arraysToObjects(data) {
