@@ -5828,7 +5828,7 @@ function buildFifaCard(cardId, o) {
 
   /* شعار الأكاديمية بدون خلفية بيضاء */
   var logoHtml = o.logo
-    ? '<img src="'+o.logo+'" style="width:32px;height:32px;object-fit:contain;display:block;filter:drop-shadow(0 0 6px rgba(212,175,55,.8));" onerror="this.style.display=\'none\'">'
+    ? '<img src="'+o.logo+'" style="width:30px;height:30px;object-fit:contain;display:block;filter:invert(1) drop-shadow(0 0 4px rgba(212,175,55,.6));" onerror="this.style.display=\'none\'">'
     : '';
 
   return (
@@ -5946,9 +5946,9 @@ function _fifaDataCell(label, val) {
   var v = (val && String(val).trim()) ? String(val).trim() : '—';
   return '<div style="background:rgba(255,255,255,.04);border-radius:6px;padding:5px 8px;'+
     'border:1px solid rgba(212,175,55,.18);overflow:hidden;direction:rtl;">'+
-    '<div style="font-size:7.5px;color:#b8860b;font-weight:700;margin-bottom:2px;direction:rtl;text-align:right;">'+label+'</div>'+
+    '<div style="font-size:7.5px;color:#b8860b;font-weight:700;margin-bottom:2px;direction:rtl;text-align:right;unicode-bidi:embed;">'+label+'</div>'+
     '<div style="font-size:10.5px;color:#f0f0f0;font-weight:800;white-space:nowrap;overflow:hidden;'+
-      'text-overflow:ellipsis;direction:rtl;text-align:right;">'+v+'</div>'+
+      'text-overflow:ellipsis;direction:rtl;text-align:right;unicode-bidi:embed;">'+v+'</div>'+
   '</div>';
 }
 
