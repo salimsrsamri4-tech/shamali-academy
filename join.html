@@ -493,7 +493,7 @@ function submitForm(){
   var payload = JSON.stringify({
     action: 'append',
     sheet: 'طلبات_انضمام',
-    row: {
+    data: [{
       'رقم الطلب': reqId,
       'تاريخ الطلب': today,
       'اسم الأكاديمية': name,
@@ -504,11 +504,17 @@ function submitForm(){
       'الفئات العمرية': cats,
       'ملاحظات': notes,
       'الحالة': 'جديد'
-    }
+    }]
   });
 
-  fetch(CENTRAL_GAS, {method:'POST', body: payload})
-    .catch(function(){})
+  fetch(CENTRAL_GAS, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain'},
+    redirect: 'follow',
+    body: payload
+  }).then(function(r){ return r.json(); })
+    .then(function(res){ console.log('GAS response:', res); })
+    .catch(function(err){ console.error('GAS error:', err); })
     .finally(function(){
       // واتساب كإشعار فوري للمدير
       window.open('https://api.whatsapp.com/send?phone=96892126558&text=' + encodeURIComponent(msg), '_blank');
