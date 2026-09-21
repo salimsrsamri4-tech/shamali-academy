@@ -5832,14 +5832,14 @@ function buildFifaCard(cardId, o) {
 
   return (
     '<div id="'+cardId+'" style="'+
-      'width:300px;border-radius:16px;overflow:hidden;'+
-      'box-shadow:0 12px 48px rgba(0,0,0,.65);'+
+      'width:260px;border-radius:14px;overflow:hidden;'+
+      'box-shadow:0 10px 40px rgba(0,0,0,.65);'+
       'font-family:Cairo,Tajawal,Arial,sans-serif;'+
       'margin:0 auto;direction:rtl;'+
     '">'+
 
     /* ===== القسم العلوي: صورة + فئة + علم + شعار ===== */
-    '<div style="position:relative;height:255px;overflow:hidden;'+
+    '<div style="position:relative;height:220px;overflow:hidden;'+
       'background:linear-gradient(160deg,#f5e88a 0%,#d4a820 8%,#b88a00 18%,#7a5c00 32%,#3c2a00 50%,#1a0f00 70%,#0a0500 100%);'+
     '">'+
 
@@ -5877,8 +5877,8 @@ function buildFifaCard(cardId, o) {
           '<div style="font-size:42px;font-weight:900;color:#fff;line-height:1;text-shadow:0 0 20px rgba(255,200,50,.6),0 3px 8px rgba(0,0,0,.9);font-family:Arial Black,Arial,sans-serif;">'+catLabel+'</div>'+
         '</div>'+
         '<div style="border:1px solid rgba(255,255,255,.5);border-radius:3px;overflow:hidden;line-height:0;box-shadow:0 2px 8px rgba(0,0,0,.6);">'+omanFlag+'</div>'+
-        '<div style="background:rgba(0,0,0,.4);border-radius:6px;padding:3px;border:1px solid rgba(212,175,55,.3);">'+
-          '<img src="'+o.logo+'" style="width:28px;height:28px;object-fit:contain;display:block;filter:drop-shadow(0 1px 3px rgba(0,0,0,.8));" onerror="this.style.display=\'none\'">'+
+        '<div style="border-radius:6px;padding:2px;border:1px solid rgba(212,175,55,.3);">'+
+          '<img src="'+o.logo+'" style="width:28px;height:28px;object-fit:contain;display:block;mix-blend-mode:multiply;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));" onerror="this.style.display=\'none\'">'+
         '</div>'+
       '</div>'+
 
@@ -5941,9 +5941,9 @@ function _fifaStatLine(val, label) {
 
 function _fifaDataCell(label, val) {
   var v = (val && String(val).trim()) ? val : '—';
-  return '<div style="background:rgba(0,0,0,.32);border-radius:5px;padding:4px 7px;border:1px solid rgba(212,175,55,.22);overflow:hidden;text-align:right;">'+
-    '<div style="font-size:7px;color:rgba(212,175,55,.8);font-weight:700;letter-spacing:.3px;white-space:nowrap;margin-bottom:1px;">'+label+'</div>'+
-    '<div style="font-size:10px;color:#fff;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.7);">'+v+'</div>'+
+  return '<div style="background:rgba(0,0,0,.32);border-radius:5px;padding:4px 7px;border:1px solid rgba(212,175,55,.22);overflow:hidden;text-align:right;direction:rtl;">'+
+    '<div style="font-size:7px;color:rgba(212,175,55,.8);font-weight:700;white-space:nowrap;margin-bottom:1px;direction:rtl;unicode-bidi:embed;">'+label+'</div>'+
+    '<div style="font-size:10px;color:#fff;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.7);direction:rtl;">'+v+'</div>'+
   '</div>';
 }
 
