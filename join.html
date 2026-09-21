@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>انضم إلى منصة توفة</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Cairo, sans-serif;
+  background: #f0f4f8;
+  color: #0f172a;
+  direction: rtl;
+  min-height: 100vh;
+}
+.hero {
+  background: linear-gradient(150deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+  padding: 48px 20px 52px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,175,55,.18), transparent);
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-block;
+  background: rgba(212,175,55,.15);
+  border: 1px solid rgba(212,175,55,.4);
+  border-radius: 20px;
+  padding: 5px 18px;
+  font-size: 12px;
+  color: #f5d060;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+.hero h1 {
+  font-size: clamp(22px, 6vw, 34px);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+.hero h1 span { color: #f5d060; }
+.hero p {
+  font-size: 13px;
+  color: rgba(255,255,255,.6);
+  max-width: 340px;
+  margin: 0 auto 24px;
+  line-height: 1.8;
+}
+.features {
+  display: flex; flex-wrap: wrap;
+  justify-content: center; gap: 8px;
+  padding: 0 16px;
+  position: relative; z-index: 1;
+}
+.feat {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 10px;
+  padding: 7px 14px;
+  font-size: 11px;
+  color: rgba(255,255,255,.85);
+  font-weight: 600;
+}
+.form-wrap {
+  max-width: 480px;
+  margin: -26px auto 40px;
+  padding: 0 16px;
+  position: relative; z-index: 2;
+}
+.card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.10);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+.card-header {
+  background: linear-gradient(135deg, #b81d22, #7a1015);
+  padding: 18px 22px;
+  display: flex; align-items: center; gap: 12px;
+}
+.card-header-icon {
+  width: 42px; height: 42px;
+  background: rgba(255,255,255,.15);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.card-header h2 { font-size: 15px; font-weight: 900; color: #fff; }
+.card-header p { font-size: 11px; color: rgba(255,255,255,.6); margin-top: 2px; }
+.card-body { padding: 22px; }
+.field { margin-bottom: 15px; }
+.field label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; }
+.field label span { color: #b81d22; }
+.inp {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  background: #f8fafc; color: #0f172a;
+  font-family: Cairo, sans-serif; font-size: 13px;
+  direction: rtl; outline: none;
+  transition: border-color .2s;
+}
+.inp:focus { border-color: #d4af37; }
+.inp::placeholder { color: #94a3b8; }
+select.inp { cursor: pointer; }
+textarea.inp { resize: vertical; min-height: 80px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 400px) { .grid2 { grid-template-columns: 1fr; } }
+.btn-submit {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, #b81d22, #7a1015);
+  color: #fff; border: none; border-radius: 12px;
+  font-family: Cairo, sans-serif; font-size: 15px; font-weight: 900;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: opacity .2s, transform .1s; margin-top: 4px;
+}
+.btn-submit:hover { opacity: .9; }
+.btn-submit:active { transform: scale(.98); }
+.note { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 10px; line-height: 1.7; }
+.err-box {
+  display: none; background: #fef2f2; border: 1px solid #fca5a5;
+  border-radius: 8px; padding: 10px 12px;
+  font-size: 12px; color: #dc2626; margin-bottom: 12px;
+}
+.success { display: none; text-align: center; padding: 44px 24px; }
+.success-icon { font-size: 56px; margin-bottom: 14px; }
+.success h3 { font-size: 18px; font-weight: 900; color: #16a34a; margin-bottom: 8px; }
+.success p { font-size: 13px; color: #64748b; line-height: 1.8; }
+.footer {
+  text-align: center; padding: 20px 16px 36px;
+  font-size: 11px; color: #94a3b8;
+}
+.footer strong { color: #d4af37; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">🏆 منصة توفة | الكابتن الصغير</div>
+  <h1>انضم إلى منصة<br><span>إدارة الأكاديميات</span></h1>
+  <p>منصة متكاملة لإدارة اللاعبين، الحضور، الاشتراكات، والبطولات — مخصصة لأكاديميتك</p>
+  <div class="features">
+    <div class="feat">🪪 بطاقات اللاعبين</div>
+    <div class="feat">📊 لوحة إحصائيات</div>
+    <div class="feat">🔄 نظام الاستعارة</div>
+    <div class="feat">🏆 إدارة البطولات</div>
+    <div class="feat">📱 متوافق مع الجوال</div>
+    <div class="feat">🇴🇲 للأكاديميات العُمانية</div>
+  </div>
+</div>
+
+<div class="form-wrap">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon">📋</div>
+      <div>
+        <h2>طلب الانضمام للمنصة</h2>
+        <p>أكمل البيانات وسنتواصل معك خلال 24 ساعة</p>
+      </div>
+    </div>
+    <div class="card-body" id="formBody">
+
+      <div class="field">
+        <label>اسم الأكاديمية <span>*</span></label>
+        <input class="inp" id="acadName" type="text" placeholder="مثال: أكاديمية النجوم الرياضية">
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>اسم المسؤول <span>*</span></label>
+          <input class="inp" id="contactName" type="text" placeholder="الاسم الكامل">
+        </div>
+        <div class="field">
+          <label>رقم الواتساب <span>*</span></label>
+          <input class="inp" id="phone" type="tel" placeholder="968XXXXXXXX" dir="ltr">
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>المحافظة</label>
+          <select class="inp" id="city">
+            <option value="">اختر...</option>
+            <option>مسقط</option><option>صحار</option><option>صلالة</option>
+            <option>نزوى</option><option>صور</option><option>البريمي</option>
+            <option>الرستاق</option><option>مطرح</option><option>أخرى</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>عدد اللاعبين تقريباً</label>
+          <select class="inp" id="playerCount">
+            <option value="">اختر...</option>
+            <option>أقل من 20</option><option>20 - 50</option>
+            <option>50 - 100</option><option>أكثر من 100</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>الفئات العمرية</label>
+        <input class="inp" id="cats" type="text" placeholder="مثال: U8، U10، U12، U14">
+      </div>
+
+      <div class="field">
+        <label>ملاحظات إضافية</label>
+        <textarea class="inp" id="notes" placeholder="أي معلومات أو استفسارات..."></textarea>
+      </div>
+
+      <div class="err-box" id="errMsg"></div>
+
+      <button class="btn-submit" onclick="submitForm()">
+        <span>📲</span> إرسال الطلب عبر واتساب
+      </button>
+      <p class="note">سيفتح واتساب تلقائياً لإرسال طلبك مباشرة لمدير المنصة</p>
+    </div>
+
+    <div class="success" id="successMsg">
+      <div class="success-icon">✅</div>
+      <h3>تم إرسال الطلب!</h3>
+      <p>شكراً لاهتمامك بمنصة توفة<br>سيتواصل معك مدير المنصة قريباً 🎯</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <strong>منصة توفة</strong> | الكابتن الصغير<br>
+  منصة إدارة الأكاديميات الرياضية في سلطنة عُمان 🇴🇲
+</div>
+
+<script>
+function submitForm() {
+  var name    = document.getElementById('acadName').value.trim();
+  var contact = document.getElementById('contactName').value.trim();
+  var phone   = document.getElementById('phone').value.trim();
+  var city    = document.getElementById('city').value;
+  var count   = document.getElementById('playerCount').value;
+  var cats    = document.getElementById('cats').value.trim();
+  var notes   = document.getElementById('notes').value.trim();
+  var err     = document.getElementById('errMsg');
+
+  if (!name || !contact || !phone) {
+    err.style.display = 'block';
+    err.textContent = '⚠️ يرجى تعبئة: اسم الأكاديمية، اسم المسؤول، رقم الواتساب';
+    return;
+  }
+  err.style.display = 'none';
+
+  var msg =
+    '🏆 *طلب انضمام — منصة توفة*\n' +
+    '━━━━━━━━━━━━━━\n' +
+    '🏫 *الأكاديمية:* ' + name + '\n' +
+    '👤 *المسؤول:* ' + contact + '\n' +
+    '📱 *الواتساب:* ' + phone + '\n' +
+    (city  ? '📍 *المحافظة:* ' + city + '\n' : '') +
+    (count ? '👥 *عدد اللاعبين:* ' + count + '\n' : '') +
+    (cats  ? '🎯 *الفئات:* ' + cats + '\n' : '') +
+    (notes ? '📝 *ملاحظات:* ' + notes + '\n' : '') +
+    '━━━━━━━━━━━━━━\n' +
+    '_من صفحة طلب الانضمام_';
+
+  window.open('https://api.whatsapp.com/send?phone=96892126558&text=' + encodeURIComponent(msg), '_blank');
+  document.getElementById('formBody').style.display = 'none';
+  document.getElementById('successMsg').style.display = 'block';
+}
+</script>
+</body>
+</html>
