@@ -11854,22 +11854,26 @@ function renderSuperJoinRequests(){
 function approveJoinRequest(reqId, waNum, acadName){
   if(!confirm('قبول طلب انضمام: '+acadName+'؟')) return;
   showL(true);
-  loanCentralPost({action:'update', sheet:PLATFORM.JOIN_SHEET, column:'رقم الطلب', value:reqId,
-    data:{'الحالة':'مقبول'}
+
+  var slug      = reqId.replace('JOIN-','').slice(-6);
+  var adminPass = Math.floor(1000+Math.random()*9000).toString();
+  var acadKey   = 'acad_'+slug;
+  var baseUrl   = window.location.origin + window.location.pathname;
+  var acadLink  = baseUrl + '?academy=' + acadKey;
+
+  // طلب واحد يحفظ كل البيانات معاً
+  loanCentralPost({
+    action: 'update',
+    sheet:  PLATFORM.JOIN_SHEET,
+    column: 'رقم الطلب',
+    value:  reqId,
+    data: {
+      'الحالة':           'مقبول',
+      'مفتاح_الأكاديمية': acadKey,
+      'كلمة_المرور':       adminPass
+    }
   }).then(function(){
     showL(false);
-    // توليد مفتاح الأكاديمية من الاسم
-    var slug = reqId.replace('JOIN-','').slice(-6);
-    var adminPass = Math.floor(1000+Math.random()*9000).toString();
-    var acadKey = 'acad_'+slug;
-    var baseUrl = window.location.origin + window.location.pathname;
-    var acadLink = baseUrl + '?academy=' + acadKey;
-
-    // حفظ المفتاح وكلمة المرور في الشيت
-    loanCentralPost({action:'update', sheet:PLATFORM.JOIN_SHEET, column:'رقم الطلب', value:reqId,
-      data:{'الحالة':'مقبول', 'مفتاح_الأكاديمية': acadKey, 'كلمة_المرور': adminPass}
-    }).catch(function(){});
-
     var msg =
       '🎉 *مبروك! تم قبول طلبكم*\n'+
       '━━━━━━━━━━━━━━\n'+
@@ -11879,9 +11883,8 @@ function approveJoinRequest(reqId, waNum, acadName){
       '🔑 *كلمة مرور الإدارة:* '+adminPass+'\n\n'+
       'للدعم الفني تواصل معنا مباشرة.\n'+
       '_منصة توفة للأكاديميات الرياضية في سلطنة عُمان 🇴🇲_';
-
     window.open('https://api.whatsapp.com/send?phone='+waNum+'&text='+encodeURIComponent(msg),'_blank');
-    alert('✅ تم قبول الأكاديمية وإرسال رابط المنصة عبر واتساب. ستظهر في المنصة تلقائياً.');
+    alert('✅ تم قبول الأكاديمية وإرسال رابط المنصة عبر واتساب.');
     go('super_join_requests');
   }).catch(function(){ showL(false); alert('خطأ في التحديث'); });
 }
