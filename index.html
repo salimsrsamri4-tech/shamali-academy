@@ -357,6 +357,7 @@ window.addEventListener('load',function(){
   </button>
   <div id="superAdminMenu" style="display:none;">
     <button class="sb-btn" style="color:#06b6d4;" onclick="go('super_dashboard')"><i class="fas fa-globe"></i> لوحة المنصة المركزية</button>
+    <button class="sb-btn" style="color:#06b6d4;" onclick="go('super_join_requests')"><i class="fas fa-clipboard-list"></i> طلبات الانضمام <span id="joinBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;">0</span></button>
     <button class="sb-btn" style="color:#06b6d4;" onclick="go('super_loans')"><i class="fas fa-exchange-alt"></i> كل الاستعارات</button>
     <button class="sb-btn" style="color:#06b6d4;" onclick="go('super_academies')"><i class="fas fa-users"></i> كل الأكاديميات</button>
     <button class="sb-btn danger" onclick="superLogout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
@@ -767,6 +768,7 @@ var CONFIG = {
 var PLATFORM = {
   CENTRAL_GAS: 'https://script.google.com/macros/s/AKfycbwuKiK4Jd_j8WxLcEXRPY0y9dZ_TRNWVw1MXOX_xLPOJxza4nvTXgZ2B8NL8IheHilS/exec',
   LOAN_SHEET: 'استعارات',
+  JOIN_SHEET: 'طلبات_انضمام',
   SUPER_PASS: '1234'  // كلمة مرور الدعم الفني / مدير المنصة
 };
 var _isSuperAdmin = false;
@@ -3339,6 +3341,7 @@ function renderPage(page) {
     case 'finance': renderFinance(); break;
     case 'super_login': renderSuperLogin(); break;
     case 'super_dashboard': if(_isSuperAdmin){renderSuperDashboard();}else{renderSuperLogin();} break;
+    case 'super_join_requests': if(_isSuperAdmin){renderSuperJoinRequests();}else{renderSuperLogin();} break;
     case 'super_loans': if(_isSuperAdmin){renderSuperLoans();}else{renderSuperLogin();} break;
     case 'super_academies': if(_isSuperAdmin){renderSuperAcademies();}else{renderSuperLogin();} break;
     default:
@@ -11545,8 +11548,11 @@ function renderSuperDashboard(){
     '<div style="padding:14px;">'+
 
     /* إحصاءات placeholder */
-    '<div id="superStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">'+
+    '<div id="superStats" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">'+
       _superStatCard('🏫','الأكاديميات',acadKeys.length,'#0891b2')+
+      _superStatCard('📋','طلبات انضمام','...','#7c3aed')+
+    '</div>'+
+    '<div id="superStats2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">'+
       _superStatCard('⏳','استعارات معلّقة','...','#f59e0b')+
       _superStatCard('✅','استعارات نشطة','...','#16a34a')+
     '</div>'+
@@ -11566,25 +11572,42 @@ function renderSuperDashboard(){
     '</div>'+
 
     /* روابط سريعة */
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+
-      '<button onclick="go(\'super_loans\')" style="background:linear-gradient(135deg,#312e81,#4c1d95);color:#fff;border:none;border-radius:12px;padding:16px;font-family:Cairo,sans-serif;font-size:12px;font-weight:800;cursor:pointer;text-align:center;">'+
-        '<div style="font-size:24px;margin-bottom:6px;">📋</div>كل الاستعارات</button>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'+
+      '<button onclick="go(\'super_join_requests\')" style="background:linear-gradient(135deg,#4c1d95,#7c3aed);color:#fff;border:none;border-radius:12px;padding:16px;font-family:Cairo,sans-serif;font-size:12px;font-weight:800;cursor:pointer;text-align:center;">'+
+        '<div style="font-size:24px;margin-bottom:6px;">📋</div>طلبات الانضمام</button>'+
       '<button onclick="go(\'super_academies\')" style="background:linear-gradient(135deg,#064e3b,#065f46);color:#fff;border:none;border-radius:12px;padding:16px;font-family:Cairo,sans-serif;font-size:12px;font-weight:800;cursor:pointer;text-align:center;">'+
         '<div style="font-size:24px;margin-bottom:6px;">🏫</div>إدارة الأكاديميات</button>'+
     '</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+
+      '<button onclick="go(\'super_loans\')" style="background:linear-gradient(135deg,#312e81,#4c1d95);color:#fff;border:none;border-radius:12px;padding:16px;font-family:Cairo,sans-serif;font-size:12px;font-weight:800;cursor:pointer;text-align:center;">'+
+        '<div style="font-size:24px;margin-bottom:6px;">🔄</div>كل الاستعارات</button>'+
+      '<button onclick="go(\'super_dashboard\')" style="background:linear-gradient(135deg,#1e3a5f,#0891b2);color:#fff;border:none;border-radius:12px;padding:16px;font-family:Cairo,sans-serif;font-size:12px;font-weight:800;cursor:pointer;text-align:center;">'+
+        '<div style="font-size:24px;margin-bottom:6px;">📊</div>تحديث الإحصاء</button>'+
+    '</div>'+
     '</div>';
 
-  // جلب إحصاء الاستعارات في الخلفية
-  loanCentralFetch({action:'get', sheet: PLATFORM.LOAN_SHEET, limit:500}).then(function(loans){
-    loans = Array.isArray(loans) ? loans : [];
+  // جلب الإحصاءات في الخلفية
+  Promise.all([
+    loanCentralFetch({action:'get', sheet: PLATFORM.LOAN_SHEET, limit:500}).catch(function(){return [];}),
+    loanCentralFetch({action:'get', sheet: PLATFORM.JOIN_SHEET, limit:200}).catch(function(){return [];})
+  ]).then(function(results){
+    var loans = Array.isArray(results[0]) ? results[0] : [];
+    var joins = Array.isArray(results[1]) ? results[1] : [];
     var pending = loans.filter(function(r){return r['الحالة']==='انتظار';}).length;
     var active  = loans.filter(function(r){return r['الحالة']==='موافق';}).length;
-    var statsEl = document.getElementById('superStats');
-    if(statsEl) statsEl.innerHTML =
+    var pendingJoins = joins.filter(function(r){return r['الحالة']==='جديد';}).length;
+    var s1 = document.getElementById('superStats');
+    var s2 = document.getElementById('superStats2');
+    if(s1) s1.innerHTML =
       _superStatCard('🏫','الأكاديميات',acadKeys.length,'#0891b2')+
+      _superStatCard('📋','طلبات انضمام',pendingJoins,'#7c3aed');
+    if(s2) s2.innerHTML =
       _superStatCard('⏳','استعارات معلّقة',pending,'#f59e0b')+
       _superStatCard('✅','استعارات نشطة',active,'#16a34a');
-  }).catch(function(){});
+    // تحديث Badge الشريط الجانبي
+    var badge = document.getElementById('joinBadge');
+    if(badge){ badge.textContent = pendingJoins; badge.style.display = pendingJoins>0?'inline':'none'; }
+  });
 }
 
 function _superStatCard(icon, label, val, color){
@@ -11696,6 +11719,99 @@ function renderSuperAcademies(){
       '<i class="fas fa-users" style="color:#06b6d4;"></i> إدارة الأكاديميات ('+acadKeys.length+')</div>'+
     sendAllHtml+
     html+'</div>';
+}
+
+function renderSuperJoinRequests(){
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ تحميل الطلبات...</div>';
+  loanCentralFetch({action:'get', sheet: PLATFORM.JOIN_SHEET, limit:200}).then(function(rows){
+    rows = Array.isArray(rows) ? rows : [];
+    var pending = rows.filter(function(r){return r['الحالة']==='جديد';});
+    var others  = rows.filter(function(r){return r['الحالة']!=='جديد';});
+    var sorted  = pending.concat(others);
+
+    var statusColor = function(s){
+      return s==='جديد'?'#7c3aed':s==='مقبول'?'#16a34a':s==='مرفوض'?'#dc2626':'#64748b';
+    };
+
+    var html = !sorted.length
+      ? '<div class="al al-warn" style="margin:20px 0;">لا توجد طلبات انضمام بعد</div>'
+      : sorted.map(function(r, i){
+        var isPending = r['الحالة']==='جديد';
+        return '<div class="card" style="margin-bottom:10px;border-right:3px solid '+(isPending?'#7c3aed':'#e2e8f0')+';">'+
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">'+
+            '<div>'+
+              '<div style="font-size:14px;font-weight:900;color:#0f172a;">'+r['اسم الأكاديمية']+'</div>'+
+              '<div style="font-size:11px;color:#64748b;">'+r['اسم المسؤول']+'</div>'+
+            '</div>'+
+            '<span style="background:'+statusColor(r['الحالة'])+';color:#fff;border-radius:20px;padding:2px 10px;font-size:10px;font-weight:700;flex-shrink:0;">'+r['الحالة']+'</span>'+
+          '</div>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px;color:#475569;margin-bottom:8px;">'+
+            '<div>📱 '+r['رقم الواتساب']+'</div>'+
+            '<div>📍 '+(r['المحافظة']||'—')+'</div>'+
+            '<div>👥 '+(r['عدد اللاعبين']||'—')+'</div>'+
+            '<div>🎯 '+(r['الفئات العمرية']||'—')+'</div>'+
+          '</div>'+
+          (r['ملاحظات'] ? '<div style="font-size:11px;color:#64748b;background:#f8fafc;border-radius:6px;padding:6px;margin-bottom:8px;">📝 '+r['ملاحظات']+'</div>' : '')+
+          '<div style="font-size:10px;color:#94a3b8;margin-bottom:8px;">🕐 '+r['تاريخ الطلب']+'</div>'+
+          (isPending ?
+            '<div style="display:flex;gap:6px;">'+
+              '<button onclick="approveJoinRequest(\''+r['رقم الطلب']+'\',\''+r['رقم الواتساب']+'\',\''+r['اسم الأكاديمية']+'\')" '+
+                'style="flex:1;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:12px;">'+
+                '✅ قبول وإخطار</button>'+
+              '<button onclick="rejectJoinRequest(\''+r['رقم الطلب']+'\',\''+r['رقم الواتساب']+'\',\''+r['اسم الأكاديمية']+'\')" '+
+                'style="flex:1;background:#dc2626;color:#fff;border:none;border-radius:8px;padding:9px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:12px;">'+
+                '❌ رفض</button>'+
+            '</div>'
+          : '')+
+        '</div>';
+      }).join('');
+
+    el.innerHTML =
+      '<div style="padding:14px;">'+
+      '<div class="sec-banner" style="background:linear-gradient(135deg,#2e1065,#7c3aed);border-right-color:#a78bfa;">'+
+        '<i class="fas fa-clipboard-list" style="color:#a78bfa;"></i> طلبات الانضمام ('+rows.length+') — معلّقة: '+pending.length+'</div>'+
+      html+
+      '</div>';
+  }).catch(function(){ el.innerHTML='<div class="al al-err">تعذّر تحميل الطلبات</div>'; });
+}
+
+function approveJoinRequest(reqId, waNum, acadName){
+  if(!confirm('قبول طلب انضمام: '+acadName+'؟')) return;
+  showL(true);
+  loanCentralPost({action:'update', sheet:PLATFORM.JOIN_SHEET, column:'رقم الطلب', value:reqId,
+    data:{'الحالة':'مقبول'}
+  }).then(function(){
+    showL(false);
+    var msg =
+      '🎉 *مبروك! تم قبول طلبكم*\n'+
+      '━━━━━━━━━━━━━━\n'+
+      '🏫 *أكاديمية:* '+acadName+'\n\n'+
+      'يسعدنا انضمامكم إلى *منصة توفة | الكابتن الصغير* 🏆\n\n'+
+      'سيتواصل معكم مدير المنصة قريباً لإعداد حسابكم وتفعيله.\n\n'+
+      '_منصة توفة للأكاديميات الرياضية في سلطنة عُمان 🇴🇲_';
+    window.open('https://api.whatsapp.com/send?phone='+waNum+'&text='+encodeURIComponent(msg),'_blank');
+    go('super_join_requests');
+  }).catch(function(){ showL(false); alert('خطأ في التحديث'); });
+}
+
+function rejectJoinRequest(reqId, waNum, acadName){
+  if(!confirm('رفض طلب انضمام: '+acadName+'؟')) return;
+  showL(true);
+  loanCentralPost({action:'update', sheet:PLATFORM.JOIN_SHEET, column:'رقم الطلب', value:reqId,
+    data:{'الحالة':'مرفوض'}
+  }).then(function(){
+    showL(false);
+    var msg =
+      '📋 *بخصوص طلب انضمامكم*\n'+
+      '━━━━━━━━━━━━━━\n'+
+      'أكاديمية: '+acadName+'\n\n'+
+      'نأسف لإبلاغكم بأنه لا يمكن قبول طلب الانضمام في الوقت الحالي.\n\n'+
+      'للاستفسار يرجى التواصل مع مدير المنصة مباشرة.\n\n'+
+      '_منصة توفة للأكاديميات الرياضية_';
+    window.open('https://api.whatsapp.com/send?phone='+waNum+'&text='+encodeURIComponent(msg),'_blank');
+    go('super_join_requests');
+  }).catch(function(){ showL(false); alert('خطأ في التحديث'); });
 }
 
 function sendAllAcadLinks(){

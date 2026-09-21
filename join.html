@@ -481,9 +481,40 @@ function submitForm(){
     '━━━━━━━━━━━━━━\n' +
     '_من صفحة طلب الانضمام_';
 
-  window.open('https://api.whatsapp.com/send?phone=96892126558&text=' + encodeURIComponent(msg), '_blank');
-  document.getElementById('formBody').style.display = 'none';
-  document.getElementById('successMsg').style.display = 'block';
+  // إرسال للـ GAS أولاً ثم واتساب
+  var CENTRAL_GAS = 'https://script.google.com/macros/s/AKfycbwuKiK4Jd_j8WxLcEXRPY0y9dZ_TRNWVw1MXOX_xLPOJxza4nvTXgZ2B8NL8IheHilS/exec';
+  var reqId = 'JOIN-' + Date.now();
+  var today = new Date().toLocaleDateString('ar-SA');
+
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ جارٍ الإرسال...';
+
+  var payload = JSON.stringify({
+    action: 'append',
+    sheet: 'طلبات_انضمام',
+    row: {
+      'رقم الطلب': reqId,
+      'تاريخ الطلب': today,
+      'اسم الأكاديمية': name,
+      'اسم المسؤول': contact,
+      'رقم الواتساب': phone,
+      'المحافظة': city,
+      'عدد اللاعبين': count,
+      'الفئات العمرية': cats,
+      'ملاحظات': notes,
+      'الحالة': 'جديد'
+    }
+  });
+
+  fetch(CENTRAL_GAS, {method:'POST', body: payload})
+    .catch(function(){})
+    .finally(function(){
+      // واتساب كإشعار فوري للمدير
+      window.open('https://api.whatsapp.com/send?phone=96892126558&text=' + encodeURIComponent(msg), '_blank');
+      document.getElementById('formBody').style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+    });
 }
 </script>
 </body>
