@@ -484,8 +484,10 @@ function submitForm(){
 
   // إرسال للـ GAS أولاً ثم واتساب
   var CENTRAL_GAS = 'https://script.google.com/macros/s/AKfycbwuKiK4Jd_j8WxLcEXRPY0y9dZ_TRNWVw1MXOX_xLPOJxza4nvTXgZ2B8NL8IheHilS/exec';
-  var reqId = 'JOIN-' + Date.now();
-  var today = new Date().toLocaleDateString('ar-SA');
+  var reqId    = 'JOIN-' + Date.now();
+  var today    = new Date().toLocaleDateString('ar-SA');
+  var acadKey  = 'acad_' + reqId.slice(-6);
+  var acadPass = '1234';
 
   var btn = document.getElementById('submitBtn');
   btn.disabled = true;
@@ -495,16 +497,18 @@ function submitForm(){
     action: 'append',
     sheet: 'أكاديميات المنصة',
     data: {
-      'رقم الطلب': reqId,
-      'تاريخ الطلب': today,
-      'اسم الأكاديمية': name,
-      'اسم المسؤول': contact,
-      'رقم الواتساب': phone,
-      'المحافظة': city,
-      'عدد اللاعبين': count,
-      'الفئات العمرية': cats,
-      'ملاحظات': notes,
-      'الحالة': 'جديد'
+      'رقم الطلب':           reqId,
+      'تاريخ الطلب':          today,
+      'اسم الأكاديمية':       name,
+      'اسم المسؤول':          contact,
+      'رقم الواتساب':         phone,
+      'المحافظة':             city,
+      'عدد اللاعبين':         count,
+      'الفئات العمرية':       cats,
+      'ملاحظات':              notes,
+      'الحالة':               'جديد',
+      'مفتاح_الأكاديمية':     acadKey,
+      'كلمة_المرور':           acadPass
     }
   });
 
