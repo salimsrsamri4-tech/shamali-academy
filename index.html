@@ -5251,48 +5251,114 @@ function remindAll(){
 // ===== VERIFY PLAYER (QR) =====
 function renderVerify(playerId){
   var el = document.getElementById('content');
-  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ التحقق...</div>';
-  checkPlayer(playerId).then(function(p){
+  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ التحقق من هوية اللاعب...</div>';
+  var now = new Date();
+  var yr = now.getFullYear();
+  var curMonthPrefix = yr+'-'+String(now.getMonth()+1).padStart(2,'0');
+
+  Promise.all([
+    checkPlayer(playerId),
+    apiGet('تجديدات الاشتراكات').catch(function(){ return []; }),
+    loanCentralFetch({action:'get', sheet: PLATFORM.LOAN_SHEET, limit:500}).catch(function(){ return []; })
+  ]).then(function(res){
+    var p = res[0];
+    var renewals = Array.isArray(res[1]) ? res[1] : [];
+    var loans = Array.isArray(res[2]) ? res[2] : [];
+
     if(!p){
       el.innerHTML = '<div class="card" style="text-align:center;padding:40px 20px;">'+
         '<div style="font-size:48px;margin-bottom:12px;">❌</div>'+
         '<div style="font-size:16px;font-weight:900;color:#dc2626;">رقم الملف غير موجود</div>'+
-        '<div style="font-size:12px;color:#64748b;margin-top:6px;">'+playerId+'</div>'+
-        '</div>';
+        '<div style="font-size:12px;color:#64748b;margin-top:6px;">'+playerId+'</div></div>';
       return;
     }
-    var cat = p.birthYear ? (new Date().getFullYear() - parseInt(p.birthYear)) + ' سنة' : '';
-    var photoHtml = p.photoB64
-      ? '<img src="'+p.photoB64+'" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid #d4af37;">'
-      : '<div style="width:90px;height:90px;border-radius:50%;background:#d4af37;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:#3b0a0a;border:3px solid #fff;">'+(p.playerName||'?').charAt(0)+'</div>';
+
+    // ── فحص الاشتراك ──
+    var MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    var curMonthAr = MONTHS_AR[now.getMonth()]+' '+yr;
+    var subscribed = renewals.some(function(r){
+      return (r['رقم الملف']===playerId||r['رقم الملف']===p.id) &&
+             (r['الشهر']===curMonthAr || (r['التاريخ']&&String(r['التاريخ']).startsWith(curMonthPrefix)));
+    });
+
+    // ── فحص الاستعارة ──
+    var activeLoan = loans.find(function(r){
+      return r['رقم اللاعب']===playerId && r['الحالة']==='موافق';
+    });
+
+    // ── الفئة العمرية ──
+    var age = p.birthYear ? yr - parseInt(p.birthYear) : 0;
+    var cat = age ? (age<=8?'U8':age<=10?'U10':age<=12?'U12':age<=14?'U14':'U16+') : '—';
+    var birthY = p.birthYear || (p.birthDate?String(p.birthDate).substring(0,4):'—');
+
+    // ── صورة ──
+    var photoHtml = p.photo
+      ? '<img src="'+p.photo+'" style="width:96px;height:96px;border-radius:50%;object-fit:cover;object-position:top;border:3px solid #d4af37;">'
+      : '<div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#b81d22,#7a1015);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:900;color:#d4af37;">'+(p.playerName||'?').charAt(0)+'</div>';
+
+    // ── بطاقة الحالة ──
+    var subBadge = subscribed
+      ? '<div style="display:flex;align-items:center;gap:8px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:10px 12px;">'+
+          '<div style="font-size:20px;">✅</div>'+
+          '<div><div style="font-size:12px;font-weight:900;color:#15803d;">الاشتراك نشط</div>'+
+          '<div style="font-size:10px;color:#16a34a;">'+curMonthAr+'</div></div></div>'
+      : '<div style="display:flex;align-items:center;gap:8px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:10px 12px;">'+
+          '<div style="font-size:20px;">⚠️</div>'+
+          '<div><div style="font-size:12px;font-weight:900;color:#dc2626;">لم يجدد الاشتراك</div>'+
+          '<div style="font-size:10px;color:#ef4444;">'+curMonthAr+'</div></div></div>';
+
+    var loanBadge = activeLoan
+      ? '<div style="display:flex;align-items:center;gap:8px;background:#faf5ff;border:1.5px solid #c4b5fd;border-radius:10px;padding:10px 12px;margin-top:8px;">'+
+          '<div style="font-size:20px;">🔄</div>'+
+          '<div><div style="font-size:12px;font-weight:900;color:#7c3aed;">مُعار حالياً</div>'+
+          '<div style="font-size:10px;color:#8b5cf6;">إلى: '+activeLoan['أكاديمية الطالبة']+(activeLoan['اسم البطولة']?' · '+activeLoan['اسم البطولة']:'')+'</div></div></div>'
+      : '<div style="display:flex;align-items:center;gap:8px;background:#f0f9ff;border:1.5px solid #7dd3fc;border-radius:10px;padding:10px 12px;margin-top:8px;">'+
+          '<div style="font-size:20px;">🏠</div>'+
+          '<div style="font-size:12px;font-weight:900;color:#0369a1;">ينتمي لأكاديميته الأصلية</div></div>';
+
     el.innerHTML =
-      '<div style="max-width:360px;margin:30px auto;font-family:Cairo,sans-serif;direction:rtl;">'+
-      '<div style="background:linear-gradient(135deg,#3b0a0a,#b81d22);border-radius:20px 20px 0 0;padding:20px;text-align:center;">'+
-        '<div style="font-size:10px;color:#d4af37;font-weight:900;letter-spacing:2px;">SHAMALI FOOTBALL ACADEMY</div>'+
-        '<div style="font-size:18px;font-weight:900;color:#fff;margin:4px 0;">🦅 أكاديمية الشمالي</div>'+
-        '<div style="font-size:11px;color:rgba(255,255,255,.6);">بطاقة تحقق رسمية</div>'+
+      '<div style="max-width:380px;margin:20px auto;font-family:Cairo,sans-serif;direction:rtl;">'+
+
+      /* هيدر */
+      '<div style="background:linear-gradient(135deg,#0f172a,#b81d22);border-radius:18px 18px 0 0;padding:18px;text-align:center;">'+
+        '<div style="font-size:10px;color:#d4af37;font-weight:900;letter-spacing:1px;margin-bottom:4px;">بطاقة تحقق رسمية — منصة توفة</div>'+
+        '<div style="font-size:16px;font-weight:900;color:#fff;">🦅 أكاديمية الشمالي</div>'+
       '</div>'+
-      '<div style="background:#fff;border:2px solid #e2e8f0;border-top:none;border-radius:0 0 20px 20px;padding:24px;text-align:center;">'+
-        '<div style="margin-bottom:14px;">'+photoHtml+'</div>'+
-        '<div style="font-size:20px;font-weight:900;color:#0f172a;margin-bottom:6px;">'+p.playerName+'</div>'+
-        '<div style="display:inline-block;background:#b81d22;color:#fff;border-radius:20px;padding:4px 16px;font-size:12px;font-weight:900;margin-bottom:16px;">'+p.id+'</div>'+
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">'+
-          '<div style="background:#f8fafc;border-radius:10px;padding:10px;">'+
-            '<div style="font-size:9px;color:#94a3b8;font-weight:700;">الفئة العمرية</div>'+
-            '<div style="font-size:13px;font-weight:800;color:#0f172a;">'+cat+'</div>'+
+
+      /* الجسم */
+      '<div style="background:#fff;border:1.5px solid #e2e8f0;border-top:none;border-radius:0 0 18px 18px;padding:20px;">'+
+
+        /* صورة + اسم */
+        '<div style="text-align:center;margin-bottom:16px;">'+
+          '<div style="margin-bottom:10px;">'+photoHtml+'</div>'+
+          '<div style="font-size:19px;font-weight:900;color:#0f172a;">'+p.playerName+'</div>'+
+          '<div style="display:inline-block;background:#b81d22;color:#fff;border-radius:20px;padding:3px 14px;font-size:11px;font-weight:900;margin-top:4px;">'+p.id+'</div>'+
+        '</div>'+
+
+        /* شبكة بيانات */
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">'+
+          '<div style="background:#f8fafc;border-radius:8px;padding:8px;text-align:center;">'+
+            '<div style="font-size:9px;color:#94a3b8;font-weight:700;margin-bottom:2px;">الفئة</div>'+
+            '<div style="font-size:14px;font-weight:900;color:#b81d22;">'+cat+'</div>'+
           '</div>'+
-          '<div style="background:#f8fafc;border-radius:10px;padding:10px;">'+
-            '<div style="font-size:9px;color:#94a3b8;font-weight:700;">الجنسية</div>'+
-            '<div style="font-size:13px;font-weight:800;color:#0f172a;">'+(p.nationality||'—')+'</div>'+
+          '<div style="background:#f8fafc;border-radius:8px;padding:8px;text-align:center;">'+
+            '<div style="font-size:9px;color:#94a3b8;font-weight:700;margin-bottom:2px;">سنة الميلاد</div>'+
+            '<div style="font-size:13px;font-weight:900;color:#0f172a;">'+birthY+'</div>'+
+          '</div>'+
+          '<div style="background:#f8fafc;border-radius:8px;padding:8px;text-align:center;">'+
+            '<div style="font-size:9px;color:#94a3b8;font-weight:700;margin-bottom:2px;">الجنسية</div>'+
+            '<div style="font-size:12px;font-weight:900;color:#0f172a;">'+(p.nationality||'—')+'</div>'+
           '</div>'+
         '</div>'+
-        '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:center;gap:8px;">'+
-          '<div style="font-size:22px;">✅</div>'+
-          '<div style="font-size:14px;font-weight:900;color:#16a34a;">لاعب مسجل رسمياً</div>'+
-        '</div>'+
-        '<div style="margin-top:10px;font-size:9px;color:#94a3b8;">تم التحقق عبر منصة أكاديمية الشمالي</div>'+
+
+        /* حالة الاشتراك + الاستعارة */
+        subBadge + loanBadge +
+
+        '<div style="margin-top:12px;font-size:9px;color:#94a3b8;text-align:center;">'+
+          now.toLocaleString('ar-OM')+'</div>'+
       '</div>'+
       '</div>';
+
   }).catch(function(){
     el.innerHTML = '<div class="card" style="text-align:center;padding:40px 20px;"><div style="font-size:14px;color:#dc2626;font-weight:700;">تعذّر الاتصال. تحقق من الإنترنت.</div></div>';
   });
@@ -11238,34 +11304,96 @@ function submitLoanRequest(){
   var parts = playerVal.split('|');
   var playerId = parts[0], playerName = parts[1], playerBirth = parts[2], playerPhone = parts[3];
   var tournName = loanType==='بطولة' ? (document.getElementById('loanTournName').value||'غير محدد') : '';
-  var reqId = 'LOAN-'+Date.now();
-  var now = new Date().toLocaleDateString('ar-SA');
-  var row = {
-    'رقم الطلب': reqId,
-    'تاريخ الطلب': now,
-    'أكاديمية الطالبة': CURRENT_ACADEMY.NAME,
-    'مفتاح الطالبة': CURRENT_ACADEMY_KEY,
-    'أكاديمية المُعيرة': ACADEMIES[targetKey].NAME,
-    'مفتاح المُعيرة': targetKey,
-    'رقم اللاعب': playerId,
-    'اسم اللاعب': playerName,
-    'تاريخ الميلاد': playerBirth,
-    'هاتف ولي الأمر': playerPhone,
-    'نوع الاستعارة': loanType,
-    'اسم البطولة': tournName,
-    'حالة المُعيرة': 'انتظار',
-    'حالة ولي الأمر': 'انتظار',
-    'الحالة': 'انتظار'
-  };
+
+  // ── فحص التعارض: هل اللاعب مُعار حالياً لأكاديمية أخرى؟ ──
   showL(true);
-  loanCentralPost({action:'append', sheet: PLATFORM.LOAN_SHEET, data: row}).then(function(){
-    showL(false);
-    // إشعار واتساب للأكاديمية المُعيرة
-    var msg = '⚽ *طلب استعارة لاعب*\n━━━━━━━━\n👤 اللاعب: '+playerName+'\n🏫 من: '+CURRENT_ACADEMY.NAME+'\n📦 النوع: '+loanType+(tournName?'\n🏆 البطولة: '+tournName:'')+'\n━━━━━━━━\nيرجى الدخول للمنصة للرد على الطلب.';
-    window.open('https://api.whatsapp.com/send?phone='+ACADEMIES[targetKey].WA_NUM+'&text='+encodeURIComponent(msg),'_blank');
-    alert('✅ تم إرسال الطلب! سيتم إشعار الأكاديمية المُعيرة.');
-    go('loans');
+  loanCentralFetch({action:'get', sheet: PLATFORM.LOAN_SHEET, limit:500}).then(function(rows){
+    var active = Array.isArray(rows) ? rows.filter(function(r){
+      return r['رقم اللاعب']===playerId &&
+             r['الحالة']==='موافق' &&
+             r['مفتاح الطالبة']!==CURRENT_ACADEMY_KEY;
+    }) : [];
+    if(active.length){
+      showL(false);
+      errEl.style.display='block';
+      errEl.textContent='⚠️ هذا اللاعب مُعار حالياً إلى أكاديمية '+active[0]['أكاديمية الطالبة']+'. لا يمكن إعارته مرة أخرى.';
+      return;
+    }
+    // إرسال الطلب
+    var reqId = 'LOAN-'+Date.now();
+    var now = new Date().toLocaleDateString('ar-SA');
+    var row = {
+      'رقم الطلب': reqId,
+      'تاريخ الطلب': now,
+      'أكاديمية الطالبة': CURRENT_ACADEMY.NAME,
+      'مفتاح الطالبة': CURRENT_ACADEMY_KEY,
+      'أكاديمية المُعيرة': ACADEMIES[targetKey].NAME,
+      'مفتاح المُعيرة': targetKey,
+      'رقم اللاعب': playerId,
+      'اسم اللاعب': playerName,
+      'تاريخ الميلاد': playerBirth,
+      'هاتف ولي الأمر': playerPhone,
+      'نوع الاستعارة': loanType,
+      'اسم البطولة': tournName,
+      'حالة المُعيرة': 'انتظار',
+      'حالة ولي الأمر': 'انتظار',
+      'الحالة': 'انتظار'
+    };
+    return loanCentralPost({action:'append', sheet: PLATFORM.LOAN_SHEET, data: row}).then(function(){
+      showL(false);
+      var msg = '⚽ *طلب استعارة لاعب*\n━━━━━━━━\n👤 اللاعب: '+playerName+'\n🏫 من: '+CURRENT_ACADEMY.NAME+'\n📦 النوع: '+loanType+(tournName?'\n🏆 البطولة: '+tournName:'')+'\n━━━━━━━━\nيرجى الدخول للمنصة للرد على الطلب.';
+      window.open('https://api.whatsapp.com/send?phone='+ACADEMIES[targetKey].WA_NUM+'&text='+encodeURIComponent(msg),'_blank');
+      alert('✅ تم إرسال الطلب! سيتم إشعار الأكاديمية المُعيرة.');
+      go('loans');
+    });
   }).catch(function(){ showL(false); alert('خطأ في الإرسال'); });
+}
+
+// ── عقد الاستعارة (طباعة) ──
+function printLoanContract(r){
+  var yr = new Date().getFullYear();
+  var age = r['تاريخ الميلاد'] ? yr - parseInt(String(r['تاريخ الميلاد']).substring(0,4)) : '—';
+  var cat = typeof age==='number' ? (age<=8?'U8':age<=10?'U10':age<=12?'U12':age<=14?'U14':'U16+') : '—';
+  var w = window.open('','_blank','width=800,height=900');
+  w.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">'+
+    '<title>عقد استعارة</title>'+
+    '<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Cairo,Arial,sans-serif;padding:40px;color:#0f172a;font-size:13px;}'+
+    'h1{font-size:20px;text-align:center;margin-bottom:4px;}.sub{text-align:center;color:#64748b;font-size:11px;margin-bottom:24px;}'+
+    'table{width:100%;border-collapse:collapse;margin-bottom:20px;}td,th{border:1px solid #e2e8f0;padding:10px 12px;text-align:right;}'+
+    'th{background:#f8fafc;font-weight:700;width:40%;}'+
+    '.sig{display:flex;gap:40px;margin-top:40px;}.sig-box{flex:1;text-align:center;border-top:2px solid #0f172a;padding-top:10px;font-size:12px;font-weight:700;}'+
+    '.badge{display:inline-block;background:#b81d22;color:#fff;border-radius:20px;padding:2px 14px;font-size:11px;font-weight:900;}'+
+    '.footer{margin-top:30px;text-align:center;font-size:10px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px;}'+
+    '@media print{button{display:none;}}</style></head><body>'+
+    '<h1>🏆 عقد استعارة لاعب</h1>'+
+    '<div class="sub">منصة توفة | الكابتن الصغير — '+new Date().toLocaleDateString('ar-OM',{year:'numeric',month:'long',day:'numeric'})+'</div>'+
+    '<table>'+
+      '<tr><th>رقم العقد</th><td><b>'+r['رقم الطلب']+'</b></td></tr>'+
+      '<tr><th>تاريخ الطلب</th><td>'+r['تاريخ الطلب']+'</td></tr>'+
+      '<tr><th>اسم اللاعب</th><td><b style="font-size:15px;">'+r['اسم اللاعب']+'</b></td></tr>'+
+      '<tr><th>رقم الملف</th><td>'+r['رقم اللاعب']+'</td></tr>'+
+      '<tr><th>تاريخ الميلاد</th><td>'+r['تاريخ الميلاد']+'</td></tr>'+
+      '<tr><th>الفئة العمرية</th><td><span class="badge">'+cat+'</span></td></tr>'+
+      '<tr><th>الأكاديمية المُعيرة</th><td><b>'+r['أكاديمية المُعيرة']+'</b></td></tr>'+
+      '<tr><th>الأكاديمية الطالبة</th><td><b>'+r['أكاديمية الطالبة']+'</b></td></tr>'+
+      '<tr><th>نوع الاستعارة</th><td>'+r['نوع الاستعارة']+(r['اسم البطولة']?' — '+r['اسم البطولة']:'')+'</td></tr>'+
+      '<tr><th>الحالة</th><td><b style="color:#16a34a;">'+r['الحالة']+'</b></td></tr>'+
+    '</table>'+
+    '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:20px;font-size:12px;line-height:1.9;">'+
+      '1. يُعار اللاعب المذكور أعلاه من الأكاديمية المُعيرة إلى الأكاديمية الطالبة للغرض المحدد فقط.<br>'+
+      '2. تبقى ملكية عقد اللاعب الأصلية للأكاديمية المُعيرة في جميع الأحوال.<br>'+
+      '3. تلتزم الأكاديمية الطالبة بإعادة اللاعب فور انتهاء مدة الاستعارة.<br>'+
+      '4. وافق ولي أمر اللاعب على هذه الاستعارة بشكل رسمي عبر المنصة.'+
+    '</div>'+
+    '<div class="sig">'+
+      '<div class="sig-box">توقيع الأكاديمية المُعيرة<br><span style="font-size:11px;color:#64748b;font-weight:400;">'+r['أكاديمية المُعيرة']+'</span></div>'+
+      '<div class="sig-box">توقيع الأكاديمية الطالبة<br><span style="font-size:11px;color:#64748b;font-weight:400;">'+r['أكاديمية الطالبة']+'</span></div>'+
+      '<div class="sig-box">توقيع ولي الأمر<br><span style="font-size:11px;color:#64748b;font-weight:400;">'+r['اسم اللاعب']+'</span></div>'+
+    '</div>'+
+    '<div class="footer">منصة توفة للأكاديميات الرياضية — وثيقة رسمية</div>'+
+    '<div style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="background:#b81d22;color:#fff;border:none;border-radius:8px;padding:10px 28px;font-family:Cairo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">🖨️ طباعة العقد</button></div>'+
+    '</body></html>');
+  w.document.close();
 }
 
 function renderLoanIncoming(){
@@ -11288,7 +11416,10 @@ function renderLoanIncoming(){
           '<div style="display:flex;gap:8px;">' +
             '<button onclick="respondLoan(\''+r['رقم الطلب']+'\',\'موافق\',\''+r['هاتف ولي الأمر']+'\',\''+r['اسم اللاعب']+'\',\''+r['أكاديمية الطالبة']+'\')" style="flex:1;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:13px;">✅ موافقة</button>' +
             '<button onclick="respondLoan(\''+r['رقم الطلب']+'\',\'مرفوض\',\'\',\'\',\'\')" style="flex:1;background:#dc2626;color:#fff;border:none;border-radius:8px;padding:9px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:13px;">❌ رفض</button>' +
-          '</div>' : '') +
+          '</div>' :
+          (r['الحالة']==='موافق' ?
+            '<button onclick=\'printLoanContract('+JSON.stringify(r).replace(/'/g,"&#39;")+');return false;\' style="margin-top:6px;width:100%;background:#0f172a;color:#d4af37;border:none;border-radius:8px;padding:8px;font-family:Cairo,sans-serif;font-size:12px;font-weight:800;cursor:pointer;">🖨️ طباعة عقد الاستعارة</button>' : '')
+        ) +
       '</div>';
     }).join('');
     el.innerHTML = '<div style="padding:14px;"><div class="sec-banner" style="background:linear-gradient(135deg,#064e3b,#065f46);border-right-color:#34d399;"><i class="fas fa-inbox" style="color:#34d399;"></i> الطلبات الواردة ('+mine.length+')</div>'+html+'</div>';
@@ -11329,7 +11460,10 @@ function renderLoanOutgoing(){
         '</div>' +
         '<div style="font-size:11px;color:#64748b;">'+r['نوع الاستعارة']+(r['اسم البطولة']?' · '+r['اسم البطولة']:'')+' · '+r['تاريخ الطلب']+'</div>' +
         (isApproved ?
-          '<div style="margin-top:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px;font-size:12px;color:#15803d;font-weight:700;">✅ اللاعب متاح في قائمتك</div>' : '') +
+          '<div style="margin-top:8px;display:flex;gap:8px;align-items:center;">'+
+            '<div style="flex:1;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px;font-size:12px;color:#15803d;font-weight:700;">✅ اللاعب متاح في قائمتك</div>'+
+            '<button onclick=\'printLoanContract('+JSON.stringify(r).replace(/'/g,"&#39;")+');return false;\' style="background:#b81d22;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-family:Cairo,sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;">🖨️ العقد</button>'+
+          '</div>' : '') +
       '</div>';
     }).join('');
     el.innerHTML = '<div style="padding:14px;"><div class="sec-banner" style="background:linear-gradient(135deg,#1e3a5f,#1e40af);border-right-color:#60a5fa;"><i class="fas fa-paper-plane" style="color:#60a5fa;"></i> طلباتي المُرسلة ('+mine.length+')</div>'+html+'</div>';
