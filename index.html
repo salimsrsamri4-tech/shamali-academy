@@ -674,36 +674,69 @@ function _fillAcadDefaults(k, a){
     window._pendingAcadKey = urlParam;
     document.addEventListener('DOMContentLoaded', function(){
       var el = document.getElementById('content');
-      if(el) el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ تحميل بيانات الأكاديمية...</div>';
+      if(el) el.innerHTML =
+        '<div style="padding:32px 20px;text-align:center;">'+
+        '<div style="font-size:48px;margin-bottom:16px;">🏫</div>'+
+        '<div style="font-size:16px;font-weight:900;margin-bottom:8px;">مرحباً بأكاديميتكم</div>'+
+        '<div style="font-size:12px;color:#64748b;margin-bottom:24px;">أدخل كلمة المرور للدخول</div>'+
+        '<input id="newAcadPass" type="password" placeholder="كلمة المرور" style="width:100%;max-width:280px;padding:12px;border:2px solid #e2e8f0;border-radius:10px;font-family:Cairo,sans-serif;font-size:16px;text-align:center;display:block;margin:0 auto 12px;">'+
+        '<button onclick="loginNewAcad(\''+urlParam+'\')" style="background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:13px 32px;font-family:Cairo,sans-serif;font-size:15px;font-weight:900;cursor:pointer;width:100%;max-width:280px;">دخول</button>'+
+        '<div id="newAcadErr" style="display:none;color:#dc2626;font-size:12px;margin-top:10px;">❌ كلمة المرور غير صحيحة</div>'+
+        '</div>';
     });
-    // انتظر حتى تصبح الأكاديمية متاحة (مهلة 8 ثوانٍ)
-    var tries = 0;
-    var poll = setInterval(function(){
-      tries++;
-      var loaded = ACADEMIES[urlParam];
-      if(loaded || tries > 40){
-        clearInterval(poll);
-        if(loaded){
-          if(!loaded.HIDE_SECTIONS)
-            loaded.HIDE_SECTIONS = ['tournaments','festival','shamali_specific'];
-          window.CURRENT_ACADEMY = loaded;
-          window.CURRENT_ACADEMY_KEY = urlParam;
-          // إعادة تهيئة CONFIG
-          if(window.CONFIG){
-            CONFIG.SHEET_ID   = loaded.SHEET_ID;
-            CONFIG.GAS_URL    = loaded.GAS_URL;
-            CONFIG.UPLOAD_URL = loaded.UPLOAD_URL;
-            CONFIG.API_KEY    = loaded.API_KEY;
-          }
-          applyAcademy(loaded);
-        } else {
-          var el2 = document.getElementById('content');
-          if(el2) el2.innerHTML = '<div class="al al-err" style="margin:20px;font-size:12px;">⚠️ لم يتم العثور على الأكاديمية.<br><br>مفتاح الرابط: <b>'+urlParam+'</b><br>بيانات الشيت: '+(window._joinDebug||'لم تُحمَّل بعد')+'</div>';
-        }
-      }
-    }, 200);
   }
 })();
+
+function loginNewAcad(acadKey){
+  var pass = (document.getElementById('newAcadPass').value||'').trim();
+  var err  = document.getElementById('newAcadErr');
+  if(!pass){ err.style.display='block'; err.textContent='❌ أدخل كلمة المرور'; return; }
+  err.style.display='none';
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ التحقق...</div>';
+
+  var url = PLATFORM.CENTRAL_GAS + '?action=get&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET) + '&limit=200';
+  fetch(url, {redirect:'follow'}).then(function(r){ return r.json(); }).then(function(rows){
+    if(!Array.isArray(rows)){ showLoginErr(); return; }
+    var found = null;
+    rows.forEach(function(r){
+      if(r['الحالة'] !== 'مقبول') return;
+      var key = r['مفتاح_الأكاديمية'] || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
+      var storedPass = r['كلمة_المرور'] || '1234';
+      if(key === acadKey && pass === storedPass) found = r;
+    });
+    if(!found){ showLoginErr(); return; }
+    var acad = _fillAcadDefaults(acadKey, {
+      NAME: found['اسم الأكاديمية'] || acadKey,
+      PRIMARY_COLOR: '#1e3a5f',
+      ADMIN_PASS: [found['كلمة_المرور']||'1234'],
+      WA_NUM: found['رقم الواتساب']||'',
+      HIDE_SECTIONS: ['tournaments','festival','shamali_specific']
+    });
+    ACADEMIES[acadKey] = acad;
+    window.CURRENT_ACADEMY = acad;
+    window.CURRENT_ACADEMY_KEY = acadKey;
+    if(window.CONFIG){
+      CONFIG.SHEET_ID=acad.SHEET_ID; CONFIG.GAS_URL=acad.GAS_URL;
+      CONFIG.UPLOAD_URL=acad.UPLOAD_URL; CONFIG.API_KEY=acad.API_KEY;
+      CONFIG.ADMIN_PASS=acad.ADMIN_PASS; CONFIG.WA_NUM=acad.WA_NUM;
+    }
+    applyAcademy(acad);
+    go('home');
+  }).catch(function(){ showLoginErr(); });
+
+  function showLoginErr(){
+    el.innerHTML =
+      '<div style="padding:32px 20px;text-align:center;">'+
+      '<div style="font-size:48px;margin-bottom:16px;">🏫</div>'+
+      '<div style="font-size:16px;font-weight:900;margin-bottom:8px;">مرحباً بأكاديميتكم</div>'+
+      '<div style="font-size:12px;color:#64748b;margin-bottom:24px;">أدخل كلمة المرور للدخول</div>'+
+      '<input id="newAcadPass" type="password" placeholder="كلمة المرور" style="width:100%;max-width:280px;padding:12px;border:2px solid #e2e8f0;border-radius:10px;font-family:Cairo,sans-serif;font-size:16px;text-align:center;display:block;margin:0 auto 12px;">'+
+      '<button onclick="loginNewAcad(\''+acadKey+'\')" style="background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:13px 32px;font-family:Cairo,sans-serif;font-size:15px;font-weight:900;cursor:pointer;width:100%;max-width:280px;">دخول</button>'+
+      '<div style="color:#dc2626;font-size:12px;margin-top:10px;">❌ كلمة المرور غير صحيحة أو الأكاديمية غير مفعّلة</div>'+
+      '</div>';
+  }
+}
 
 function showAcademyPicker(){
   var keys = Object.keys(ACADEMIES);
