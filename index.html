@@ -1977,21 +1977,19 @@ function downloadPlayerCard(){
   if(!card) return;
   var btn = event && event.target ? event.target.closest('button') : null;
   if(btn){ btn.disabled=true; btn.textContent='⏳ جارٍ التحضير...'; }
-  html2canvas(card,{scale:3,useCORS:true,backgroundColor:'#1a0e00',logging:false}).then(function(canvas){
-    // نصدر على كانفاس 1080×1350 (نسبة 4:5 للإنستجرام وواتساب)
+  html2canvas(card,{scale:4,useCORS:true,backgroundColor:'#050505',logging:false}).then(function(canvas){
+    /* 750×1050 نسبة 5:7 — مناسبة لستوري إنستغرام وواتساب */
+    var OUT_W = 750, OUT_H = 1050;
     var out = document.createElement('canvas');
-    out.width = 1080; out.height = 1350;
+    out.width = OUT_W; out.height = OUT_H;
     var ctx = out.getContext('2d');
-    ctx.fillStyle = '#1a1200';
-    ctx.fillRect(0,0,1080,1350);
-    // مركز البطاقة عمودياً
-    var imgW = canvas.width, imgH = canvas.height;
-    var scale = Math.min(1080/imgW, 1300/imgH);
-    var dw = imgW*scale, dh = imgH*scale;
-    var dx = (1080-dw)/2, dy = (1350-dh)/2;
-    ctx.drawImage(canvas, dx, dy, dw, dh);
+    ctx.fillStyle = '#050505';
+    ctx.fillRect(0,0,OUT_W,OUT_H);
+    var scale = Math.min((OUT_W-40)/canvas.width, (OUT_H-40)/canvas.height);
+    var dw = canvas.width*scale, dh = canvas.height*scale;
+    ctx.drawImage(canvas, (OUT_W-dw)/2, (OUT_H-dh)/2, dw, dh);
     var a = document.createElement('a');
-    a.download = 'بطاقة-لاعب-1080.png';
+    a.download = 'بطاقة-لاعب-750x1050.png';
     a.href = out.toDataURL('image/png');
     a.click();
     if(btn){ btn.disabled=false; btn.textContent='⬇️ تنزيل'; }
@@ -5819,7 +5817,7 @@ function buildFifaCard(cardId, o) {
 
   /* علم عُمان الصحيح: أحمر أعلى + أبيض وسط + أخضر أسفل + شريط أحمر يسار + شعار */
   var omanFlag =
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 30" width="36" height="24" style="display:block;border-radius:3px;">'+
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 30" width="44" height="30" style="display:block;border-radius:3px;">'+
       /* خلفية بيضاء */
       '<rect width="45" height="30" fill="#fff"/>'+
       /* شريط أحمر أعلى */
@@ -5845,16 +5843,16 @@ function buildFifaCard(cardId, o) {
 
   /* شعار الأكاديمية بدون خلفية بيضاء */
   var logoHtml = o.logo
-    ? '<img src="'+o.logo+'" style="width:30px;height:30px;object-fit:contain;display:block;filter:invert(1) drop-shadow(0 0 4px rgba(212,175,55,.6));" onerror="this.style.display=\'none\'">'
+    ? '<img src="'+o.logo+'" style="width:38px;height:38px;object-fit:contain;display:block;filter:invert(1) drop-shadow(0 0 5px rgba(212,175,55,.7));" onerror="this.style.display=\'none\'">'
     : '';
 
   return (
-    /* ===== غلاف البطاقة — حد ذهبي معدني ===== */
+    /* ===== غلاف البطاقة — حد ذهبي معدني — 350×490 نسبة 5:7 ===== */
     '<div id="'+cardId+'" style="'+
-      'width:260px;border-radius:16px;'+
+      'width:350px;border-radius:18px;'+
       'background:linear-gradient(145deg,#c8960a,#f5d060,#7a5800,#e8b822,#3d2800);'+
       'padding:2px;'+
-      'box-shadow:0 8px 32px rgba(0,0,0,.8),0 0 0 1px rgba(212,175,55,.15);'+
+      'box-shadow:0 12px 40px rgba(0,0,0,.85),0 0 0 1px rgba(212,175,55,.15);'+
       'font-family:Cairo,Tajawal,Arial,sans-serif;margin:0 auto;direction:rtl;'+
     '">'+
 
@@ -5864,8 +5862,8 @@ function buildFifaCard(cardId, o) {
       /* ===== شريط ذهبي علوي ===== */
       '<div style="height:4px;background:linear-gradient(90deg,#3d2800,#f5d060,#fff8dc,#f5d060,#3d2800);"></div>'+
 
-      /* ===== قسم الصورة ===== */
-      '<div style="position:relative;height:230px;overflow:hidden;background:#0a0a0a;">'+
+      /* ===== قسم الصورة — الارتفاع محسوب ليعطي 490px للبطاقة كاملة ===== */
+      '<div style="position:relative;height:300px;overflow:hidden;background:#0a0a0a;">'+
 
         /* الصورة */
         '<div style="position:absolute;inset:0;">'+photoHtml+'</div>'+
@@ -5881,8 +5879,8 @@ function buildFifaCard(cardId, o) {
           '<div style="background:linear-gradient(135deg,rgba(0,0,0,.75),rgba(0,0,0,.55));'+
             'border:1.5px solid rgba(212,175,55,.7);border-radius:8px;padding:2px 7px;'+
             'backdrop-filter:blur(8px);">'+
-            '<div style="font-size:36px;font-weight:900;color:#f5d060;line-height:1.05;'+
-              'text-shadow:0 0 16px rgba(245,208,96,.5),0 2px 6px rgba(0,0,0,.9);'+
+            '<div style="font-size:44px;font-weight:900;color:#f5d060;line-height:1.05;'+
+              'text-shadow:0 0 18px rgba(245,208,96,.5),0 2px 8px rgba(0,0,0,.9);'+
               'font-family:Arial Black,Arial,sans-serif;text-align:center;">'+catLabel+'</div>'+
           '</div>'+
 
@@ -5900,8 +5898,8 @@ function buildFifaCard(cardId, o) {
 
         /* اسم اللاعب فوق الخط السفلي */
         '<div style="position:absolute;bottom:10px;left:10px;right:10px;text-align:center;">'+
-          '<div style="font-size:17px;font-weight:900;color:#ffffff;direction:rtl;'+
-            'text-shadow:0 2px 12px rgba(0,0,0,1),0 0 20px rgba(0,0,0,.9);'+
+          '<div style="font-size:22px;font-weight:900;color:#ffffff;direction:rtl;'+
+            'text-shadow:0 2px 14px rgba(0,0,0,1),0 0 24px rgba(0,0,0,.9);'+
             'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+o.name+'</div>'+
         '</div>'+
 
@@ -5961,10 +5959,10 @@ function _fifaStatLine(val, label) {
 
 function _fifaDataCell(label, val) {
   var v = (val && String(val).trim()) ? String(val).trim() : '—';
-  return '<div style="background:rgba(255,255,255,.04);border-radius:6px;padding:5px 8px;'+
+  return '<div style="background:rgba(255,255,255,.04);border-radius:7px;padding:7px 10px;'+
     'border:1px solid rgba(212,175,55,.18);overflow:hidden;direction:rtl;">'+
-    '<div style="font-size:7.5px;color:#b8860b;font-weight:700;margin-bottom:2px;direction:rtl;text-align:right;unicode-bidi:embed;">'+label+'</div>'+
-    '<div style="font-size:10.5px;color:#f0f0f0;font-weight:800;white-space:nowrap;overflow:hidden;'+
+    '<div style="font-size:9px;color:#b8860b;font-weight:700;margin-bottom:3px;direction:rtl;text-align:right;unicode-bidi:embed;">'+label+'</div>'+
+    '<div style="font-size:12.5px;color:#f0f0f0;font-weight:800;white-space:nowrap;overflow:hidden;'+
       'text-overflow:ellipsis;direction:rtl;text-align:right;unicode-bidi:embed;">'+v+'</div>'+
   '</div>';
 }
