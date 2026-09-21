@@ -493,7 +493,7 @@ function submitForm(){
   var payload = JSON.stringify({
     action: 'append',
     sheet: 'طلبات_انضمام',
-    data: [{
+    data: {
       'رقم الطلب': reqId,
       'تاريخ الطلب': today,
       'اسم الأكاديمية': name,
@@ -504,7 +504,7 @@ function submitForm(){
       'الفئات العمرية': cats,
       'ملاحظات': notes,
       'الحالة': 'جديد'
-    }]
+    }
   });
 
   fetch(CENTRAL_GAS, {
