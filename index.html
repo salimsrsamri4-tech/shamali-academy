@@ -656,20 +656,54 @@ function _fillAcadDefaults(k, a){
 // قراءة معامل الأكاديمية من الرابط (?academy=shamali)
 (function(){
   var urlParam = new URLSearchParams(window.location.search).get('academy');
-  // إذا لم يُحدد معامل → أظهر صفحة اختيار الأكاديمية
   if(!urlParam){
-    document.addEventListener('DOMContentLoaded', function(){
-      showAcademyPicker();
-    });
-    urlParam = 'shamali'; // افتراضي مؤقت
+    document.addEventListener('DOMContentLoaded', function(){ showAcademyPicker(); });
+    urlParam = 'shamali';
   }
   var acad = ACADEMIES[urlParam];
-  if(!acad){ urlParam = 'shamali'; acad = ACADEMIES['shamali']; }
-  if(urlParam !== 'shamali' && !acad.HIDE_SECTIONS){
-    acad.HIDE_SECTIONS = ['tournaments', 'festival', 'shamali_specific'];
+  if(acad){
+    // موجودة مباشرةً
+    if(urlParam !== 'shamali' && !acad.HIDE_SECTIONS)
+      acad.HIDE_SECTIONS = ['tournaments','festival','shamali_specific'];
+    window.CURRENT_ACADEMY = acad;
+    window.CURRENT_ACADEMY_KEY = urlParam;
+  } else {
+    // غير موجودة بعد → انتظر تحميل الشيت (مع spinner)
+    window.CURRENT_ACADEMY = ACADEMIES['shamali'];
+    window.CURRENT_ACADEMY_KEY = 'shamali';
+    window._pendingAcadKey = urlParam;
+    document.addEventListener('DOMContentLoaded', function(){
+      var el = document.getElementById('content');
+      if(el) el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ تحميل بيانات الأكاديمية...</div>';
+    });
+    // انتظر حتى تصبح الأكاديمية متاحة (مهلة 8 ثوانٍ)
+    var tries = 0;
+    var poll = setInterval(function(){
+      tries++;
+      var loaded = ACADEMIES[urlParam];
+      if(loaded || tries > 40){
+        clearInterval(poll);
+        if(loaded){
+          if(!loaded.HIDE_SECTIONS)
+            loaded.HIDE_SECTIONS = ['tournaments','festival','shamali_specific'];
+          window.CURRENT_ACADEMY = loaded;
+          window.CURRENT_ACADEMY_KEY = urlParam;
+          // إعادة تهيئة CONFIG
+          if(window.CONFIG){
+            CONFIG.SHEET_ID   = loaded.SHEET_ID;
+            CONFIG.GAS_URL    = loaded.GAS_URL;
+            CONFIG.UPLOAD_URL = loaded.UPLOAD_URL;
+            CONFIG.API_KEY    = loaded.API_KEY;
+          }
+          applyAcademy(loaded);
+        } else {
+          // لم تُوجَد → رسالة خطأ
+          var el2 = document.getElementById('content');
+          if(el2) el2.innerHTML = '<div class="al al-err">⚠️ لم يتم العثور على الأكاديمية. تحقق من الرابط.</div>';
+        }
+      }
+    }, 200);
   }
-  window.CURRENT_ACADEMY = acad;
-  window.CURRENT_ACADEMY_KEY = urlParam;
 })();
 
 function showAcademyPicker(){
