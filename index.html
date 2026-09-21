@@ -5850,16 +5850,9 @@ function buildFifaCard(cardId, o) {
         '<div style="position:absolute;bottom:0;left:0;right:0;height:120px;'+
           'background:linear-gradient(0deg,#050505 0%,rgba(5,5,5,.85) 40%,transparent 100%);pointer-events:none;"></div>'+
 
-        /* زاوية علوية يمين: فئة + علم */
-        '<div style="position:absolute;top:10px;right:10px;display:flex;flex-direction:column;align-items:center;gap:6px;">'+
-          '<div style="background:linear-gradient(135deg,rgba(0,0,0,.75),rgba(0,0,0,.55));'+
-            'border:1.5px solid rgba(212,175,55,.7);border-radius:8px;padding:2px 10px;'+
-            'backdrop-filter:blur(8px);">'+
-            '<div style="font-size:44px;font-weight:900;color:#f5d060;line-height:1.05;'+
-              'text-shadow:0 0 18px rgba(245,208,96,.5),0 2px 8px rgba(0,0,0,.9);'+
-              'font-family:Arial Black,Arial,sans-serif;text-align:center;">'+catLabel+'</div>'+
-          '</div>'+
-          '<div style="font-size:30px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.8));">🇴🇲</div>'+
+        /* زاوية علوية يمين: علم فقط */
+        '<div style="position:absolute;top:10px;right:12px;">'+
+          '<div style="font-size:36px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.9));">🇴🇲</div>'+
         '</div>'+
 
         /* اسم اللاعب فوق الخط السفلي */
@@ -5881,11 +5874,20 @@ function buildFifaCard(cardId, o) {
         '<div style="position:absolute;inset:0;opacity:.03;pointer-events:none;'+
           'background-image:radial-gradient(circle,#d4af37 1px,transparent 1px);background-size:14px 14px;"></div>'+
 
-        /* اسم الأكاديمية */
-        '<div style="text-align:center;margin-bottom:10px;">'+
-          '<div style="font-size:13px;font-weight:900;color:#f5d060;direction:rtl;">'+(o.acadName||'أكاديمية الشمالي')+'</div>'+
-          '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.4),transparent);margin-top:6px;"></div>'+
+        /* اسم الأكاديمية + الفئة العمرية */
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'+
+          '<div style="background:linear-gradient(135deg,rgba(212,175,55,.15),rgba(212,175,55,.05));'+
+            'border:1.5px solid rgba(212,175,55,.6);border-radius:8px;padding:2px 10px;'+
+            'backdrop-filter:blur(6px);flex-shrink:0;">'+
+            '<div style="font-size:28px;font-weight:900;color:#f5d060;line-height:1.1;'+
+              'font-family:Arial Black,Arial,sans-serif;text-align:center;'+
+              'text-shadow:0 0 12px rgba(245,208,96,.4);">'+catLabel+'</div>'+
+          '</div>'+
+          '<div style="text-align:center;flex:1;padding:0 8px;">'+
+            '<div style="font-size:13px;font-weight:900;color:#f5d060;direction:rtl;">'+(o.acadName||'أكاديمية الشمالي')+'</div>'+
+          '</div>'+
         '</div>'+
+        '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.4),transparent);margin-bottom:8px;"></div>'+
 
         /* شبكة البيانات 2×3 */
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;">'+
