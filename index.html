@@ -827,15 +827,17 @@ var _isSuperAdmin = false;
 // تطبيق الإعدادات المركزية على الأكاديميات الثابتة
 (function(){ Object.keys(ACADEMIES).forEach(function(k){ _fillAcadDefaults(k, ACADEMIES[k]); }); })();
 
-// تحميل الأكاديميات المقبولة من الشيت تلقائياً
+  // تحميل الأكاديميات المقبولة من الشيت تلقائياً
 (function(){
   var url = PLATFORM.CENTRAL_GAS + '?action=get&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET) + '&limit=200';
   fetch(url, {redirect:'follow'}).then(function(r){ return r.json(); }).then(function(rows){
     if(!Array.isArray(rows)) return;
     rows.forEach(function(r){
       if(r['الحالة'] !== 'مقبول') return;
-      var key  = r['مفتاح_الأكاديمية'];
-      var pass = r['كلمة_المرور'];
+      // المفتاح: من العمود أو مشتق من رقم الطلب
+      var key  = r['مفتاح_الأكاديمية'] || ('acad_' + (r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
+      // كلمة المرور: من العمود أو آخر 4 أرقام واتساب
+      var pass = r['كلمة_المرور'] || (r['رقم الواتساب']||'').slice(-4);
       if(!key || !pass) return;
       if(ACADEMIES[key]) return;
       ACADEMIES[key] = _fillAcadDefaults(key, {
@@ -11856,7 +11858,7 @@ function approveJoinRequest(reqId, waNum, acadName){
   showL(true);
 
   var slug      = reqId.replace('JOIN-','').slice(-6);
-  var adminPass = Math.floor(1000+Math.random()*9000).toString();
+  var adminPass = waNum.slice(-4);  // آخر 4 أرقام من الواتساب
   var acadKey   = 'acad_'+slug;
   var baseUrl   = window.location.origin + window.location.pathname;
   var acadLink  = baseUrl + '?academy=' + acadKey;
