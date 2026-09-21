@@ -831,13 +831,14 @@ var _isSuperAdmin = false;
 (function(){
   var url = PLATFORM.CENTRAL_GAS + '?action=get&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET) + '&limit=200';
   fetch(url, {redirect:'follow'}).then(function(r){ return r.json(); }).then(function(rows){
+    console.log('JOIN SHEET RAW:', JSON.stringify(rows).slice(0,500));
     if(!Array.isArray(rows)) return;
     rows.forEach(function(r){
+      console.log('ROW الحالة=['+r['الحالة']+'] مفتاح=['+r['مفتاح_الأكاديمية']+']');
       if(r['الحالة'] !== 'مقبول') return;
-      // المفتاح: من العمود أو مشتق من رقم الطلب
       var key  = r['مفتاح_الأكاديمية'] || ('acad_' + (r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
-      var pass = r['كلمة_المرور'] || '1234';  // افتراضي للأكاديميات الجديدة
-      if(!key || !pass) return;
+      var pass = r['كلمة_المرور'] || '1234';
+      if(!key) return;
       if(ACADEMIES[key]) return;
       ACADEMIES[key] = _fillAcadDefaults(key, {
         NAME: r['اسم الأكاديمية'] || key,
@@ -845,8 +846,9 @@ var _isSuperAdmin = false;
         ADMIN_PASS: [pass],
         WA_NUM: r['رقم الواتساب'] || ''
       });
+      console.log('✅ أضيفت أكاديمية:', key, ACADEMIES[key].NAME);
     });
-  }).catch(function(){});
+  }).catch(function(e){ console.error('JOIN FETCH ERROR:', e); });
 })();
 
 // ===== API (يدعم Apps Script و SheetDB) =====
