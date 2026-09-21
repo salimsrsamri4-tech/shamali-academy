@@ -4,188 +4,360 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>انضم إلى منصة توفة</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Space+Grotesk:wght@500;600;700&display=swap">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: Cairo, sans-serif;
-  background: #f0f4f8;
-  color: #0f172a;
-  direction: rtl;
-  min-height: 100vh;
+:root {
+  --bg:        #050810;
+  --surface:   #0d1117;
+  --surface2:  #161b25;
+  --surface3:  #1e2535;
+  --border:    rgba(255,255,255,.08);
+  --border2:   rgba(212,175,55,.25);
+  --text:      #f1f5f9;
+  --text2:     #94a3b8;
+  --text3:     #475569;
+  --gold:      #d4af37;
+  --gold2:     #f5d060;
+  --gold-dim:  rgba(212,175,55,.12);
+  --red:       #b81d22;
+  --red2:      #7a1015;
+  --green:     #10b981;
+  --err-bg:    rgba(220,38,38,.12);
+  --err-text:  #f87171;
+  --inp-bg:    rgba(255,255,255,.04);
+  --inp-focus: rgba(212,175,55,.3);
+  --shadow:    0 24px 64px rgba(0,0,0,.6);
+  --radius:    14px;
 }
-.hero {
-  background: linear-gradient(150deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
-  padding: 48px 20px 52px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;}
+body{
+  font-family:Cairo,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  direction:rtl;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
 }
-.hero::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,175,55,.18), transparent);
-  pointer-events: none;
+
+/* ── هيدر ── */
+.hero{
+  position:relative;
+  padding:56px 20px 72px;
+  text-align:center;
+  overflow:hidden;
 }
-.hero-badge {
-  display: inline-block;
-  background: rgba(212,175,55,.15);
-  border: 1px solid rgba(212,175,55,.4);
-  border-radius: 20px;
-  padding: 5px 18px;
-  font-size: 12px;
-  color: #f5d060;
-  font-weight: 700;
-  margin-bottom: 18px;
+.hero-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(184,29,34,.22), transparent),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(212,175,55,.08), transparent),
+    linear-gradient(180deg,#0d1117 0%,var(--bg) 100%);
+  pointer-events:none;
 }
-.hero h1 {
-  font-size: clamp(22px, 6vw, 34px);
-  font-weight: 900;
-  color: #fff;
-  line-height: 1.3;
-  margin-bottom: 10px;
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;
+  mask-image:linear-gradient(180deg,rgba(0,0,0,.6) 0%,transparent 100%);
 }
-.hero h1 span { color: #f5d060; }
-.hero p {
-  font-size: 13px;
-  color: rgba(255,255,255,.6);
-  max-width: 340px;
-  margin: 0 auto 24px;
-  line-height: 1.8;
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--gold-dim);
+  border:1px solid var(--border2);
+  border-radius:20px;padding:5px 16px;
+  font-size:11px;color:var(--gold2);font-weight:700;
+  letter-spacing:.5px;margin-bottom:22px;
+  position:relative;z-index:1;
 }
-.features {
-  display: flex; flex-wrap: wrap;
-  justify-content: center; gap: 8px;
-  padding: 0 16px;
-  position: relative; z-index: 1;
+.badge svg{width:13px;height:13px;fill:var(--gold2);}
+.hero h1{
+  font-size:clamp(26px,7vw,46px);
+  font-weight:900;line-height:1.2;
+  color:#fff;
+  margin-bottom:14px;
+  position:relative;z-index:1;
+  text-wrap:balance;
 }
-.feat {
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.13);
-  border-radius: 10px;
-  padding: 7px 14px;
-  font-size: 11px;
-  color: rgba(255,255,255,.85);
-  font-weight: 600;
+.hero h1 em{
+  font-style:normal;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
 }
-.form-wrap {
-  max-width: 480px;
-  margin: -26px auto 40px;
-  padding: 0 16px;
-  position: relative; z-index: 2;
+.hero-desc{
+  font-size:14px;color:var(--text2);
+  max-width:360px;margin:0 auto 32px;
+  line-height:1.8;position:relative;z-index:1;
 }
-.card {
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0,0,0,.10);
-  border: 1px solid #e2e8f0;
-  overflow: hidden;
+
+/* stats */
+.stats{
+  display:flex;justify-content:center;flex-wrap:wrap;gap:24px;
+  margin-bottom:36px;position:relative;z-index:1;
 }
-.card-header {
-  background: linear-gradient(135deg, #b81d22, #7a1015);
-  padding: 18px 22px;
-  display: flex; align-items: center; gap: 12px;
+.stat{text-align:center;}
+.stat-num{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:28px;font-weight:700;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  font-variant-numeric:tabular-nums;
 }
-.card-header-icon {
-  width: 42px; height: 42px;
-  background: rgba(255,255,255,.15);
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px; flex-shrink: 0;
+.stat-lbl{font-size:11px;color:var(--text3);font-weight:600;margin-top:2px;}
+
+.divider-v{width:1px;height:40px;background:var(--border);align-self:center;}
+
+/* features strip */
+.features{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:8px;
+  position:relative;z-index:1;
 }
-.card-header h2 { font-size: 15px; font-weight: 900; color: #fff; }
-.card-header p { font-size: 11px; color: rgba(255,255,255,.6); margin-top: 2px; }
-.card-body { padding: 22px; }
-.field { margin-bottom: 15px; }
-.field label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; }
-.field label span { color: #b81d22; }
-.inp {
-  width: 100%; padding: 11px 14px;
-  border: 1.5px solid #e2e8f0; border-radius: 10px;
-  background: #f8fafc; color: #0f172a;
-  font-family: Cairo, sans-serif; font-size: 13px;
-  direction: rtl; outline: none;
-  transition: border-color .2s;
+.feat{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--border);
+  border-radius:10px;padding:8px 14px;
+  font-size:12px;color:rgba(255,255,255,.8);font-weight:600;
+  transition:border-color .2s,background .2s;
 }
-.inp:focus { border-color: #d4af37; }
-.inp::placeholder { color: #94a3b8; }
-select.inp { cursor: pointer; }
-textarea.inp { resize: vertical; min-height: 80px; }
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 400px) { .grid2 { grid-template-columns: 1fr; } }
-.btn-submit {
-  width: 100%; padding: 14px;
-  background: linear-gradient(135deg, #b81d22, #7a1015);
-  color: #fff; border: none; border-radius: 12px;
-  font-family: Cairo, sans-serif; font-size: 15px; font-weight: 900;
-  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-  transition: opacity .2s, transform .1s; margin-top: 4px;
+.feat:hover{border-color:var(--border2);background:var(--gold-dim);}
+.feat svg{width:15px;height:15px;flex-shrink:0;}
+
+/* ── كرت النموذج ── */
+.form-wrap{
+  max-width:520px;
+  margin:-32px auto 48px;
+  padding:0 16px;
+  position:relative;z-index:2;
 }
-.btn-submit:hover { opacity: .9; }
-.btn-submit:active { transform: scale(.98); }
-.note { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 10px; line-height: 1.7; }
-.err-box {
-  display: none; background: #fef2f2; border: 1px solid #fca5a5;
-  border-radius: 8px; padding: 10px 12px;
-  font-size: 12px; color: #dc2626; margin-bottom: 12px;
+.card{
+  background:var(--surface);
+  border-radius:20px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  overflow:hidden;
 }
-.success { display: none; text-align: center; padding: 44px 24px; }
-.success-icon { font-size: 56px; margin-bottom: 14px; }
-.success h3 { font-size: 18px; font-weight: 900; color: #16a34a; margin-bottom: 8px; }
-.success p { font-size: 13px; color: #64748b; line-height: 1.8; }
-.footer {
-  text-align: center; padding: 20px 16px 36px;
-  font-size: 11px; color: #94a3b8;
+.card-header{
+  background:linear-gradient(135deg,var(--red),var(--red2));
+  padding:20px 24px;
+  display:flex;align-items:center;gap:14px;
 }
-.footer strong { color: #d4af37; }
+.card-header-icon{
+  width:46px;height:46px;
+  background:rgba(255,255,255,.15);
+  border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.card-header-icon svg{width:22px;height:22px;fill:#fff;}
+.card-header h2{font-size:16px;font-weight:900;color:#fff;}
+.card-header p{font-size:11px;color:rgba(255,255,255,.6);margin-top:3px;}
+.card-body{padding:24px;}
+
+/* fields */
+.field{margin-bottom:18px;}
+.field label{
+  display:flex;align-items:center;gap:4px;
+  font-size:12px;font-weight:700;color:var(--text2);
+  margin-bottom:7px;
+}
+.field label .req{color:var(--gold);font-size:14px;line-height:1;}
+.inp{
+  width:100%;
+  padding:12px 14px;
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  background:var(--inp-bg);
+  color:var(--text);
+  font-family:Cairo,sans-serif;
+  font-size:13px;direction:rtl;
+  outline:none;
+  transition:border-color .2s,box-shadow .2s,background .2s;
+  appearance:none;
+}
+.inp:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px var(--inp-focus);
+  background:rgba(212,175,55,.04);
+}
+.inp::placeholder{color:var(--text3);}
+.inp.invalid{border-color:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.2);}
+.inp.valid{border-color:#10b981;}
+select.inp{cursor:pointer;}
+select.inp option{background:var(--surface2);color:var(--text);}
+textarea.inp{resize:vertical;min-height:88px;}
+.field-err{
+  display:none;font-size:11px;color:var(--err-text);
+  margin-top:5px;padding:6px 10px;
+  background:var(--err-bg);border-radius:6px;
+}
+.field-err.show{display:block;}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:420px){.grid2{grid-template-columns:1fr;}}
+
+/* خط فاصل */
+.sep{height:1px;background:var(--border);margin:4px 0 20px;}
+
+/* submit */
+.btn-submit{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg,var(--red),var(--red2));
+  color:#fff;border:none;border-radius:12px;
+  font-family:Cairo,sans-serif;font-size:15px;font-weight:900;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:opacity .2s,transform .1s,box-shadow .2s;
+  box-shadow:0 4px 20px rgba(184,29,34,.4);
+}
+.btn-submit:hover{opacity:.92;box-shadow:0 6px 28px rgba(184,29,34,.55);}
+.btn-submit:active{transform:scale(.98);}
+.btn-submit svg{width:18px;height:18px;fill:#fff;flex-shrink:0;}
+.note{font-size:11px;color:var(--text3);text-align:center;margin-top:12px;line-height:1.7;}
+.note a{color:var(--gold);text-decoration:none;}
+
+/* success */
+.success{display:none;text-align:center;padding:48px 24px;}
+.success-ring{
+  width:80px;height:80px;border-radius:50%;
+  background:rgba(16,185,129,.12);border:2px solid var(--green);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 18px;
+}
+.success-ring svg{width:38px;height:38px;stroke:var(--green);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+.success h3{font-size:20px;font-weight:900;color:var(--green);margin-bottom:10px;}
+.success p{font-size:13px;color:var(--text2);line-height:1.9;}
+
+/* footer */
+.footer{
+  text-align:center;padding:24px 16px 40px;
+  font-size:11px;color:var(--text3);line-height:1.9;
+}
+.footer strong{color:var(--gold);}
+
+/* fade-in */
+@media(prefers-reduced-motion:no-preference){
+  .feat{opacity:0;transform:translateY(8px);animation:fadeUp .4s ease forwards;}
+  .feat:nth-child(1){animation-delay:.05s}
+  .feat:nth-child(2){animation-delay:.1s}
+  .feat:nth-child(3){animation-delay:.15s}
+  .feat:nth-child(4){animation-delay:.2s}
+  .feat:nth-child(5){animation-delay:.25s}
+  .feat:nth-child(6){animation-delay:.3s}
+  .card{opacity:0;transform:translateY(16px);animation:fadeUp .5s .1s ease forwards;}
+  @keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+}
 </style>
 </head>
 <body>
 
+<!-- هيدر -->
 <div class="hero">
-  <div class="hero-badge">🏆 منصة توفة | الكابتن الصغير</div>
-  <h1>انضم إلى منصة<br><span>إدارة الأكاديميات</span></h1>
-  <p>منصة متكاملة لإدارة اللاعبين، الحضور، الاشتراكات، والبطولات — مخصصة لأكاديميتك</p>
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+
+  <div class="badge">
+    <svg viewBox="0 0 20 20"><path d="M10 1l2.39 4.84 5.34.78-3.86 3.76.91 5.32L10 13.27l-4.78 2.51.91-5.32L2.27 6.62l5.34-.78z"/></svg>
+    منصة توفة | الكابتن الصغير
+  </div>
+
+  <h1>انضم إلى منصة<br><em>إدارة الأكاديميات</em></h1>
+  <p class="hero-desc">منصة متكاملة لإدارة اللاعبين، الحضور، الاشتراكات، والبطولات — مخصصة لأكاديميتك</p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num">+٥٠٠</div>
+      <div class="stat-lbl">لاعب مسجّل</div>
+    </div>
+    <div class="divider-v"></div>
+    <div class="stat">
+      <div class="stat-num">٦</div>
+      <div class="stat-lbl">أكاديمية نشطة</div>
+    </div>
+    <div class="divider-v"></div>
+    <div class="stat">
+      <div class="stat-num">٢٤/٧</div>
+      <div class="stat-lbl">دعم فني</div>
+    </div>
+  </div>
+
   <div class="features">
-    <div class="feat">🪪 بطاقات اللاعبين</div>
-    <div class="feat">📊 لوحة إحصائيات</div>
-    <div class="feat">🔄 نظام الاستعارة</div>
-    <div class="feat">🏆 إدارة البطولات</div>
-    <div class="feat">📱 متوافق مع الجوال</div>
-    <div class="feat">🇴🇲 للأكاديميات العُمانية</div>
+    <div class="feat">
+      <svg viewBox="0 0 20 20" fill="currentColor" style="color:var(--gold)"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
+      بطاقات اللاعبين
+    </div>
+    <div class="feat">
+      <svg viewBox="0 0 20 20" fill="currentColor" style="color:#60a5fa"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+      لوحة إحصائيات
+    </div>
+    <div class="feat">
+      <svg viewBox="0 0 20 20" fill="currentColor" style="color:#a78bfa"><path d="M8 5a1 1 0 100 2h5.586l-1.293 1.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L13.586 5H8zM12 15a1 1 0 100-2H6.414l1.293-1.293a1 1 0 10-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L6.414 15H12z"/></svg>
+      نظام الاستعارة
+    </div>
+    <div class="feat">
+      <svg viewBox="0 0 20 20" fill="currentColor" style="color:#f59e0b"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+      إدارة البطولات
+    </div>
+    <div class="feat">
+      <svg viewBox="0 0 20 20" fill="currentColor" style="color:#34d399"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 6a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zm0 6a1 1 0 011-1h6a1 1 0 010 2H4a1 1 0 01-1-1z"/></svg>
+      متابعة الحضور
+    </div>
+    <div class="feat">
+      <svg viewBox="0 0 20 20" fill="currentColor" style="color:#f472b6"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg>
+      دعم فني مستمر
+    </div>
   </div>
 </div>
 
+<!-- النموذج -->
 <div class="form-wrap">
-  <div class="card">
+  <div class="card" role="main">
     <div class="card-header">
-      <div class="card-header-icon">📋</div>
+      <div class="card-header-icon">
+        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
       <div>
         <h2>طلب الانضمام للمنصة</h2>
         <p>أكمل البيانات وسنتواصل معك خلال 24 ساعة</p>
       </div>
     </div>
+
     <div class="card-body" id="formBody">
 
+      <!-- ملخص الأخطاء -->
+      <div id="errSummary" role="alert" tabindex="-1" style="display:none;background:var(--err-bg);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 14px;margin-bottom:18px;">
+        <div style="font-size:12px;font-weight:800;color:var(--err-text);margin-bottom:6px;">يرجى تصحيح الأخطاء التالية:</div>
+        <ul id="errList" style="list-style:none;font-size:12px;color:var(--err-text);line-height:1.9;padding:0;"></ul>
+      </div>
+
       <div class="field">
-        <label>اسم الأكاديمية <span>*</span></label>
-        <input class="inp" id="acadName" type="text" placeholder="مثال: أكاديمية النجوم الرياضية">
+        <label for="acadName">اسم الأكاديمية <span class="req" aria-hidden="true">*</span></label>
+        <input class="inp" id="acadName" type="text" placeholder="مثال: أكاديمية النجوم الرياضية" aria-required="true" aria-describedby="acadName-err" autocomplete="organization">
+        <div class="field-err" id="acadName-err" aria-live="polite">يرجى إدخال اسم الأكاديمية</div>
       </div>
 
       <div class="grid2">
         <div class="field">
-          <label>اسم المسؤول <span>*</span></label>
-          <input class="inp" id="contactName" type="text" placeholder="الاسم الكامل">
+          <label for="contactName">اسم المسؤول <span class="req" aria-hidden="true">*</span></label>
+          <input class="inp" id="contactName" type="text" placeholder="الاسم الكامل" aria-required="true" aria-describedby="contactName-err" autocomplete="name">
+          <div class="field-err" id="contactName-err" aria-live="polite">يرجى إدخال اسم المسؤول</div>
         </div>
         <div class="field">
-          <label>رقم الواتساب <span>*</span></label>
-          <input class="inp" id="phone" type="tel" placeholder="968XXXXXXXX" dir="ltr">
+          <label for="phone">رقم الواتساب <span class="req" aria-hidden="true">*</span></label>
+          <input class="inp" id="phone" type="tel" placeholder="968XXXXXXXX" dir="ltr" aria-required="true" aria-describedby="phone-err" autocomplete="tel">
+          <div class="field-err" id="phone-err" aria-live="polite">يرجى إدخال رقم واتساب صحيح</div>
         </div>
       </div>
 
+      <div class="sep"></div>
+
       <div class="grid2">
         <div class="field">
-          <label>المحافظة</label>
+          <label for="city">المحافظة</label>
           <select class="inp" id="city">
             <option value="">اختر...</option>
             <option>مسقط</option><option>صحار</option><option>صلالة</option>
@@ -194,35 +366,37 @@ textarea.inp { resize: vertical; min-height: 80px; }
           </select>
         </div>
         <div class="field">
-          <label>عدد اللاعبين تقريباً</label>
+          <label for="playerCount">عدد اللاعبين تقريباً</label>
           <select class="inp" id="playerCount">
             <option value="">اختر...</option>
-            <option>أقل من 20</option><option>20 - 50</option>
-            <option>50 - 100</option><option>أكثر من 100</option>
+            <option>أقل من 20</option><option>20 – 50</option>
+            <option>50 – 100</option><option>أكثر من 100</option>
           </select>
         </div>
       </div>
 
       <div class="field">
-        <label>الفئات العمرية</label>
+        <label for="cats">الفئات العمرية</label>
         <input class="inp" id="cats" type="text" placeholder="مثال: U8، U10، U12، U14">
       </div>
 
       <div class="field">
-        <label>ملاحظات إضافية</label>
+        <label for="notes">ملاحظات إضافية</label>
         <textarea class="inp" id="notes" placeholder="أي معلومات أو استفسارات..."></textarea>
       </div>
 
-      <div class="err-box" id="errMsg"></div>
-
-      <button class="btn-submit" onclick="submitForm()">
-        <span>📲</span> إرسال الطلب عبر واتساب
+      <button class="btn-submit" onclick="submitForm()" id="submitBtn">
+        <svg viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+        إرسال الطلب عبر واتساب
       </button>
-      <p class="note">سيفتح واتساب تلقائياً لإرسال طلبك مباشرة لمدير المنصة</p>
+      <p class="note">سيفتح واتساب تلقائياً — طلبك يصل مباشرة للدعم الفني</p>
     </div>
 
-    <div class="success" id="successMsg">
-      <div class="success-icon">✅</div>
+    <!-- رسالة النجاح -->
+    <div class="success" id="successMsg" role="status" aria-live="polite">
+      <div class="success-ring">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
       <h3>تم إرسال الطلب!</h3>
       <p>شكراً لاهتمامك بمنصة توفة<br>سيتواصل معك مدير المنصة قريباً 🎯</p>
     </div>
@@ -235,7 +409,27 @@ textarea.inp { resize: vertical; min-height: 80px; }
 </div>
 
 <script>
-function submitForm() {
+// تحقق عند مغادرة الحقل
+['acadName','contactName','phone'].forEach(function(id){
+  document.getElementById(id).addEventListener('blur', function(){
+    validateField(id);
+  });
+});
+
+function validateField(id){
+  var el = document.getElementById(id);
+  var err = document.getElementById(id+'-err');
+  var val = el.value.trim();
+  var ok = true;
+  if(id==='phone') ok = val.length >= 8 && /^[\d+\s()-]+$/.test(val);
+  else ok = val.length > 0;
+  el.classList.toggle('invalid', !ok);
+  el.classList.toggle('valid', ok && val.length > 0);
+  err.classList.toggle('show', !ok && val.length > 0);
+  return ok || val.length === 0; // لا تظهر الخطأ إذا لم يلمس الحقل
+}
+
+function submitForm(){
   var name    = document.getElementById('acadName').value.trim();
   var contact = document.getElementById('contactName').value.trim();
   var phone   = document.getElementById('phone').value.trim();
@@ -243,14 +437,36 @@ function submitForm() {
   var count   = document.getElementById('playerCount').value;
   var cats    = document.getElementById('cats').value.trim();
   var notes   = document.getElementById('notes').value.trim();
-  var err     = document.getElementById('errMsg');
 
-  if (!name || !contact || !phone) {
-    err.style.display = 'block';
-    err.textContent = '⚠️ يرجى تعبئة: اسم الأكاديمية، اسم المسؤول، رقم الواتساب';
+  // تحقق كامل
+  var errors = [];
+  if(!name){
+    document.getElementById('acadName').classList.add('invalid');
+    document.getElementById('acadName-err').classList.add('show');
+    errors.push({msg:'اسم الأكاديمية مطلوب', id:'acadName'});
+  }
+  if(!contact){
+    document.getElementById('contactName').classList.add('invalid');
+    document.getElementById('contactName-err').classList.add('show');
+    errors.push({msg:'اسم المسؤول مطلوب', id:'contactName'});
+  }
+  if(!phone || phone.length < 8){
+    document.getElementById('phone').classList.add('invalid');
+    document.getElementById('phone-err').classList.add('show');
+    errors.push({msg:'رقم الواتساب مطلوب (8 أرقام على الأقل)', id:'phone'});
+  }
+
+  if(errors.length){
+    var sum = document.getElementById('errSummary');
+    var list = document.getElementById('errList');
+    list.innerHTML = errors.map(function(e){
+      return '<li><a href="#'+e.id+'" style="color:var(--err-text);text-decoration:underline;">'+e.msg+'</a></li>';
+    }).join('');
+    sum.style.display = 'block';
+    sum.focus();
     return;
   }
-  err.style.display = 'none';
+  document.getElementById('errSummary').style.display = 'none';
 
   var msg =
     '🏆 *طلب انضمام — منصة توفة*\n' +
