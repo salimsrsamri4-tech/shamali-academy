@@ -1119,8 +1119,10 @@ function saveRegistration(data) {
   var playerPhotoUrl = data.playerPhotoId || '';
   var playerDocUrl = data.playerDocId || '';
   var birthYear = data.playerBirthDate ? data.playerBirthDate.split('-')[0] : '';
+  var acadName = (window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) || 'أكاديمية الشمالي';
   var row = {
     'التاريخ': now, 'رقم الملف': id,
+    'اسم الأكاديمية': acadName,
     'اسم ولي الأمر': data.parentName, 'الرقم المدني': data.parentCivilId,
     'صلة القرابة': data.parentRelation || '',
     'الهاتف': data.parentPhone, 'الطوارئ': data.emergencyPhone,
@@ -1130,7 +1132,9 @@ function saveRegistration(data) {
     'الحالة': 'موافق', 'الجنسية': data.playerNationality,
     'الصحة': data.playerHealth,
     'ملاحظات صحية': data.healthNotes || '',
-    'صورة اللاعب': playerPhotoUrl
+    'صورة اللاعب': playerPhotoUrl,
+    'صورة هوية ولي الأمر': parentIdUrl,
+    'وثيقة اللاعب': playerDocUrl
   };
   var _gasUrl = CONFIG.GAS_URL || 'EMPTY';
   var _key    = window.CURRENT_ACADEMY_KEY || 'EMPTY';
