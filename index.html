@@ -11876,7 +11876,7 @@ function renderSuperJoinRequests(){
           '<div style="font-size:10px;color:#94a3b8;margin-bottom:8px;">🕐 '+r['تاريخ الطلب']+'</div>'+
           (isPending ?
             '<div style="display:flex;gap:6px;">'+
-              '<button onclick="approveJoinRequest(\''+r['رقم الطلب']+'\',\''+r['رقم الواتساب']+'\',\''+r['اسم الأكاديمية']+'\')" '+
+              '<button onclick="approveJoinRequest(\''+r['رقم الطلب']+'\',\''+r['رقم الواتساب']+'\',\''+r['اسم الأكاديمية']+'\',\''+r['مفتاح_الأكاديمية']+'\')" '+
                 'style="flex:1;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:12px;">'+
                 '✅ قبول وإخطار</button>'+
               '<button onclick="rejectJoinRequest(\''+r['رقم الطلب']+'\',\''+r['رقم الواتساب']+'\',\''+r['اسم الأكاديمية']+'\')" '+
@@ -11896,13 +11896,12 @@ function renderSuperJoinRequests(){
   }).catch(function(){ el.innerHTML='<div class="al al-err">تعذّر تحميل الطلبات</div>'; });
 }
 
-function approveJoinRequest(reqId, waNum, acadName){
+function approveJoinRequest(reqId, waNum, acadName, acadKey){
   if(!confirm('قبول طلب انضمام: '+acadName+'؟')) return;
   showL(true);
 
-  var slug      = reqId.replace('JOIN-','').slice(-6);
-  var adminPass = '1234';  // كلمة مرور افتراضية للأكاديميات الجديدة
-  var acadKey   = 'acad_'+slug;
+  // استخدم المفتاح المحفوظ في الشيت مباشرةً
+  var adminPass = '1234';
   var baseUrl   = window.location.origin + window.location.pathname;
   var acadLink  = baseUrl + '?academy=' + acadKey;
 
