@@ -697,15 +697,19 @@ function loginNewAcad(acadKey){
 
   var url = PLATFORM.CENTRAL_GAS + '?action=get&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET) + '&limit=200';
   fetch(url, {redirect:'follow'}).then(function(r){ return r.json(); }).then(function(rows){
-    if(!Array.isArray(rows)){ showLoginErr(); return; }
+    if(!Array.isArray(rows)){ showLoginErr('ليست مصفوفة'); return; }
     var found = null;
+    var debugKeys = [];
     rows.forEach(function(r){
-      if(r['الحالة'] !== 'مقبول') return;
       var key = r['مفتاح_الأكاديمية'] || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
       var storedPass = r['كلمة_المرور'] || '1234';
-      if(key === acadKey && pass === storedPass) found = r;
+      debugKeys.push(key+'('+r['الحالة']+')');
+      if(key === acadKey && r['الحالة'] === 'مقبول' && pass === storedPass) found = r;
     });
-    if(!found){ showLoginErr(); return; }
+    if(!found){
+      showLoginErr('مفتاح الرابط: '+acadKey+'<br>مفاتيح الشيت: '+debugKeys.join(', '));
+      return;
+    }
     var acad = _fillAcadDefaults(acadKey, {
       NAME: found['اسم الأكاديمية'] || acadKey,
       PRIMARY_COLOR: '#1e3a5f',
@@ -730,7 +734,7 @@ function loginNewAcad(acadKey){
     el.innerHTML = '<div style="padding:24px;text-align:center;color:#dc2626;">❌ خطأ في الاتصال<br><small>'+e.message+'</small><br><br><button onclick="loginNewAcad(\''+acadKey+'\')" style="background:#b81d22;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-family:Cairo,sans-serif;cursor:pointer;">إعادة المحاولة</button></div>';
   });
 
-  function showLoginErr(){
+  function showLoginErr(msg){
     el.innerHTML =
       '<div style="padding:32px 20px;text-align:center;">'+
       '<div style="font-size:48px;margin-bottom:16px;">🏫</div>'+
@@ -738,7 +742,7 @@ function loginNewAcad(acadKey){
       '<div style="font-size:12px;color:#64748b;margin-bottom:24px;">أدخل كلمة المرور للدخول</div>'+
       '<input id="newAcadPass" type="password" placeholder="كلمة المرور" style="width:100%;max-width:280px;padding:12px;border:2px solid #e2e8f0;border-radius:10px;font-family:Cairo,sans-serif;font-size:16px;text-align:center;display:block;margin:0 auto 12px;">'+
       '<button onclick="loginNewAcad(\''+acadKey+'\')" style="background:linear-gradient(135deg,#b81d22,#7a1015);color:#fff;border:none;border-radius:10px;padding:13px 32px;font-family:Cairo,sans-serif;font-size:15px;font-weight:900;cursor:pointer;width:100%;max-width:280px;">دخول</button>'+
-      '<div style="color:#dc2626;font-size:12px;margin-top:10px;">❌ كلمة المرور غير صحيحة أو الأكاديمية غير مفعّلة</div>'+
+      '<div style="color:#dc2626;font-size:11px;margin-top:10px;line-height:1.6;">'+(msg||'❌ كلمة المرور غير صحيحة أو الأكاديمية غير مفعّلة')+'</div>'+
       '</div>';
   }
 }
