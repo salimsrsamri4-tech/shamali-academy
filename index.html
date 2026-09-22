@@ -1122,7 +1122,7 @@ function saveRegistration(data) {
   var acadName = (window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) || 'أكاديمية الشمالي';
   var row = {
     'التاريخ': now, 'رقم الملف': id,
-    'اسم الأكاديمية': acadName,
+    'الأكاديمية': acadName,
     'اسم ولي الأمر': data.parentName, 'الرقم المدني': data.parentCivilId,
     'صلة القرابة': data.parentRelation || '',
     'الهاتف': data.parentPhone, 'الطوارئ': data.emergencyPhone,
@@ -1133,7 +1133,7 @@ function saveRegistration(data) {
     'الصحة': data.playerHealth,
     'ملاحظات صحية': data.healthNotes || '',
     'صورة اللاعب': playerPhotoUrl,
-    'صورة هوية ولي الأمر': parentIdUrl,
+    'بطاقة ولي الأمر': parentIdUrl,
     'وثيقة اللاعب': playerDocUrl
   };
   var _gasUrl = CONFIG.GAS_URL || 'EMPTY';
