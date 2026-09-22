@@ -1185,33 +1185,23 @@ function checkPlayer(id) {
 
 // ===== رفع الملفات عبر Apps Script =====
 function uploadFiles(files) {
-  return new Promise(function(resolve) {
-    var hasFiles = files.some(function(f){ return f.file; });
-    if(!hasFiles) { resolve({}); return; }
-
-    var promises = files.map(function(f) {
-      if(!f.file) return Promise.resolve('');
-      return compressImage(f.file).then(function(compressed) {
-        return fileToBase64(compressed || f.file);
-      }).then(function(base64) {
-        return {key: f.key, base64: base64, name: f.name};
-      });
+  var keyMap = {parentId:'parentIdUrl', playerPhoto:'playerPhotoUrl', playerDoc:'playerDocUrl'};
+  var promises = files.map(function(f){
+    if(!f.file) return Promise.resolve({key: f.key, url: ''});
+    return compressImage(f.file).then(function(c){ return fileToBase64(c||f.file); }).then(function(b64){
+      return fetch(CONFIG.UPLOAD_URL, {
+        method:'POST', redirect:'follow',
+        headers:{'Content-Type':'text/plain'},
+        body: JSON.stringify({file: b64.split(',')[1], mimeType: f.file.type, filename: f.name||f.key})
+      }).then(function(r){ return r.json(); }).then(function(d){
+        return {key: f.key, url: d.url || d.id || ''};
+      }).catch(function(){ return {key: f.key, url: ''}; });
     });
-
-    Promise.all(promises).then(function(fileData) {
-      var body = {name: files[0] ? files[0].name : ''};
-      fileData.forEach(function(f) {
-        if(f && f.base64) body[f.key] = f.base64;
-      });
-      fetch(CONFIG.UPLOAD_URL, {
-        method: 'POST',
-        redirect: 'follow',
-        headers: {'Content-Type': 'text/plain'},
-        body: JSON.stringify(body)
-      }).then(function(r){ return r.json(); }).then(function(data){
-        resolve(data.status === 'success' ? (data.files || {}) : {});
-      }).catch(function(){ resolve({}); });
-    }).catch(function() { resolve({}); });
+  });
+  return Promise.all(promises).then(function(results){
+    var out = {};
+    results.forEach(function(r){ if(r) out[keyMap[r.key]||r.key] = r.url; });
+    return out;
   });
 }
 
