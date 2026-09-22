@@ -830,28 +830,34 @@ function showAcademyPicker(){
 function selectAcademy(key){
   var acad = ACADEMIES[key];
   if(!acad) return;
+
+  // طلب كلمة المرور
+  var allowed = [].concat(acad.ADMIN_PASS||[]).concat(acad.COACH_PASS||[]);
+  var pass = prompt('🔐 أدخل كلمة المرور للدخول إلى ' + acad.NAME);
+  if(pass === null) return; // ضغط إلغاء
+  if(allowed.indexOf(pass.trim()) === -1){
+    alert('❌ كلمة المرور غير صحيحة');
+    return;
+  }
+
   if(key !== 'shamali' && !acad.HIDE_SECTIONS){
     acad.HIDE_SECTIONS = ['tournaments','festival','shamali_specific'];
   }
   window.CURRENT_ACADEMY = acad;
   window.CURRENT_ACADEMY_KEY = key;
-  // تحديث CONFIG
   CONFIG.SHEET_ID   = acad.SHEET_ID;
   CONFIG.GAS_URL    = acad.GAS_URL;
   CONFIG.UPLOAD_URL = acad.UPLOAD_URL;
   CONFIG.SHEETDB_URL= acad.SHEETDB_URL;
   CONFIG.ADMIN_PASS = acad.ADMIN_PASS;
   CONFIG.COACH_PASS = acad.COACH_PASS;
-  // تطبيق الألوان والمعلومات
   applyAcademy(acad);
-  // إخفاء شاشة الاختيار بتأثير
   var overlay = document.getElementById('acadPickerOverlay');
   if(overlay){
     overlay.style.transition = 'opacity .4s';
     overlay.style.opacity = '0';
     setTimeout(function(){ overlay.remove(); }, 400);
   }
-  // تحديث الرابط بدون إعادة تحميل
   history.replaceState(null,'', '?academy='+key);
 }
 
