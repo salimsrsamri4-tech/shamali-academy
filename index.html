@@ -1122,7 +1122,7 @@ function saveRegistration(data) {
   var acadName = (window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) || 'أكاديمية الشمالي';
   var row = {
     'التاريخ': now, 'رقم الملف': id,
-    'الأكاديمية': acadName,
+    'اسم الأكاديمية': acadName,
     'اسم ولي الأمر': data.parentName, 'الرقم المدني': data.parentCivilId,
     'صلة القرابة': data.parentRelation || '',
     'الهاتف': data.parentPhone, 'الطوارئ': data.emergencyPhone,
