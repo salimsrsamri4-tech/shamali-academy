@@ -988,10 +988,10 @@ function apiAppend(sheetName, dataObj) {
       + '?action=append'
       + '&sheet=' + encodeURIComponent(sheetName)
       + '&data='  + encodeURIComponent(JSON.stringify(rowData));
-    return new Promise(function(resolve){
-      var img = new Image();
-      img.onload = img.onerror = function(){ apiClearCache(sheetName); resolve({status:'ok'}); };
-      img.src = appendUrl;
+    return fetch(appendUrl, {mode:'no-cors'}).then(function(){
+      apiClearCache(sheetName); return {status:'ok'};
+    }).catch(function(){
+      apiClearCache(sheetName); return {status:'ok'};
     });
   } else {
     var url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
