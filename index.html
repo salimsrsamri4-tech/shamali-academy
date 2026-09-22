@@ -641,11 +641,11 @@ function _fillAcadDefaults(k, a){
   var centralGAS   = PLATFORM ? PLATFORM.CENTRAL_GAS : '';
   var centralSheet = '16Qc1DUjhpbT-kIra74YeFQxzVxvBY7tSquUrHdacZKI';
   var centralAPIKey= 'AIzaSyBOiSr2yaHT8eWbUuQnn6hNY6w6zHzhqUo';
-  if(!a.GAS_URL)    a.GAS_URL    = centralGAS;
+  if(!a.GAS_URL)    a.GAS_URL    = ''; // الأكاديميات الجديدة تستخدم SheetDB
   if(!a.UPLOAD_URL) a.UPLOAD_URL = centralGAS;
   if(!a.SHEET_ID)   a.SHEET_ID   = centralSheet;
   if(!a.API_KEY)    a.API_KEY    = centralAPIKey;
-  if(!a.SHEETDB_URL) a.SHEETDB_URL = '';
+  if(!a.SHEETDB_URL) a.SHEETDB_URL = 'https://sheetdb.io/api/v1/19dnaxf04au5l';
   if(!a.NAME_EN)    a.NAME_EN    = a.NAME;
   if(!a.LOGO)       a.LOGO       = '';
   if(!a.DARK_COLOR) a.DARK_COLOR = a.PRIMARY_COLOR || '#1e3a5f';
@@ -994,7 +994,10 @@ function apiAppend(sheetName, dataObj) {
     });
   } else {
     var url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
-    var body = JSON.stringify({data: Array.isArray(dataObj)?dataObj:[dataObj]});
+    var rowForSheet = Array.isArray(dataObj) ? dataObj[0] : dataObj;
+    var currentKey2 = window.CURRENT_ACADEMY_KEY || 'shamali';
+    if(currentKey2 !== 'shamali') rowForSheet['أكاديمية'] = currentKey2;
+    var body = JSON.stringify({data: [rowForSheet]});
     return _fetchWithRetry(url, {
       method: 'POST',
       mode: 'no-cors',
