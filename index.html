@@ -716,14 +716,19 @@ function loginNewAcad(acadKey){
     ACADEMIES[acadKey] = acad;
     window.CURRENT_ACADEMY = acad;
     window.CURRENT_ACADEMY_KEY = acadKey;
-    if(window.CONFIG){
-      CONFIG.SHEET_ID=acad.SHEET_ID; CONFIG.GAS_URL=acad.GAS_URL;
-      CONFIG.UPLOAD_URL=acad.UPLOAD_URL; CONFIG.API_KEY=acad.API_KEY;
-      CONFIG.ADMIN_PASS=acad.ADMIN_PASS; CONFIG.WA_NUM=acad.WA_NUM;
-    }
+    // تحديث CONFIG في مكانه
+    CONFIG.SHEET_ID   = acad.SHEET_ID;
+    CONFIG.GAS_URL    = acad.GAS_URL;
+    CONFIG.UPLOAD_URL = acad.UPLOAD_URL;
+    CONFIG.API_KEY    = acad.API_KEY;
+    CONFIG.ADMIN_PASS = acad.ADMIN_PASS;
+    CONFIG.COACH_PASS = acad.COACH_PASS;
+    CONFIG.WA_NUM     = acad.WA_NUM;
     applyAcademy(acad);
     go('home');
-  }).catch(function(){ showLoginErr(); });
+  }).catch(function(e){
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:#dc2626;">❌ خطأ في الاتصال<br><small>'+e.message+'</small><br><br><button onclick="loginNewAcad(\''+acadKey+'\')" style="background:#b81d22;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-family:Cairo,sans-serif;cursor:pointer;">إعادة المحاولة</button></div>';
+  });
 
   function showLoginErr(){
     el.innerHTML =
