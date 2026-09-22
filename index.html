@@ -750,6 +750,25 @@ function loginNewAcad(acadKey){
 }
 
 function showAcademyPicker(){
+  // جلب الأكاديميات المعتمدة من الشيت
+  var gasUrl = PLATFORM.CENTRAL_GAS + '?action=get&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET) + '&limit=200';
+  fetch(gasUrl, {redirect:'follow'}).then(function(r){ return r.json(); }).then(function(rows){
+    if(Array.isArray(rows)) rows.forEach(function(r){
+      var status = (r['الحالة']||'').trim();
+      if(status !== 'مقبول') return;
+      var key = r['مفتاح_الأكاديمية'] || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
+      if(ACADEMIES[key]) return; // موجودة مسبقاً
+      ACADEMIES[key] = _fillAcadDefaults(key, {
+        NAME: r['اسم الأكاديمية'] || key,
+        PRIMARY_COLOR: '#e67e22',
+        ADMIN_PASS: [r['كلمة_المرور']||'1234'],
+        WA_NUM: r['رقم الواتساب']||''
+      });
+    });
+    _renderPicker();
+  }).catch(function(){ _renderPicker(); });
+
+  function _renderPicker(){
   var keys = Object.keys(ACADEMIES);
   var cards = keys.map(function(k,i){
     var a = ACADEMIES[k];
@@ -805,6 +824,7 @@ function showAcademyPicker(){
     +'</style>';
 
   document.body.appendChild(overlay);
+  } // end _renderPicker
 }
 
 function selectAcademy(key){
