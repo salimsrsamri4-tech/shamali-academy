@@ -974,19 +974,17 @@ function apiClearCache(sheetName) {
 function apiAppend(sheetName, dataObj) {
   if(CONFIG.GAS_URL) {
     var rowData = Array.isArray(dataObj) ? dataObj[0] : dataObj;
-    // استخدم اسم التاب الخاص بالأكاديمية للأكاديميات الجديدة
     var acadKey = window.CURRENT_ACADEMY_KEY || 'shamali';
     var tabName = (acadKey === 'shamali') ? sheetName : (acadKey + '_' + sheetName);
-    return fetch(CONFIG.GAS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type': 'text/plain'},
-      body: JSON.stringify({action:'append', sheet: tabName, data: rowData})
-    }).then(function(){
-      apiClearCache(sheetName);
-      return {status:'ok'};
-    }).catch(function(err){
-      throw new Error(_apiErrorMsg(err));
+    // استخدم Image ping لتجاوز CORS مع GAS
+    var appendUrl = CONFIG.GAS_URL
+      + '?action=append'
+      + '&sheet=' + encodeURIComponent(tabName)
+      + '&data='  + encodeURIComponent(JSON.stringify(rowData));
+    return new Promise(function(resolve) {
+      var img = new Image();
+      img.onload = img.onerror = function(){ apiClearCache(sheetName); resolve({status:'ok'}); };
+      img.src = appendUrl;
     });
   } else {
     var url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
