@@ -11920,7 +11920,19 @@ function renderSuperJoinRequests(){
                 'style="flex:1;background:#dc2626;color:#fff;border:none;border-radius:8px;padding:9px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:12px;">'+
                 '❌ رفض</button>'+
             '</div>'
-          : '')+
+          : (r['الحالة']==='مقبول' ?
+            (function(){
+              var _k = r['مفتاح_الأكاديمية']||('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
+              var _l = window.location.origin+window.location.pathname+'?academy='+_k;
+              var _p = r['كلمة_المرور']||'1234';
+              var _msg = encodeURIComponent('🏆 *منصة توفه*\n\nمرحباً *'+r['اسم الأكاديمية']+'*\n\n✅ تم قبول طلب انضمامكم\n\n📲 *رابط منصتكم:*\n'+_l+'\n\n🔑 *كلمة المرور:* '+_p+'\n\n_منصة توفه 🏅_');
+              return '<div style="background:#f0fdf4;border-radius:8px;padding:8px 10px;font-size:11px;color:#166534;margin-bottom:6px;word-break:break-all;">🔗 '+_l+'<br>🔑 '+_p+'</div>'+
+                '<div style="display:flex;gap:6px;">'+
+                '<button onclick="navigator.clipboard.writeText(\''+_l+'\')" style="flex:1;background:#0891b2;color:#fff;border:none;border-radius:8px;padding:8px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:11px;">📋 نسخ الرابط</button>'+
+                '<button onclick="window.open(\'https://wa.me/968'+r['رقم الواتساب']+'?text='+_msg+'\',\'_blank\')" style="flex:1;background:#25d366;color:#fff;border:none;border-radius:8px;padding:8px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:11px;">💬 إرسال واتساب</button>'+
+                '</div>';
+            })()
+          : ''))+
         '</div>';
       }).join('');
 
