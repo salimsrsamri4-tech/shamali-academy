@@ -1132,6 +1132,10 @@ function saveRegistration(data) {
     'ملاحظات صحية': data.healthNotes || '',
     'صورة اللاعب': playerPhotoUrl
   };
+  var _gasUrl = CONFIG.GAS_URL || 'EMPTY';
+  var _sdbUrl = CONFIG.SHEETDB_URL || 'EMPTY';
+  var _key    = window.CURRENT_ACADEMY_KEY || 'EMPTY';
+  alert('DEBUG: key='+_key+'\nGAS='+_gasUrl.slice(0,40)+'\nSDB='+_sdbUrl.slice(0,30));
   return apiAppend('الورقة1', row).then(function(){ return id; });
 }
 
