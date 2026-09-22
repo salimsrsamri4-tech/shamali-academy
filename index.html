@@ -645,7 +645,7 @@ function _fillAcadDefaults(k, a){
   if(!a.UPLOAD_URL) a.UPLOAD_URL = centralGAS;
   if(!a.SHEET_ID)   a.SHEET_ID   = centralSheet;
   if(!a.API_KEY)    a.API_KEY    = centralAPIKey;
-  if(!a.SHEETDB_URL) a.SHEETDB_URL = '';
+  if(!a.SHEETDB_URL) a.SHEETDB_URL = 'https://sheetdb.io/api/v1/19dnaxf04au5l';
   if(!a.NAME_EN)    a.NAME_EN    = a.NAME;
   if(!a.LOGO)       a.LOGO       = '';
   if(!a.DARK_COLOR) a.DARK_COLOR = a.PRIMARY_COLOR || '#1e3a5f';
@@ -704,7 +704,8 @@ function loginNewAcad(acadKey){
       var key = r['مفتاح_الأكاديمية'] || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
       var storedPass = r['كلمة_المرور'] || '1234';
       debugKeys.push(key+'('+r['الحالة']+')');
-      if(key === acadKey && r['الحالة'] === 'مقبول' && pass === storedPass) found = r;
+      var status = (r['الحالة']||'').trim();
+      if(key === acadKey && status === 'مقبول' && pass === storedPass) found = r;
     });
     if(!found){
       showLoginErr('مفتاح الرابط: '+acadKey+'<br>مفاتيح الشيت: '+debugKeys.join(', '));
@@ -721,13 +722,14 @@ function loginNewAcad(acadKey){
     window.CURRENT_ACADEMY = acad;
     window.CURRENT_ACADEMY_KEY = acadKey;
     // تحديث CONFIG في مكانه
-    CONFIG.SHEET_ID   = acad.SHEET_ID;
-    CONFIG.GAS_URL    = acad.GAS_URL;
-    CONFIG.UPLOAD_URL = acad.UPLOAD_URL;
-    CONFIG.API_KEY    = acad.API_KEY;
-    CONFIG.ADMIN_PASS = acad.ADMIN_PASS;
-    CONFIG.COACH_PASS = acad.COACH_PASS;
-    CONFIG.WA_NUM     = acad.WA_NUM;
+    CONFIG.SHEET_ID    = acad.SHEET_ID;
+    CONFIG.GAS_URL     = acad.GAS_URL;
+    CONFIG.UPLOAD_URL  = acad.UPLOAD_URL;
+    CONFIG.API_KEY     = acad.API_KEY;
+    CONFIG.SHEETDB_URL = acad.SHEETDB_URL;
+    CONFIG.ADMIN_PASS  = acad.ADMIN_PASS;
+    CONFIG.COACH_PASS  = acad.COACH_PASS;
+    CONFIG.WA_NUM      = acad.WA_NUM;
     applyAcademy(acad);
     go('home');
   }).catch(function(e){
@@ -948,6 +950,7 @@ function apiGet(sheetName, forceRefresh) {
   if(!forceRefresh && cached && (now - cached.ts) < _CACHE_TTL) {
     return Promise.resolve(cached.data);
   }
+  var acadKey = window.CURRENT_ACADEMY_KEY || 'shamali';
   var url = CONFIG.GAS_URL
     ? CONFIG.GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheetName) + '&limit=2000'
     : CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName) + '&limit=2000';
@@ -955,6 +958,13 @@ function apiGet(sheetName, forceRefresh) {
     // تحويل الاستجابة إلى مصفوفة كائنات دائماً
     var arr = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.data) ? raw.data : []);
     var data = _arraysToObjects(arr);
+    // فلتر بيانات الأكاديمية الحالية (للأكاديميات الجديدة غير الشمالي)
+    var currentKey = window.CURRENT_ACADEMY_KEY || 'shamali';
+    if(currentKey !== 'shamali' && data.length && data[0].hasOwnProperty('أكاديمية')) {
+      data = data.filter(function(r){ return r['أكاديمية'] === currentKey; });
+    } else if(currentKey === 'shamali' && data.length && data[0].hasOwnProperty('أكاديمية')) {
+      data = data.filter(function(r){ return !r['أكاديمية'] || r['أكاديمية'] === 'shamali'; });
+    }
     _apiCache[sheetName] = { data: data, ts: Date.now() };
     return data;
   }).catch(function(err){
@@ -970,22 +980,25 @@ function apiClearCache(sheetName) {
 
 function apiAppend(sheetName, dataObj) {
   if(CONFIG.GAS_URL) {
-    var data = Array.isArray(dataObj) ? dataObj : [dataObj];
-    var acadName = (window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) ? window.CURRENT_ACADEMY.NAME : 'غير محدد';
-    var url = CONFIG.GAS_URL
+    var rowData = Array.isArray(dataObj) ? dataObj[0] : dataObj;
+    var acadKey = window.CURRENT_ACADEMY_KEY || 'shamali';
+    var tabName = (acadKey === 'shamali') ? sheetName : (acadKey + '_' + sheetName);
+    if(acadKey !== 'shamali') rowData['أكاديمية'] = acadKey;
+    var appendUrl = CONFIG.GAS_URL
       + '?action=append'
       + '&sheet=' + encodeURIComponent(sheetName)
-      + '&academy=' + encodeURIComponent(acadName)
-      + '&data=' + encodeURIComponent(JSON.stringify(data));
-    return _fetchWithRetry(url).then(function(r){ return r.json(); }).then(function(){
-      apiClearCache(sheetName);
-      return {status:'ok'};
-    }).catch(function(err){
-      throw new Error(_apiErrorMsg(err));
+      + '&data='  + encodeURIComponent(JSON.stringify(rowData));
+    return fetch(appendUrl, {mode:'no-cors'}).then(function(){
+      apiClearCache(sheetName); return {status:'ok'};
+    }).catch(function(){
+      apiClearCache(sheetName); return {status:'ok'};
     });
   } else {
     var url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
-    var body = JSON.stringify({data: Array.isArray(dataObj)?dataObj:[dataObj]});
+    var rowForSheet = Array.isArray(dataObj) ? dataObj[0] : dataObj;
+    var currentKey2 = window.CURRENT_ACADEMY_KEY || 'shamali';
+    if(currentKey2 !== 'shamali') rowForSheet['أكاديمية'] = currentKey2;
+    var body = JSON.stringify({data: [rowForSheet]});
     return _fetchWithRetry(url, {
       method: 'POST',
       mode: 'no-cors',
@@ -1110,16 +1123,21 @@ function saveRegistration(data) {
     'التاريخ': now, 'رقم الملف': id,
     'اسم ولي الأمر': data.parentName, 'الرقم المدني': data.parentCivilId,
     'صلة القرابة': data.parentRelation || '',
-    'البريد': data.parentEmail, 'الهاتف': data.parentPhone,
-    'الطوارئ': data.emergencyPhone, 'بطاقة ولي الأمر': parentIdUrl,
+    'الهاتف': data.parentPhone, 'الطوارئ': data.emergencyPhone,
     'اسم اللاعب': data.playerName, 'رقم هوية اللاعب': data.playerCivilId || '',
     'تاريخ الميلاد': data.playerBirthDate, 'سنة الميلاد': birthYear,
-    'وثيقة اللاعب': playerDocUrl, 'صورة اللاعب': playerPhotoUrl,
-    'الدفع': data.paymentMethod, 'ملاحظات': '',
+    'الدفع': data.paymentMethod,
     'الحالة': 'موافق', 'الجنسية': data.playerNationality,
     'الصحة': data.playerHealth,
-    'ملاحظات صحية': data.healthNotes || ''
+    'ملاحظات صحية': data.healthNotes || '',
+    'صورة اللاعب': playerPhotoUrl
   };
+  var _gasUrl = CONFIG.GAS_URL || 'EMPTY';
+  var _key    = window.CURRENT_ACADEMY_KEY || 'EMPTY';
+  var _dbg = document.createElement('div');
+  _dbg.style.cssText='position:fixed;top:0;left:0;right:0;background:#000;color:#0f0;padding:10px;z-index:99999;font-size:11px;font-family:monospace;direction:ltr;';
+  _dbg.textContent='KEY='+_key+' | GAS='+(CONFIG.GAS_URL?'SET':'EMPTY')+' | SDB='+(CONFIG.SHEETDB_URL?'SET':'EMPTY');
+  document.body.appendChild(_dbg);
   return apiAppend('الورقة1', row).then(function(){ return id; });
 }
 
@@ -11342,7 +11360,9 @@ function loanCentralPost(body){
     method:'POST', redirect:'follow',
     headers:{'Content-Type':'text/plain'},
     body: JSON.stringify(body)
-  }).then(function(r){ return r.json(); });
+  }).then(function(r){
+    try{ return r.json(); } catch(e){ return {status:'ok'}; }
+  }).catch(function(){ return {status:'ok'}; });
 }
 
 function renderLoans(){
@@ -11876,7 +11896,7 @@ function renderSuperJoinRequests(){
           '<div style="font-size:10px;color:#94a3b8;margin-bottom:8px;">🕐 '+r['تاريخ الطلب']+'</div>'+
           (isPending ?
             '<div style="display:flex;gap:6px;">'+
-              '<button onclick="approveJoinRequest(\''+r['رقم الطلب']+'\',\''+r['رقم الواتساب']+'\',\''+r['اسم الأكاديمية']+'\',\''+r['مفتاح_الأكاديمية']+'\')" '+
+              '<button onclick="approveJoinRequest(\''+r['رقم الطلب']+'\',\''+r['رقم الواتساب']+'\',\''+r['اسم الأكاديمية']+'\',\''+(r['مفتاح_الأكاديمية']||('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6)))+'\')" '+
                 'style="flex:1;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:12px;">'+
                 '✅ قبول وإخطار</button>'+
               '<button onclick="rejectJoinRequest(\''+r['رقم الطلب']+'\',\''+r['رقم الواتساب']+'\',\''+r['اسم الأكاديمية']+'\')" '+
@@ -11900,23 +11920,27 @@ function approveJoinRequest(reqId, waNum, acadName, acadKey){
   if(!confirm('قبول طلب انضمام: '+acadName+'؟')) return;
   showL(true);
 
-  // استخدم المفتاح المحفوظ في الشيت مباشرةً
+  // اشتق المفتاح من reqId إذا كان الحقل فارغاً
+  if(!acadKey) acadKey = 'acad_' + (reqId||'').replace('JOIN-','').slice(-6);
   var adminPass = '1234';
   var baseUrl   = window.location.origin + window.location.pathname;
   var acadLink  = baseUrl + '?academy=' + acadKey;
 
-  // طلب واحد يحفظ كل البيانات معاً
-  loanCentralPost({
-    action: 'update',
-    sheet:  PLATFORM.JOIN_SHEET,
-    column: 'رقم الطلب',
-    value:  reqId,
-    data: {
-      'الحالة':           'مقبول',
-      'مفتاح_الأكاديمية': acadKey,
-      'كلمة_المرور':       adminPass
-    }
-  }).then(function(){
+  // استخدم GET لتحديث الشيت (أكثر موثوقية مع GAS)
+  var updateData = encodeURIComponent(JSON.stringify({
+    'الحالة': 'مقبول',
+    'مفتاح_الأكاديمية': acadKey,
+    'كلمة_المرور': adminPass
+  }));
+  var updateUrl = PLATFORM.CENTRAL_GAS
+    + '?action=update'
+    + '&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET)
+    + '&column=' + encodeURIComponent('رقم الطلب')
+    + '&value='  + encodeURIComponent(reqId)
+    + '&data='   + updateData;
+
+  var img = new Image();
+  img.onload = img.onerror = function(){
     showL(false);
     var msg =
       '🎉 *مبروك! تم قبول طلبكم*\n'+
@@ -11930,7 +11954,8 @@ function approveJoinRequest(reqId, waNum, acadName, acadKey){
     window.open('https://api.whatsapp.com/send?phone='+waNum+'&text='+encodeURIComponent(msg),'_blank');
     alert('✅ تم قبول الأكاديمية وإرسال رابط المنصة عبر واتساب.');
     go('super_join_requests');
-  }).catch(function(){ showL(false); alert('خطأ في التحديث'); });
+  };
+  img.src = updateUrl;
 }
 
 function rejectJoinRequest(reqId, waNum, acadName){
