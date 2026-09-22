@@ -722,13 +722,14 @@ function loginNewAcad(acadKey){
     window.CURRENT_ACADEMY = acad;
     window.CURRENT_ACADEMY_KEY = acadKey;
     // تحديث CONFIG في مكانه
-    CONFIG.SHEET_ID   = acad.SHEET_ID;
-    CONFIG.GAS_URL    = acad.GAS_URL;
-    CONFIG.UPLOAD_URL = acad.UPLOAD_URL;
-    CONFIG.API_KEY    = acad.API_KEY;
-    CONFIG.ADMIN_PASS = acad.ADMIN_PASS;
-    CONFIG.COACH_PASS = acad.COACH_PASS;
-    CONFIG.WA_NUM     = acad.WA_NUM;
+    CONFIG.SHEET_ID    = acad.SHEET_ID;
+    CONFIG.GAS_URL     = acad.GAS_URL;
+    CONFIG.UPLOAD_URL  = acad.UPLOAD_URL;
+    CONFIG.API_KEY     = acad.API_KEY;
+    CONFIG.SHEETDB_URL = acad.SHEETDB_URL;
+    CONFIG.ADMIN_PASS  = acad.ADMIN_PASS;
+    CONFIG.COACH_PASS  = acad.COACH_PASS;
+    CONFIG.WA_NUM      = acad.WA_NUM;
     applyAcademy(acad);
     go('home');
   }).catch(function(e){
