@@ -704,7 +704,8 @@ function loginNewAcad(acadKey){
       var key = r['مفتاح_الأكاديمية'] || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
       var storedPass = r['كلمة_المرور'] || '1234';
       debugKeys.push(key+'('+r['الحالة']+')');
-      if(key === acadKey && r['الحالة'] === 'مقبول' && pass === storedPass) found = r;
+      var status = (r['الحالة']||'').trim();
+      if(key === acadKey && status === 'مقبول' && pass === storedPass) found = r;
     });
     if(!found){
       showLoginErr('مفتاح الرابط: '+acadKey+'<br>مفاتيح الشيت: '+debugKeys.join(', '));
@@ -11882,7 +11883,7 @@ function renderSuperJoinRequests(){
           '<div style="font-size:10px;color:#94a3b8;margin-bottom:8px;">🕐 '+r['تاريخ الطلب']+'</div>'+
           (isPending ?
             '<div style="display:flex;gap:6px;">'+
-              '<button onclick="approveJoinRequest(\''+r['رقم الطلب']+'\',\''+r['رقم الواتساب']+'\',\''+r['اسم الأكاديمية']+'\',\''+r['مفتاح_الأكاديمية']+'\')" '+
+              '<button onclick="approveJoinRequest(\''+r['رقم الطلب']+'\',\''+r['رقم الواتساب']+'\',\''+r['اسم الأكاديمية']+'\',\''+(r['مفتاح_الأكاديمية']||('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6)))+'\')" '+
                 'style="flex:1;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:12px;">'+
                 '✅ قبول وإخطار</button>'+
               '<button onclick="rejectJoinRequest(\''+r['رقم الطلب']+'\',\''+r['رقم الواتساب']+'\',\''+r['اسم الأكاديمية']+'\')" '+
@@ -11906,7 +11907,8 @@ function approveJoinRequest(reqId, waNum, acadName, acadKey){
   if(!confirm('قبول طلب انضمام: '+acadName+'؟')) return;
   showL(true);
 
-  // استخدم المفتاح المحفوظ في الشيت مباشرةً
+  // اشتق المفتاح من reqId إذا كان الحقل فارغاً
+  if(!acadKey) acadKey = 'acad_' + (reqId||'').replace('JOIN-','').slice(-6);
   var adminPass = '1234';
   var baseUrl   = window.location.origin + window.location.pathname;
   var acadLink  = baseUrl + '?academy=' + acadKey;
