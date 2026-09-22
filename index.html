@@ -982,19 +982,15 @@ function apiAppend(sheetName, dataObj) {
     var rowData = Array.isArray(dataObj) ? dataObj[0] : dataObj;
     var acadKey = window.CURRENT_ACADEMY_KEY || 'shamali';
     var tabName = (acadKey === 'shamali') ? sheetName : (acadKey + '_' + sheetName);
-    // أضف مفتاح الأكاديمية لتمييز البيانات في الشيت المشترك
     if(acadKey !== 'shamali') rowData['أكاديمية'] = acadKey;
-    return fetch(CONFIG.GAS_URL, {
-      method: 'POST',
-      redirect: 'follow',
-      headers: {'Content-Type': 'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'append', sheet: sheetName, data: rowData})
-    }).then(function(){
-      apiClearCache(sheetName);
-      return {status:'ok'};
-    }).catch(function(){
-      apiClearCache(sheetName);
-      return {status:'ok'};
+    var appendUrl = CONFIG.GAS_URL
+      + '?action=append'
+      + '&sheet=' + encodeURIComponent(sheetName)
+      + '&data='  + encodeURIComponent(JSON.stringify(rowData));
+    return new Promise(function(resolve){
+      var img = new Image();
+      img.onload = img.onerror = function(){ apiClearCache(sheetName); resolve({status:'ok'}); };
+      img.src = appendUrl;
     });
   } else {
     var url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
@@ -1123,15 +1119,14 @@ function saveRegistration(data) {
     'التاريخ': now, 'رقم الملف': id,
     'اسم ولي الأمر': data.parentName, 'الرقم المدني': data.parentCivilId,
     'صلة القرابة': data.parentRelation || '',
-    'البريد': data.parentEmail, 'الهاتف': data.parentPhone,
-    'الطوارئ': data.emergencyPhone, 'بطاقة ولي الأمر': parentIdUrl,
+    'الهاتف': data.parentPhone, 'الطوارئ': data.emergencyPhone,
     'اسم اللاعب': data.playerName, 'رقم هوية اللاعب': data.playerCivilId || '',
     'تاريخ الميلاد': data.playerBirthDate, 'سنة الميلاد': birthYear,
-    'وثيقة اللاعب': playerDocUrl, 'صورة اللاعب': playerPhotoUrl,
-    'الدفع': data.paymentMethod, 'ملاحظات': '',
+    'الدفع': data.paymentMethod,
     'الحالة': 'موافق', 'الجنسية': data.playerNationality,
     'الصحة': data.playerHealth,
-    'ملاحظات صحية': data.healthNotes || ''
+    'ملاحظات صحية': data.healthNotes || '',
+    'صورة اللاعب': playerPhotoUrl
   };
   return apiAppend('الورقة1', row).then(function(){ return id; });
 }
