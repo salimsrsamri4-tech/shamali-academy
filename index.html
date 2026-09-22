@@ -950,14 +950,20 @@ function apiGet(sheetName, forceRefresh) {
     return Promise.resolve(cached.data);
   }
   var acadKey = window.CURRENT_ACADEMY_KEY || 'shamali';
-  var tabName = (acadKey === 'shamali') ? sheetName : (acadKey + '_' + sheetName);
   var url = CONFIG.GAS_URL
-    ? CONFIG.GAS_URL + '?action=get&sheet=' + encodeURIComponent(tabName) + '&limit=2000'
+    ? CONFIG.GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheetName) + '&limit=2000'
     : CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName) + '&limit=2000';
   return _fetchWithRetry(url).then(function(r){ return r.json(); }).then(function(raw){
     // تحويل الاستجابة إلى مصفوفة كائنات دائماً
     var arr = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.data) ? raw.data : []);
     var data = _arraysToObjects(arr);
+    // فلتر بيانات الأكاديمية الحالية (للأكاديميات الجديدة غير الشمالي)
+    var currentKey = window.CURRENT_ACADEMY_KEY || 'shamali';
+    if(currentKey !== 'shamali' && data.length && data[0].hasOwnProperty('أكاديمية')) {
+      data = data.filter(function(r){ return r['أكاديمية'] === currentKey; });
+    } else if(currentKey === 'shamali' && data.length && data[0].hasOwnProperty('أكاديمية')) {
+      data = data.filter(function(r){ return !r['أكاديمية'] || r['أكاديمية'] === 'shamali'; });
+    }
     _apiCache[sheetName] = { data: data, ts: Date.now() };
     return data;
   }).catch(function(err){
@@ -976,11 +982,13 @@ function apiAppend(sheetName, dataObj) {
     var rowData = Array.isArray(dataObj) ? dataObj[0] : dataObj;
     var acadKey = window.CURRENT_ACADEMY_KEY || 'shamali';
     var tabName = (acadKey === 'shamali') ? sheetName : (acadKey + '_' + sheetName);
+    // أضف مفتاح الأكاديمية لتمييز البيانات في الشيت المشترك
+    if(acadKey !== 'shamali') rowData['أكاديمية'] = acadKey;
     return fetch(CONFIG.GAS_URL, {
       method: 'POST',
       redirect: 'follow',
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'append', sheet: tabName, data: rowData})
+      body: JSON.stringify({action:'append', sheet: sheetName, data: rowData})
     }).then(function(){
       apiClearCache(sheetName);
       return {status:'ok'};
