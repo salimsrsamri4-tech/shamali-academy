@@ -702,9 +702,9 @@ function loginNewAcad(acadKey){
     var debugKeys = [];
     rows.forEach(function(r){
       var key = r['مفتاح_الأكاديمية'] || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
-      var storedPass = r['كلمة_المرور'] || '1234';
-      debugKeys.push(key+'('+r['الحالة']+')');
+      var storedPass = (r['كلمة_المرور'] || '1234').toString().trim();
       var status = (r['الحالة']||'').trim();
+      debugKeys.push(key+'('+status+'/p:'+(storedPass.length)+'c)');
       if(key === acadKey && status === 'مقبول' && pass === storedPass) found = r;
     });
     if(!found){
