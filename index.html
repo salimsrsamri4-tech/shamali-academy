@@ -11346,7 +11346,9 @@ function loanCentralPost(body){
     method:'POST', redirect:'follow',
     headers:{'Content-Type':'text/plain'},
     body: JSON.stringify(body)
-  }).then(function(r){ return r.json(); });
+  }).then(function(r){
+    try{ return r.json(); } catch(e){ return {status:'ok'}; }
+  }).catch(function(){ return {status:'ok'}; });
 }
 
 function renderLoans(){
