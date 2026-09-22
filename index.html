@@ -641,7 +641,7 @@ function _fillAcadDefaults(k, a){
   var centralGAS   = PLATFORM ? PLATFORM.CENTRAL_GAS : '';
   var centralSheet = '16Qc1DUjhpbT-kIra74YeFQxzVxvBY7tSquUrHdacZKI';
   var centralAPIKey= 'AIzaSyBOiSr2yaHT8eWbUuQnn6hNY6w6zHzhqUo';
-  if(!a.GAS_URL)    a.GAS_URL    = ''; // الأكاديميات الجديدة تستخدم SheetDB
+  if(!a.GAS_URL)    a.GAS_URL    = centralGAS;
   if(!a.UPLOAD_URL) a.UPLOAD_URL = centralGAS;
   if(!a.SHEET_ID)   a.SHEET_ID   = centralSheet;
   if(!a.API_KEY)    a.API_KEY    = centralAPIKey;
