@@ -976,15 +976,39 @@ function apiAppend(sheetName, dataObj) {
     var rowData = Array.isArray(dataObj) ? dataObj[0] : dataObj;
     var acadKey = window.CURRENT_ACADEMY_KEY || 'shamali';
     var tabName = (acadKey === 'shamali') ? sheetName : (acadKey + '_' + sheetName);
-    // استخدم Image ping لتجاوز CORS مع GAS
-    var appendUrl = CONFIG.GAS_URL
-      + '?action=append'
-      + '&sheet=' + encodeURIComponent(tabName)
-      + '&data='  + encodeURIComponent(JSON.stringify(rowData));
+    // أرسل عبر form مخفي لتجاوز CORS مع GAS
     return new Promise(function(resolve) {
-      var img = new Image();
-      img.onload = img.onerror = function(){ apiClearCache(sheetName); resolve({status:'ok'}); };
-      img.src = appendUrl;
+      var formId = 'gas_form_' + Date.now();
+      var iframeId = 'gas_iframe_' + Date.now();
+      var iframe = document.createElement('iframe');
+      iframe.name = iframeId;
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      var form = document.createElement('form');
+      form.method = 'POST';
+      form.action = CONFIG.GAS_URL;
+      form.target = iframeId;
+      form.style.display = 'none';
+      var addField = function(name, val) {
+        var inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = name;
+        inp.value = val;
+        form.appendChild(inp);
+      };
+      addField('action', 'append');
+      addField('sheet', tabName);
+      addField('data', JSON.stringify(rowData));
+      document.body.appendChild(form);
+      setTimeout(function() {
+        form.submit();
+        setTimeout(function() {
+          document.body.removeChild(form);
+          document.body.removeChild(iframe);
+          apiClearCache(sheetName);
+          resolve({status:'ok'});
+        }, 2000);
+      }, 100);
     });
   } else {
     var url = CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName);
