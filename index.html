@@ -11926,23 +11926,23 @@ function approveJoinRequest(reqId, waNum, acadName, acadKey){
     + '&value='  + encodeURIComponent(reqId)
     + '&data='   + updateData;
 
-  fetch(updateUrl, {redirect:'follow'})
-    .then(function(r){ return r.json(); })
-    .then(function(){
-      showL(false);
-      var msg =
-        '🎉 *مبروك! تم قبول طلبكم*\n'+
-        '━━━━━━━━━━━━━━\n'+
-        '🏫 *أكاديمية:* '+acadName+'\n\n'+
-        'يسعدنا انضمامكم إلى *منصة توفة | الكابتن الصغير* 🏆\n\n'+
-        '📲 *رابط منصتكم:*\n'+acadLink+'\n\n'+
-        '🔑 *كلمة مرور الإدارة:* '+adminPass+'\n\n'+
-        'للدعم الفني تواصل معنا مباشرة.\n'+
-        '_منصة توفة للأكاديميات الرياضية في سلطنة عُمان 🇴🇲_';
-      window.open('https://api.whatsapp.com/send?phone='+waNum+'&text='+encodeURIComponent(msg),'_blank');
-      alert('✅ تم قبول الأكاديمية وإرسال رابط المنصة عبر واتساب.');
-      go('super_join_requests');
-    }).catch(function(){ showL(false); alert('خطأ في التحديث'); });
+  var img = new Image();
+  img.onload = img.onerror = function(){
+    showL(false);
+    var msg =
+      '🎉 *مبروك! تم قبول طلبكم*\n'+
+      '━━━━━━━━━━━━━━\n'+
+      '🏫 *أكاديمية:* '+acadName+'\n\n'+
+      'يسعدنا انضمامكم إلى *منصة توفة | الكابتن الصغير* 🏆\n\n'+
+      '📲 *رابط منصتكم:*\n'+acadLink+'\n\n'+
+      '🔑 *كلمة مرور الإدارة:* '+adminPass+'\n\n'+
+      'للدعم الفني تواصل معنا مباشرة.\n'+
+      '_منصة توفة للأكاديميات الرياضية في سلطنة عُمان 🇴🇲_';
+    window.open('https://api.whatsapp.com/send?phone='+waNum+'&text='+encodeURIComponent(msg),'_blank');
+    alert('✅ تم قبول الأكاديمية وإرسال رابط المنصة عبر واتساب.');
+    go('super_join_requests');
+  };
+  img.src = updateUrl;
 }
 
 function rejectJoinRequest(reqId, waNum, acadName){
