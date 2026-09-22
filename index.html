@@ -1192,9 +1192,9 @@ function uploadFiles(files) {
       return fetch(CONFIG.UPLOAD_URL, {
         method:'POST', redirect:'follow',
         headers:{'Content-Type':'text/plain'},
-        body: JSON.stringify({file: b64.split(',')[1], mimeType: f.file.type, filename: f.name||f.key})
+        body: JSON.stringify({action:'uploadFile', fileData: b64.split(',')[1], mimeType: f.file.type, fileName: f.name||f.key})
       }).then(function(r){ return r.json(); }).then(function(d){
-        return {key: f.key, url: d.url || d.id || ''};
+        return {key: f.key, url: d.fileUrl || d.fileId || ''};
       }).catch(function(){ return {key: f.key, url: ''}; });
     });
   });
