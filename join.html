@@ -366,6 +366,13 @@ textarea.inp{resize:vertical;min-height:88px;}
           </select>
         </div>
         <div class="field">
+          <label for="wilaya">الولاية</label>
+          <input class="inp" id="wilaya" type="text" placeholder="اسم الولاية">
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
           <label for="playerCount">عدد اللاعبين تقريباً</label>
           <select class="inp" id="playerCount">
             <option value="">اختر...</option>
@@ -373,11 +380,90 @@ textarea.inp{resize:vertical;min-height:88px;}
             <option>50 – 100</option><option>أكثر من 100</option>
           </select>
         </div>
+        <div class="field">
+          <label for="branches">عدد الأفرع</label>
+          <select class="inp" id="branches">
+            <option value="">اختر...</option>
+            <option>فرع واحد</option><option>فرعان</option>
+            <option>3 أفرع</option><option>4 أفرع أو أكثر</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="mainLocation">موقع المقر الرئيسي</label>
+        <input class="inp" id="mainLocation" type="text" placeholder="مثال: مسقط - الخوير - بجانب نادي الشباب">
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="grassType">نوع العشب</label>
+          <select class="inp" id="grassType">
+            <option value="">اختر...</option>
+            <option>عشب طبيعي</option><option>عشب صناعي</option>
+            <option>أرضية ترابية</option><option>أرضية إسفلتية</option><option>أخرى</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="trainDays">أيام التدريب</label>
+          <input class="inp" id="trainDays" type="text" placeholder="مثال: السبت والاثنين والأربعاء">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="trainTime">وقت التدريب</label>
+        <input class="inp" id="trainTime" type="text" placeholder="مثال: من ٤ عصراً إلى ٦ مساءً">
       </div>
 
       <div class="field">
         <label for="cats">الفئات العمرية</label>
-        <input class="inp" id="cats" type="text" placeholder="مثال: U8، U10، U12، U14">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;" id="catsCheckboxes">
+          <label style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;">
+            <input type="checkbox" value="براعم (٦-٩)"> براعم ٦–٩
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;">
+            <input type="checkbox" value="ناشئين (١٠-١٢)"> ناشئين ١٠–١٢
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;">
+            <input type="checkbox" value="أشبال (١٣-١٥)"> أشبال ١٣–١٥
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;">
+            <input type="checkbox" value="شباب (١٦-١٨)"> شباب ١٦–١٨
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;">
+            <input type="checkbox" value="كبار (١٨+)"> كبار ١٨+
+          </label>
+        </div>
+        <input type="hidden" id="cats">
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="instagram">إنستغرام</label>
+          <input class="inp" id="instagram" type="text" placeholder="@academy" dir="ltr">
+        </div>
+        <div class="field">
+          <label for="twitter">تويتر / X</label>
+          <input class="inp" id="twitter" type="text" placeholder="@academy" dir="ltr">
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="tiktok">تيك توك</label>
+          <input class="inp" id="tiktok" type="text" placeholder="@academy" dir="ltr">
+        </div>
+        <div class="field">
+          <label for="snapchat">سناب شات</label>
+          <input class="inp" id="snapchat" type="text" placeholder="@academy" dir="ltr">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="logoFile">شعار الأكاديمية (بجودة عالية)</label>
+        <input class="inp" id="logoFile" type="file" accept="image/*" style="padding:10px;">
       </div>
 
       <div class="field">
@@ -431,13 +517,28 @@ function validateField(id){
 }
 
 function submitForm(){
-  var name    = document.getElementById('acadName').value.trim();
-  var contact = document.getElementById('contactName').value.trim();
-  var phone   = document.getElementById('phone').value.trim();
-  var city    = document.getElementById('city').value;
-  var count   = document.getElementById('playerCount').value;
-  var cats    = document.getElementById('cats').value.trim();
-  var notes   = document.getElementById('notes').value.trim();
+  // جمع الفئات العمرية من checkboxes
+  var catsArr = [];
+  document.querySelectorAll('#catsCheckboxes input[type=checkbox]:checked').forEach(function(cb){ catsArr.push(cb.value); });
+  document.getElementById('cats').value = catsArr.join('، ');
+
+  var name        = document.getElementById('acadName').value.trim();
+  var contact     = document.getElementById('contactName').value.trim();
+  var phone       = document.getElementById('phone').value.trim();
+  var city        = document.getElementById('city').value;
+  var wilaya      = document.getElementById('wilaya').value.trim();
+  var count       = document.getElementById('playerCount').value;
+  var branches    = document.getElementById('branches').value;
+  var mainLoc     = document.getElementById('mainLocation').value.trim();
+  var grassType   = document.getElementById('grassType').value;
+  var trainDays   = document.getElementById('trainDays').value.trim();
+  var trainTime   = document.getElementById('trainTime').value.trim();
+  var cats        = document.getElementById('cats').value.trim();
+  var instagram   = document.getElementById('instagram').value.trim();
+  var twitter     = document.getElementById('twitter').value.trim();
+  var tiktok      = document.getElementById('tiktok').value.trim();
+  var snapchat    = document.getElementById('snapchat').value.trim();
+  var notes       = document.getElementById('notes').value.trim();
 
   // تحقق كامل
   var errors = [];
@@ -475,10 +576,19 @@ function submitForm(){
     '🏫 *الأكاديمية:* ' + name + '\n' +
     '👤 *المسؤول:* ' + contact + '\n' +
     '📱 *الواتساب:* ' + phone + '\n' +
-    (city  ? '📍 *المحافظة:* ' + city + '\n' : '') +
-    (count ? '👥 *عدد اللاعبين:* ' + count + '\n' : '') +
-    (cats  ? '🎯 *الفئات:* ' + cats + '\n' : '') +
-    (notes ? '📝 *ملاحظات:* ' + notes + '\n' : '') +
+    (city      ? '📍 *المحافظة:* ' + city + (wilaya?' - '+wilaya:'') + '\n' : '') +
+    (mainLoc   ? '🗺️ *الموقع:* ' + mainLoc + '\n' : '') +
+    (branches  ? '🏢 *الأفرع:* ' + branches + '\n' : '') +
+    (grassType ? '🌿 *العشب:* ' + grassType + '\n' : '') +
+    (trainDays ? '📅 *أيام التدريب:* ' + trainDays + '\n' : '') +
+    (trainTime ? '⏰ *وقت التدريب:* ' + trainTime + '\n' : '') +
+    (count     ? '👥 *عدد اللاعبين:* ' + count + '\n' : '') +
+    (cats      ? '🎯 *الفئات:* ' + cats + '\n' : '') +
+    (instagram ? '📸 *إنستغرام:* ' + instagram + '\n' : '') +
+    (twitter   ? '🐦 *تويتر:* ' + twitter + '\n' : '') +
+    (tiktok    ? '🎵 *تيك توك:* ' + tiktok + '\n' : '') +
+    (snapchat  ? '👻 *سناب:* ' + snapchat + '\n' : '') +
+    (notes     ? '📝 *ملاحظات:* ' + notes + '\n' : '') +
     '━━━━━━━━━━━━━━\n' +
     '_من صفحة طلب الانضمام_';
 
@@ -503,8 +613,18 @@ function submitForm(){
       'اسم المسؤول':          contact,
       'رقم الواتساب':         phone,
       'المحافظة':             city,
+      'الولاية':              wilaya,
+      'الموقع الرئيسي':       mainLoc,
+      'عدد الأفرع':           branches,
+      'نوع العشب':            grassType,
+      'أيام التدريب':         trainDays,
+      'وقت التدريب':          trainTime,
       'عدد اللاعبين':         count,
       'الفئات العمرية':       cats,
+      'إنستغرام':             instagram,
+      'تويتر':                twitter,
+      'تيك توك':              tiktok,
+      'سناب شات':             snapchat,
       'ملاحظات':              notes,
       'الحالة':               'جديد',
       'مفتاح_الأكاديمية':     acadKey,
@@ -514,6 +634,19 @@ function submitForm(){
 
   var gasStatus = document.getElementById('gasStatus');
   if(gasStatus) gasStatus.textContent = '⏳ جارٍ الحفظ في السجل...';
+
+  // رفع الشعار إذا تم اختياره
+  var logoFile = document.getElementById('logoFile').files[0];
+  if(logoFile){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var b64 = e.target.result.split(',')[1];
+      fetch(CENTRAL_GAS,{method:'POST',headers:{'Content-Type':'text/plain'},redirect:'follow',
+        body:JSON.stringify({action:'uploadFile',fileData:b64,mimeType:logoFile.type,fileName:'logo_'+reqId})
+      }).catch(function(){});
+    };
+    reader.readAsDataURL(logoFile);
+  }
 
   fetch(CENTRAL_GAS, {
     method: 'POST',
