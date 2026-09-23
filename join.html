@@ -3,30 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>انضم إلى منصة توفة</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Space+Grotesk:wght@500;600;700&display=swap">
 <style>
 :root {
-  --bg:        #050810;
-  --surface:   #0d1117;
-  --surface2:  #161b25;
-  --surface3:  #1e2535;
-  --border:    rgba(255,255,255,.08);
-  --border2:   rgba(212,175,55,.25);
-  --text:      #f1f5f9;
-  --text2:     #94a3b8;
-  --text3:     #475569;
-  --gold:      #d4af37;
-  --gold2:     #f5d060;
-  --gold-dim:  rgba(212,175,55,.12);
+  --bg:        #f1f5f9;
+  --surface:   #ffffff;
+  --surface2:  #f8fafc;
+  --surface3:  #e2e8f0;
+  --border:    rgba(0,0,0,.08);
+  --border2:   rgba(184,29,34,.25);
+  --text:      #0f172a;
+  --text2:     #475569;
+  --text3:     #94a3b8;
+  --gold:      #b81d22;
+  --gold2:     #e53e3e;
+  --gold-dim:  rgba(184,29,34,.08);
   --red:       #b81d22;
   --red2:      #7a1015;
-  --green:     #10b981;
-  --err-bg:    rgba(220,38,38,.12);
-  --err-text:  #f87171;
-  --inp-bg:    rgba(255,255,255,.04);
-  --inp-focus: rgba(212,175,55,.3);
-  --shadow:    0 24px 64px rgba(0,0,0,.6);
+  --green:     #16a34a;
+  --err-bg:    rgba(220,38,38,.08);
+  --err-text:  #dc2626;
+  --inp-bg:    #ffffff;
+  --inp-focus: rgba(184,29,34,.15);
+  --shadow:    0 8px 32px rgba(0,0,0,.1);
   --radius:    14px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -50,16 +53,16 @@ body{
 .hero-bg{
   position:absolute;inset:0;
   background:
-    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(184,29,34,.22), transparent),
-    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(212,175,55,.08), transparent),
-    linear-gradient(180deg,#0d1117 0%,var(--bg) 100%);
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(184,29,34,.15), transparent),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(184,29,34,.06), transparent),
+    linear-gradient(180deg,#fff 0%,var(--bg) 100%);
   pointer-events:none;
 }
 .hero-grid{
   position:absolute;inset:0;
   background-image:
-    linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+    linear-gradient(rgba(0,0,0,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,0,0,.04) 1px,transparent 1px);
   background-size:48px 48px;
   pointer-events:none;
   mask-image:linear-gradient(180deg,rgba(0,0,0,.6) 0%,transparent 100%);
@@ -188,7 +191,7 @@ body{
 .inp.invalid{border-color:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.2);}
 .inp.valid{border-color:#10b981;}
 select.inp{cursor:pointer;}
-select.inp option{background:var(--surface2);color:var(--text);}
+select.inp option{background:#fff;color:#0f172a;}
 textarea.inp{resize:vertical;min-height:88px;}
 .field-err{
   display:none;font-size:11px;color:var(--err-text);
@@ -360,11 +363,26 @@ textarea.inp{resize:vertical;min-height:88px;}
           <label for="city">المحافظة</label>
           <select class="inp" id="city">
             <option value="">اختر...</option>
-            <option>مسقط</option><option>صحار</option><option>صلالة</option>
-            <option>نزوى</option><option>صور</option><option>البريمي</option>
-            <option>الرستاق</option><option>مطرح</option><option>أخرى</option>
+            <option>محافظة مسقط</option>
+            <option>محافظة مسندم</option>
+            <option>محافظة ظفار</option>
+            <option>محافظة البريمي</option>
+            <option>محافظة الداخلية</option>
+            <option>محافظة شمال الباطنة</option>
+            <option>محافظة جنوب الباطنة</option>
+            <option>محافظة شمال الشرقية</option>
+            <option>محافظة جنوب الشرقية</option>
+            <option>محافظة الظاهرة</option>
+            <option>محافظة الوسطى</option>
           </select>
         </div>
+        <div class="field">
+          <label for="wilaya">الولاية</label>
+          <input class="inp" id="wilaya" type="text" placeholder="اسم الولاية">
+        </div>
+      </div>
+
+      <div class="grid2">
         <div class="field">
           <label for="playerCount">عدد اللاعبين تقريباً</label>
           <select class="inp" id="playerCount">
@@ -373,11 +391,90 @@ textarea.inp{resize:vertical;min-height:88px;}
             <option>50 – 100</option><option>أكثر من 100</option>
           </select>
         </div>
+        <div class="field">
+          <label for="branches">عدد الأفرع</label>
+          <select class="inp" id="branches">
+            <option value="">اختر...</option>
+            <option>فرع واحد</option><option>فرعان</option>
+            <option>3 أفرع</option><option>4 أفرع أو أكثر</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="mainLocation">موقع المقر الرئيسي</label>
+        <input class="inp" id="mainLocation" type="text" placeholder="مثال: مسقط - الخوير - بجانب نادي الشباب">
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="grassType">نوع العشب</label>
+          <select class="inp" id="grassType">
+            <option value="">اختر...</option>
+            <option>عشب طبيعي</option><option>عشب صناعي</option>
+            <option>أرضية ترابية</option><option>أرضية إسفلتية</option><option>أخرى</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="trainDays">أيام التدريب</label>
+          <input class="inp" id="trainDays" type="text" placeholder="مثال: السبت والاثنين والأربعاء">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="trainTime">وقت التدريب</label>
+        <input class="inp" id="trainTime" type="text" placeholder="مثال: من ٤ عصراً إلى ٦ مساءً">
       </div>
 
       <div class="field">
         <label for="cats">الفئات العمرية</label>
-        <input class="inp" id="cats" type="text" placeholder="مثال: U8، U10، U12، U14">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;" id="catsCheckboxes">
+          <label style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;">
+            <input type="checkbox" value="براعم (٦-٩)"> براعم ٦–٩
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;">
+            <input type="checkbox" value="ناشئين (١٠-١٢)"> ناشئين ١٠–١٢
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;">
+            <input type="checkbox" value="أشبال (١٣-١٥)"> أشبال ١٣–١٥
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;">
+            <input type="checkbox" value="شباب (١٦-١٨)"> شباب ١٦–١٨
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;">
+            <input type="checkbox" value="كبار (١٨+)"> كبار ١٨+
+          </label>
+        </div>
+        <input type="hidden" id="cats">
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="instagram">إنستغرام</label>
+          <input class="inp" id="instagram" type="text" placeholder="@academy" dir="ltr">
+        </div>
+        <div class="field">
+          <label for="twitter">تويتر / X</label>
+          <input class="inp" id="twitter" type="text" placeholder="@academy" dir="ltr">
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="tiktok">تيك توك</label>
+          <input class="inp" id="tiktok" type="text" placeholder="@academy" dir="ltr">
+        </div>
+        <div class="field">
+          <label for="snapchat">سناب شات</label>
+          <input class="inp" id="snapchat" type="text" placeholder="@academy" dir="ltr">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="logoFile">شعار الأكاديمية (بجودة عالية)</label>
+        <input class="inp" id="logoFile" type="file" accept="image/*" style="padding:10px;">
       </div>
 
       <div class="field">
@@ -431,13 +528,28 @@ function validateField(id){
 }
 
 function submitForm(){
-  var name    = document.getElementById('acadName').value.trim();
-  var contact = document.getElementById('contactName').value.trim();
-  var phone   = document.getElementById('phone').value.trim();
-  var city    = document.getElementById('city').value;
-  var count   = document.getElementById('playerCount').value;
-  var cats    = document.getElementById('cats').value.trim();
-  var notes   = document.getElementById('notes').value.trim();
+  // جمع الفئات العمرية من checkboxes
+  var catsArr = [];
+  document.querySelectorAll('#catsCheckboxes input[type=checkbox]:checked').forEach(function(cb){ catsArr.push(cb.value); });
+  document.getElementById('cats').value = catsArr.join('، ');
+
+  var name        = document.getElementById('acadName').value.trim();
+  var contact     = document.getElementById('contactName').value.trim();
+  var phone       = document.getElementById('phone').value.trim();
+  var city        = document.getElementById('city').value;
+  var wilaya      = document.getElementById('wilaya').value.trim();
+  var count       = document.getElementById('playerCount').value;
+  var branches    = document.getElementById('branches').value;
+  var mainLoc     = document.getElementById('mainLocation').value.trim();
+  var grassType   = document.getElementById('grassType').value;
+  var trainDays   = document.getElementById('trainDays').value.trim();
+  var trainTime   = document.getElementById('trainTime').value.trim();
+  var cats        = document.getElementById('cats').value.trim();
+  var instagram   = document.getElementById('instagram').value.trim();
+  var twitter     = document.getElementById('twitter').value.trim();
+  var tiktok      = document.getElementById('tiktok').value.trim();
+  var snapchat    = document.getElementById('snapchat').value.trim();
+  var notes       = document.getElementById('notes').value.trim();
 
   // تحقق كامل
   var errors = [];
@@ -475,10 +587,19 @@ function submitForm(){
     '🏫 *الأكاديمية:* ' + name + '\n' +
     '👤 *المسؤول:* ' + contact + '\n' +
     '📱 *الواتساب:* ' + phone + '\n' +
-    (city  ? '📍 *المحافظة:* ' + city + '\n' : '') +
-    (count ? '👥 *عدد اللاعبين:* ' + count + '\n' : '') +
-    (cats  ? '🎯 *الفئات:* ' + cats + '\n' : '') +
-    (notes ? '📝 *ملاحظات:* ' + notes + '\n' : '') +
+    (city      ? '📍 *المحافظة:* ' + city + (wilaya?' - '+wilaya:'') + '\n' : '') +
+    (mainLoc   ? '🗺️ *الموقع:* ' + mainLoc + '\n' : '') +
+    (branches  ? '🏢 *الأفرع:* ' + branches + '\n' : '') +
+    (grassType ? '🌿 *العشب:* ' + grassType + '\n' : '') +
+    (trainDays ? '📅 *أيام التدريب:* ' + trainDays + '\n' : '') +
+    (trainTime ? '⏰ *وقت التدريب:* ' + trainTime + '\n' : '') +
+    (count     ? '👥 *عدد اللاعبين:* ' + count + '\n' : '') +
+    (cats      ? '🎯 *الفئات:* ' + cats + '\n' : '') +
+    (instagram ? '📸 *إنستغرام:* ' + instagram + '\n' : '') +
+    (twitter   ? '🐦 *تويتر:* ' + twitter + '\n' : '') +
+    (tiktok    ? '🎵 *تيك توك:* ' + tiktok + '\n' : '') +
+    (snapchat  ? '👻 *سناب:* ' + snapchat + '\n' : '') +
+    (notes     ? '📝 *ملاحظات:* ' + notes + '\n' : '') +
     '━━━━━━━━━━━━━━\n' +
     '_من صفحة طلب الانضمام_';
 
@@ -493,56 +614,79 @@ function submitForm(){
   btn.disabled = true;
   btn.textContent = '⏳ جارٍ الإرسال...';
 
-  var payload = JSON.stringify({
-    action: 'append',
-    sheet: 'أكاديميات المنصة',
-    data: {
-      'رقم الطلب':           reqId,
-      'تاريخ الطلب':          today,
-      'اسم الأكاديمية':       name,
-      'اسم المسؤول':          contact,
-      'رقم الواتساب':         phone,
-      'المحافظة':             city,
-      'عدد اللاعبين':         count,
-      'الفئات العمرية':       cats,
-      'ملاحظات':              notes,
-      'الحالة':               'جديد',
-      'مفتاح_الأكاديمية':     acadKey,
-      'كلمة_المرور':           acadPass
-    }
-  });
-
   var gasStatus = document.getElementById('gasStatus');
-  if(gasStatus) gasStatus.textContent = '⏳ جارٍ الحفظ في السجل...';
+  var logoFile = document.getElementById('logoFile').files[0];
 
-  fetch(CENTRAL_GAS, {
-    method: 'POST',
-    headers: {'Content-Type': 'text/plain'},
-    redirect: 'follow',
-    body: payload
-  }).then(function(r){ return r.json(); })
-    .then(function(res){
-      if(gasStatus){
-        if(res && (res.status === 'ok' || res.result === 'success' || res.success)){
-          gasStatus.style.color = '#16a34a';
-          gasStatus.textContent = '✅ تم الحفظ في السجل بنجاح';
-        } else {
-          gasStatus.style.color = '#f59e0b';
-          gasStatus.textContent = '⚠️ رد الخادم: ' + JSON.stringify(res);
-        }
+  function saveToSheet(logoUrl){
+    if(gasStatus) gasStatus.textContent = '⏳ جارٍ الحفظ في السجل...';
+    var payload = JSON.stringify({
+      action: 'append',
+      sheet: 'أكاديميات المنصة',
+      data: {
+        'رقم الطلب':         reqId,
+        'تاريخ الطلب':        today,
+        'اسم الأكاديمية':     name,
+        'اسم المسؤول':        contact,
+        'رقم الواتساب':       phone,
+        'المحافظة':           city,
+        'الولاية':            wilaya,
+        'الموقع الرئيسي':     mainLoc,
+        'عدد الأفرع':         branches,
+        'نوع العشب':          grassType,
+        'أيام التدريب':       trainDays,
+        'وقت التدريب':        trainTime,
+        'عدد اللاعبين':       count,
+        'الفئات العمرية':     cats,
+        'إنستغرام':           instagram,
+        'تويتر':              twitter,
+        'تيك توك':            tiktok,
+        'سناب شات':           snapchat,
+        'شعار الأكاديمية':    logoUrl || '',
+        'ملاحظات':            notes,
+        'الحالة':             'جديد',
+        'مفتاح_الأكاديمية':   acadKey,
+        'كلمة_المرور':         acadPass
       }
-    })
-    .catch(function(err){
-      if(gasStatus){
-        gasStatus.style.color = '#dc2626';
-        gasStatus.textContent = '❌ خطأ في الاتصال: ' + err.message;
-      }
-    })
-    .finally(function(){
-      window.open('https://api.whatsapp.com/send?phone=96892126558&text=' + encodeURIComponent(msg), '_blank');
-      document.getElementById('formBody').style.display = 'none';
-      document.getElementById('successMsg').style.display = 'block';
     });
+    fetch(CENTRAL_GAS, {method:'POST', headers:{'Content-Type':'text/plain'}, redirect:'follow', body:payload})
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if(gasStatus){
+          if(res && (res.status==='ok'||res.result==='success'||res.success)){
+            gasStatus.style.color='#16a34a';
+            gasStatus.textContent='✅ تم الحفظ في السجل بنجاح';
+          } else {
+            gasStatus.style.color='#f59e0b';
+            gasStatus.textContent='⚠️ رد الخادم: '+JSON.stringify(res);
+          }
+        }
+      })
+      .catch(function(err){
+        if(gasStatus){ gasStatus.style.color='#dc2626'; gasStatus.textContent='❌ خطأ: '+err.message; }
+      })
+      .finally(function(){
+        window.open('https://api.whatsapp.com/send?phone=96892126558&text='+encodeURIComponent(msg),'_blank');
+        document.getElementById('formBody').style.display='none';
+        document.getElementById('successMsg').style.display='block';
+      });
+  }
+
+  // رفع الشعار أولاً إذا تم اختياره
+  if(logoFile){
+    if(gasStatus) gasStatus.textContent='⏳ جارٍ رفع الشعار...';
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var b64 = e.target.result.split(',')[1];
+      fetch(CENTRAL_GAS,{method:'POST',headers:{'Content-Type':'text/plain'},redirect:'follow',
+        body:JSON.stringify({action:'uploadFile',fileData:b64,mimeType:logoFile.type,fileName:'logo_'+reqId})
+      }).then(function(r){ return r.json(); })
+        .then(function(d){ saveToSheet(d.fileUrl||d.fileId||''); })
+        .catch(function(){ saveToSheet(''); });
+    };
+    reader.readAsDataURL(logoFile);
+  } else {
+    saveToSheet('');
+  }
 }
 </script>
 </body>
