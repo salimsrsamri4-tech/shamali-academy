@@ -3,9 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <meta name="color-scheme" content="light only">
 <meta name="theme-color" content="#16a34a">
 <meta name="mobile-web-app-capable" content="yes">
@@ -238,35 +235,6 @@ function applyAcademy(acad){
     });
   }
   document.title = 'بوابة ' + acad.NAME;
-
-  // بطاقة معلومات الأكاديمية في الرئيسية
-  if(acad.TRAIN_DAYS || acad.CATEGORIES || acad.CITY || acad.INSTAGRAM){
-    var infoCard = document.getElementById('acadInfoCard');
-    if(!infoCard){
-      infoCard = document.createElement('div');
-      infoCard.id = 'acadInfoCard';
-      infoCard.className = 'card';
-      infoCard.style.cssText = 'margin:12px 14px;padding:14px;';
-      var splash = document.getElementById('splashScreen');
-      if(splash && splash.nextSibling){
-        splash.parentNode.insertBefore(infoCard, splash.nextSibling);
-      }
-    }
-    var info = '';
-    if(acad.CITY)       info += '<div style="font-size:12px;color:#475569;margin-bottom:4px;">📍 '+(acad.CITY)+(acad.WILAYA?' - '+acad.WILAYA:'')+(acad.LOCATION?' · '+acad.LOCATION:'')+'</div>';
-    if(acad.TRAIN_DAYS) info += '<div style="font-size:12px;color:#475569;margin-bottom:4px;">📅 '+acad.TRAIN_DAYS+(acad.TRAIN_TIME?' · '+acad.TRAIN_TIME:'')+'</div>';
-    if(acad.CATEGORIES) info += '<div style="font-size:12px;color:#475569;margin-bottom:4px;">🎯 '+acad.CATEGORIES+'</div>';
-    if(acad.GRASS)      info += '<div style="font-size:12px;color:#475569;margin-bottom:4px;">🌿 '+acad.GRASS+'</div>';
-    if(acad.FOUND_YEAR) info += '<div style="font-size:12px;color:#475569;margin-bottom:4px;">📆 تأسست: '+acad.FOUND_YEAR+'</div>';
-    var social = [
-      acad.INSTAGRAM ? '📸 '+acad.INSTAGRAM : '',
-      acad.TWITTER   ? '🐦 '+acad.TWITTER   : '',
-      acad.TIKTOK    ? '🎵 '+acad.TIKTOK    : '',
-      acad.SNAPCHAT  ? '👻 '+acad.SNAPCHAT  : ''
-    ].filter(Boolean).join(' · ');
-    if(social) info += '<div style="font-size:11px;color:#64748b;margin-top:6px;">'+social+'</div>';
-    infoCard.innerHTML = '<div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:8px;">معلومات الأكاديمية</div>'+info;
-  }
 }
 
 window.addEventListener('load',function(){
@@ -734,9 +702,9 @@ function loginNewAcad(acadKey){
     var debugKeys = [];
     rows.forEach(function(r){
       var key = r['مفتاح_الأكاديمية'] || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
-      var storedPass = (r['كلمة_المرور'] || '1234').toString().trim();
+      var storedPass = r['كلمة_المرور'] || '1234';
+      debugKeys.push(key+'('+r['الحالة']+')');
       var status = (r['الحالة']||'').trim();
-      debugKeys.push(key+'('+status+'/p:'+(storedPass.length)+'c)');
       if(key === acadKey && status === 'مقبول' && pass === storedPass) found = r;
     });
     if(!found){
@@ -748,23 +716,6 @@ function loginNewAcad(acadKey){
       PRIMARY_COLOR: '#1e3a5f',
       ADMIN_PASS: [found['كلمة_المرور']||'1234'],
       WA_NUM: found['رقم الواتساب']||'',
-      LOGO: found['شعار الأكاديمية']||'',
-      PHONE2: found['هاتف ثانٍ']||'',
-      EMAIL: found['البريد الإلكتروني']||'',
-      FOUND_YEAR: found['سنة التأسيس']||'',
-      LICENSED: found['الترخيص']||'',
-      CITY: found['المحافظة']||'',
-      WILAYA: found['الولاية']||'',
-      LOCATION: found['الموقع الرئيسي']||'',
-      BRANCHES: found['عدد الأفرع']||'',
-      GRASS: found['نوع العشب']||'',
-      TRAIN_DAYS: found['أيام التدريب']||'',
-      TRAIN_TIME: found['وقت التدريب']||'',
-      CATEGORIES: found['الفئات العمرية']||'',
-      INSTAGRAM: found['إنستغرام']||'',
-      TWITTER: found['تويتر']||'',
-      TIKTOK: found['تيك توك']||'',
-      SNAPCHAT: found['سناب شات']||'',
       HIDE_SECTIONS: ['tournaments','festival','shamali_specific']
     });
     ACADEMIES[acadKey] = acad;
@@ -799,42 +750,6 @@ function loginNewAcad(acadKey){
 }
 
 function showAcademyPicker(){
-  // جلب الأكاديميات المعتمدة من الشيت
-  var gasUrl = PLATFORM.CENTRAL_GAS + '?action=get&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET) + '&limit=200';
-  fetch(gasUrl, {redirect:'follow'}).then(function(r){ return r.json(); }).then(function(rows){
-    if(Array.isArray(rows)) rows.forEach(function(r){
-      var status = (r['الحالة']||'').trim();
-      if(status !== 'مقبول') return;
-      var key = r['مفتاح_الأكاديمية'] || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
-      if(ACADEMIES[key]) return; // موجودة مسبقاً
-      ACADEMIES[key] = _fillAcadDefaults(key, {
-        NAME: r['اسم الأكاديمية'] || key,
-        PRIMARY_COLOR: '#e67e22',
-        ADMIN_PASS: [r['كلمة_المرور']||'1234'],
-        WA_NUM: r['رقم الواتساب']||'',
-        LOGO: r['شعار الأكاديمية']||'',
-        PHONE2: r['هاتف ثانٍ']||'',
-        EMAIL: r['البريد الإلكتروني']||'',
-        FOUND_YEAR: r['سنة التأسيس']||'',
-        LICENSED: r['الترخيص']||'',
-        CITY: r['المحافظة']||'',
-        WILAYA: r['الولاية']||'',
-        LOCATION: r['الموقع الرئيسي']||'',
-        BRANCHES: r['عدد الأفرع']||'',
-        GRASS: r['نوع العشب']||'',
-        TRAIN_DAYS: r['أيام التدريب']||'',
-        TRAIN_TIME: r['وقت التدريب']||'',
-        CATEGORIES: r['الفئات العمرية']||'',
-        INSTAGRAM: r['إنستغرام']||'',
-        TWITTER: r['تويتر']||'',
-        TIKTOK: r['تيك توك']||'',
-        SNAPCHAT: r['سناب شات']||''
-      });
-    });
-    _renderPicker();
-  }).catch(function(){ _renderPicker(); });
-
-  function _renderPicker(){
   var keys = Object.keys(ACADEMIES);
   var cards = keys.map(function(k,i){
     var a = ACADEMIES[k];
@@ -890,40 +805,33 @@ function showAcademyPicker(){
     +'</style>';
 
   document.body.appendChild(overlay);
-  } // end _renderPicker
 }
 
 function selectAcademy(key){
   var acad = ACADEMIES[key];
   if(!acad) return;
-
-  // طلب كلمة المرور
-  var allowed = [].concat(acad.ADMIN_PASS||[]).concat(acad.COACH_PASS||[]);
-  var pass = prompt('🔐 أدخل كلمة المرور للدخول إلى ' + acad.NAME);
-  if(pass === null) return; // ضغط إلغاء
-  if(allowed.indexOf(pass.trim()) === -1){
-    alert('❌ كلمة المرور غير صحيحة');
-    return;
-  }
-
   if(key !== 'shamali' && !acad.HIDE_SECTIONS){
     acad.HIDE_SECTIONS = ['tournaments','festival','shamali_specific'];
   }
   window.CURRENT_ACADEMY = acad;
   window.CURRENT_ACADEMY_KEY = key;
+  // تحديث CONFIG
   CONFIG.SHEET_ID   = acad.SHEET_ID;
   CONFIG.GAS_URL    = acad.GAS_URL;
   CONFIG.UPLOAD_URL = acad.UPLOAD_URL;
   CONFIG.SHEETDB_URL= acad.SHEETDB_URL;
   CONFIG.ADMIN_PASS = acad.ADMIN_PASS;
   CONFIG.COACH_PASS = acad.COACH_PASS;
+  // تطبيق الألوان والمعلومات
   applyAcademy(acad);
+  // إخفاء شاشة الاختيار بتأثير
   var overlay = document.getElementById('acadPickerOverlay');
   if(overlay){
     overlay.style.transition = 'opacity .4s';
     overlay.style.opacity = '0';
     setTimeout(function(){ overlay.remove(); }, 400);
   }
+  // تحديث الرابط بدون إعادة تحميل
   history.replaceState(null,'', '?academy='+key);
 }
 
@@ -1211,10 +1119,8 @@ function saveRegistration(data) {
   var playerPhotoUrl = data.playerPhotoId || '';
   var playerDocUrl = data.playerDocId || '';
   var birthYear = data.playerBirthDate ? data.playerBirthDate.split('-')[0] : '';
-  var acadName = (window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) || 'أكاديمية الشمالي';
   var row = {
     'التاريخ': now, 'رقم الملف': id,
-    'الأكاديمية': acadName,
     'اسم ولي الأمر': data.parentName, 'الرقم المدني': data.parentCivilId,
     'صلة القرابة': data.parentRelation || '',
     'الهاتف': data.parentPhone, 'الطوارئ': data.emergencyPhone,
@@ -1224,10 +1130,14 @@ function saveRegistration(data) {
     'الحالة': 'موافق', 'الجنسية': data.playerNationality,
     'الصحة': data.playerHealth,
     'ملاحظات صحية': data.healthNotes || '',
-    'صورة اللاعب': playerPhotoUrl,
-    'بطاقة ولي الأمر': parentIdUrl,
-    'وثيقة اللاعب': playerDocUrl
+    'صورة اللاعب': playerPhotoUrl
   };
+  var _gasUrl = CONFIG.GAS_URL || 'EMPTY';
+  var _key    = window.CURRENT_ACADEMY_KEY || 'EMPTY';
+  var _dbg = document.createElement('div');
+  _dbg.style.cssText='position:fixed;top:0;left:0;right:0;background:#000;color:#0f0;padding:10px;z-index:99999;font-size:11px;font-family:monospace;direction:ltr;';
+  _dbg.textContent='KEY='+_key+' | GAS='+(CONFIG.GAS_URL?'SET':'EMPTY')+' | SDB='+(CONFIG.SHEETDB_URL?'SET':'EMPTY');
+  document.body.appendChild(_dbg);
   return apiAppend('الورقة1', row).then(function(){ return id; });
 }
 
@@ -1271,23 +1181,33 @@ function checkPlayer(id) {
 
 // ===== رفع الملفات عبر Apps Script =====
 function uploadFiles(files) {
-  var keyMap = {parentId:'parentIdUrl', playerPhoto:'playerPhotoUrl', playerDoc:'playerDocUrl'};
-  var promises = files.map(function(f){
-    if(!f.file) return Promise.resolve({key: f.key, url: ''});
-    return compressImage(f.file).then(function(c){ return fileToBase64(c||f.file); }).then(function(b64){
-      return fetch(CONFIG.UPLOAD_URL, {
-        method:'POST', redirect:'follow',
-        headers:{'Content-Type':'text/plain'},
-        body: JSON.stringify({action:'uploadFile', fileData: b64.split(',')[1], mimeType: f.file.type, fileName: f.name||f.key})
-      }).then(function(r){ return r.json(); }).then(function(d){
-        return {key: f.key, url: d.fileUrl || d.fileId || ''};
-      }).catch(function(){ return {key: f.key, url: ''}; });
+  return new Promise(function(resolve) {
+    var hasFiles = files.some(function(f){ return f.file; });
+    if(!hasFiles) { resolve({}); return; }
+
+    var promises = files.map(function(f) {
+      if(!f.file) return Promise.resolve('');
+      return compressImage(f.file).then(function(compressed) {
+        return fileToBase64(compressed || f.file);
+      }).then(function(base64) {
+        return {key: f.key, base64: base64, name: f.name};
+      });
     });
-  });
-  return Promise.all(promises).then(function(results){
-    var out = {};
-    results.forEach(function(r){ if(r) out[keyMap[r.key]||r.key] = r.url; });
-    return out;
+
+    Promise.all(promises).then(function(fileData) {
+      var body = {name: files[0] ? files[0].name : ''};
+      fileData.forEach(function(f) {
+        if(f && f.base64) body[f.key] = f.base64;
+      });
+      fetch(CONFIG.UPLOAD_URL, {
+        method: 'POST',
+        redirect: 'follow',
+        headers: {'Content-Type': 'text/plain'},
+        body: JSON.stringify(body)
+      }).then(function(r){ return r.json(); }).then(function(data){
+        resolve(data.status === 'success' ? (data.files || {}) : {});
+      }).catch(function(){ resolve({}); });
+    }).catch(function() { resolve({}); });
   });
 }
 
@@ -1478,7 +1398,7 @@ function renderSched(){
         '<div style="font-size:28px;">🗓️</div>'+
         '<div>'+
           '<div style="color:#d4af37;font-size:11px;font-weight:800;letter-spacing:1px;">أيام التدريب</div>'+
-          '<div style="color:#fff;font-size:18px;font-weight:900;">'+(ACAD.TRAIN_DAYS||'—')+'</div>'+
+          '<div style="color:#fff;font-size:18px;font-weight:900;">الاثنين والأربعاء</div>'+
         '</div>'+
       '</div>'+
       '<div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px;">'+
@@ -1486,21 +1406,21 @@ function renderSched(){
           '<div style="width:42px;height:42px;background:#fff7ed;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🌅</div>'+
           '<div>'+
             '<div style="font-size:11px;color:#94a3b8;font-weight:700;">الوقت</div>'+
-            '<div style="font-size:16px;font-weight:900;color:#0f172a;">'+(ACAD.TRAIN_TIME||'—')+'</div>'+
+            '<div style="font-size:16px;font-weight:900;color:#0f172a;">عصراً</div>'+
           '</div>'+
         '</div>'+
         '<div style="display:flex;align-items:center;gap:12px;">'+
           '<div style="width:42px;height:42px;background:#fef2f2;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📍</div>'+
           '<div>'+
             '<div style="font-size:11px;color:#94a3b8;font-weight:700;">الملعب</div>'+
-            '<div style="font-size:16px;font-weight:900;color:#0f172a;">'+(ACAD.LOCATION||'—')+'</div>'+
+            '<div style="font-size:16px;font-weight:900;color:#0f172a;">ملعب فريق الشمالي</div>'+
           '</div>'+
         '</div>'+
         '<div style="display:flex;align-items:center;gap:12px;">'+
           '<div style="width:42px;height:42px;background:#f0fdf4;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👥</div>'+
           '<div>'+
             '<div style="font-size:11px;color:#94a3b8;font-weight:700;">الفئات</div>'+
-            '<div style="font-size:16px;font-weight:900;color:#0f172a;">'+(ACAD.CATEGORIES||'جميع الفئات العمرية')+'</div>'+
+            '<div style="font-size:16px;font-weight:900;color:#0f172a;">جميع الفئات العمرية</div>'+
           '</div>'+
         '</div>'+
       '</div>'+
@@ -11983,19 +11903,7 @@ function renderSuperJoinRequests(){
                 'style="flex:1;background:#dc2626;color:#fff;border:none;border-radius:8px;padding:9px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:12px;">'+
                 '❌ رفض</button>'+
             '</div>'
-          : (r['الحالة']==='مقبول' ?
-            (function(){
-              var _k = r['مفتاح_الأكاديمية']||('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
-              var _l = window.location.origin+window.location.pathname+'?academy='+_k;
-              var _p = r['كلمة_المرور']||'1234';
-              var _msg = encodeURIComponent('🏆 *منصة توفه*\n\nمرحباً *'+r['اسم الأكاديمية']+'*\n\n✅ تم قبول طلب انضمامكم\n\n📲 *رابط منصتكم:*\n'+_l+'\n\n🔑 *كلمة المرور:* '+_p+'\n\n_منصة توفه 🏅_');
-              return '<div style="background:#f0fdf4;border-radius:8px;padding:8px 10px;font-size:11px;color:#166534;margin-bottom:6px;word-break:break-all;">🔗 '+_l+'<br>🔑 '+_p+'</div>'+
-                '<div style="display:flex;gap:6px;">'+
-                '<button onclick="navigator.clipboard.writeText(\''+_l+'\')" style="flex:1;background:#0891b2;color:#fff;border:none;border-radius:8px;padding:8px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:11px;">📋 نسخ الرابط</button>'+
-                '<button onclick="window.open(\'https://wa.me/968'+r['رقم الواتساب']+'?text='+_msg+'\',\'_blank\')" style="flex:1;background:#25d366;color:#fff;border:none;border-radius:8px;padding:8px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer;font-size:11px;">💬 إرسال واتساب</button>'+
-                '</div>';
-            })()
-          : ''))+
+          : '')+
         '</div>';
       }).join('');
 
