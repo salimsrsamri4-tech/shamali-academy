@@ -699,16 +699,14 @@ function loginNewAcad(acadKey){
   fetch(url, {redirect:'follow'}).then(function(r){ return r.json(); }).then(function(rows){
     if(!Array.isArray(rows)){ showLoginErr('ليست مصفوفة'); return; }
     var found = null;
-    var debugKeys = [];
     rows.forEach(function(r){
-      var key = r['مفتاح_الأكاديمية'] || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
-      var storedPass = r['كلمة_المرور'] || '1234';
-      debugKeys.push(key+'('+r['الحالة']+')');
+      var key = (r['مفتاح_الأكاديمية']||'').trim() || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
+      var storedPass = (r['كلمة_المرور']||'1234').toString().trim();
       var status = (r['الحالة']||'').trim();
       if(key === acadKey && status === 'مقبول' && pass === storedPass) found = r;
     });
     if(!found){
-      showLoginErr('مفتاح الرابط: '+acadKey+'<br>مفاتيح الشيت: '+debugKeys.join(', '));
+      showLoginErr('❌ كلمة المرور غير صحيحة أو الأكاديمية غير مفعّلة');
       return;
     }
     var acad = _fillAcadDefaults(acadKey, {
