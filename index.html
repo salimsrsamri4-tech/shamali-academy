@@ -714,7 +714,8 @@ function loginNewAcad(acadKey){
     var acad = _fillAcadDefaults(acadKey, {
       NAME: found['اسم الأكاديمية'] || acadKey,
       PRIMARY_COLOR: '#1e3a5f',
-      ADMIN_PASS: [found['كلمة_المرور']||'1234'],
+      ADMIN_PASS: [(found['كلمة_المرور']||'1234').toString().trim()],
+      COACH_PASS: [(found['كلمة_المرور_المدرب']||'1234').toString().trim()],
       WA_NUM: found['رقم الواتساب']||'',
       HIDE_SECTIONS: ['tournaments','festival','shamali_specific']
     });
@@ -4229,6 +4230,28 @@ function renderAdminTools(){
       '</div>'+
     '</div>'+
 
+    // تغيير كلمات المرور
+    '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.07);overflow:hidden;">'+
+      '<div style="background:linear-gradient(135deg,#b45309,#92400e);padding:14px 16px;display:flex;align-items:center;gap:10px;">'+
+        '<div style="font-size:24px;">🔐</div>'+
+        '<div><div style="font-size:14px;font-weight:900;color:#fff;">تغيير كلمات المرور</div>'+
+        '<div style="font-size:10px;color:rgba(255,255,255,.7);">كلمة مرور الأدمن والمدرب</div></div>'+
+      '</div>'+
+      '<div style="padding:14px;display:flex;flex-direction:column;gap:10px;">'+
+        '<div>'+
+          '<label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">🔑 كلمة مرور الأدمن الجديدة</label>'+
+          '<input id="newAdminPass" type="password" placeholder="اتركه فارغاً للإبقاء على الحالية" class="inp">'+
+        '</div>'+
+        '<div>'+
+          '<label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">👨‍🏫 كلمة مرور المدرب الجديدة</label>'+
+          '<input id="newCoachPass" type="password" placeholder="اتركه فارغاً للإبقاء على الحالية" class="inp">'+
+        '</div>'+
+        '<div id="passChangeMsg" style="display:none;font-size:12px;font-weight:700;padding:8px;border-radius:8px;text-align:center;"></div>'+
+        '<button onclick="changeAcadPasswords()" style="width:100%;background:linear-gradient(135deg,#b45309,#92400e);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">'+
+          '💾 حفظ كلمات المرور</button>'+
+      '</div>'+
+    '</div>'+
+
     // رابط التسجيل
     '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.07);overflow:hidden;">'+
       '<div style="background:linear-gradient(135deg,#7c3aed,#6d28d9);padding:14px 16px;display:flex;align-items:center;gap:10px;">'+
@@ -4250,6 +4273,52 @@ function renderAdminTools(){
     '</div>'+
 
     '</div>';
+}
+
+function changeAcadPasswords(){
+  var newAdmin = (document.getElementById('newAdminPass').value||'').trim();
+  var newCoach = (document.getElementById('newCoachPass').value||'').trim();
+  var msg = document.getElementById('passChangeMsg');
+  if(!newAdmin && !newCoach){
+    msg.style.display='block'; msg.style.background='#fef2f2'; msg.style.color='#dc2626';
+    msg.textContent='❌ أدخل كلمة مرور واحدة على الأقل'; return;
+  }
+  var acadKey = window.CURRENT_ACADEMY_KEY;
+  if(!acadKey || acadKey === 'shamali'){
+    msg.style.display='block'; msg.style.background='#fef2f2'; msg.style.color='#dc2626';
+    msg.textContent='❌ هذه الميزة للأكاديميات المسجّلة فقط'; return;
+  }
+  var updateData = {};
+  if(newAdmin) updateData['كلمة_المرور'] = newAdmin;
+  if(newCoach)  updateData['كلمة_المرور_المدرب'] = newCoach;
+  msg.style.display='block'; msg.style.background='#fffbeb'; msg.style.color='#92400e';
+  msg.textContent='⏳ جارٍ الحفظ...';
+  fetch(PLATFORM.CENTRAL_GAS, {
+    method:'POST', redirect:'follow',
+    headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify({
+      action:'update',
+      sheet: PLATFORM.JOIN_SHEET,
+      column:'مفتاح_الأكاديمية',
+      value: acadKey,
+      data: updateData
+    })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if(d.status==='ok'){
+      if(newAdmin) CONFIG.ADMIN_PASS = [newAdmin];
+      if(newCoach) CONFIG.COACH_PASS = [newCoach];
+      document.getElementById('newAdminPass').value='';
+      document.getElementById('newCoachPass').value='';
+      msg.style.background='#f0fdf4'; msg.style.color='#16a34a';
+      msg.textContent='✅ تم حفظ كلمات المرور بنجاح';
+    } else {
+      msg.style.background='#fef2f2'; msg.style.color='#dc2626';
+      msg.textContent='❌ خطأ: '+(d.message||'فشل الحفظ');
+    }
+  }).catch(function(e){
+    msg.style.background='#fef2f2'; msg.style.color='#dc2626';
+    msg.textContent='❌ خطأ في الاتصال';
+  });
 }
 
 function copyAcadLink(){
