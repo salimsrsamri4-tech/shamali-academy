@@ -699,16 +699,14 @@ function loginNewAcad(acadKey){
   fetch(url, {redirect:'follow'}).then(function(r){ return r.json(); }).then(function(rows){
     if(!Array.isArray(rows)){ showLoginErr('ليست مصفوفة'); return; }
     var found = null;
-    var debugKeys = [];
     rows.forEach(function(r){
       var key = r['مفتاح_الأكاديمية'] || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
       var storedPass = r['كلمة_المرور'] || '1234';
-      debugKeys.push(key+'('+r['الحالة']+')');
       var status = (r['الحالة']||'').trim();
       if(key === acadKey && status === 'مقبول' && pass === storedPass) found = r;
     });
     if(!found){
-      showLoginErr('مفتاح الرابط: '+acadKey+'<br>مفاتيح الشيت: '+debugKeys.join(', '));
+      showLoginErr('كلمة المرور غير صحيحة أو الأكاديمية غير مفعّلة');
       return;
     }
     var acad = _fillAcadDefaults(acadKey, {
@@ -1133,11 +1131,6 @@ function saveRegistration(data) {
     'صورة اللاعب': playerPhotoUrl
   };
   var _gasUrl = CONFIG.GAS_URL || 'EMPTY';
-  var _key    = window.CURRENT_ACADEMY_KEY || 'EMPTY';
-  var _dbg = document.createElement('div');
-  _dbg.style.cssText='position:fixed;top:0;left:0;right:0;background:#000;color:#0f0;padding:10px;z-index:99999;font-size:11px;font-family:monospace;direction:ltr;';
-  _dbg.textContent='KEY='+_key+' | GAS='+(CONFIG.GAS_URL?'SET':'EMPTY')+' | SDB='+(CONFIG.SHEETDB_URL?'SET':'EMPTY');
-  document.body.appendChild(_dbg);
   return apiAppend('الورقة1', row).then(function(){ return id; });
 }
 
