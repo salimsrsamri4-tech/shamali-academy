@@ -238,6 +238,35 @@ function applyAcademy(acad){
     });
   }
   document.title = 'بوابة ' + acad.NAME;
+
+  // بطاقة معلومات الأكاديمية في الرئيسية
+  if(acad.TRAIN_DAYS || acad.CATEGORIES || acad.CITY || acad.INSTAGRAM){
+    var infoCard = document.getElementById('acadInfoCard');
+    if(!infoCard){
+      infoCard = document.createElement('div');
+      infoCard.id = 'acadInfoCard';
+      infoCard.className = 'card';
+      infoCard.style.cssText = 'margin:12px 14px;padding:14px;';
+      var splash = document.getElementById('splashScreen');
+      if(splash && splash.nextSibling){
+        splash.parentNode.insertBefore(infoCard, splash.nextSibling);
+      }
+    }
+    var info = '';
+    if(acad.CITY)       info += '<div style="font-size:12px;color:#475569;margin-bottom:4px;">📍 '+(acad.CITY)+(acad.WILAYA?' - '+acad.WILAYA:'')+(acad.LOCATION?' · '+acad.LOCATION:'')+'</div>';
+    if(acad.TRAIN_DAYS) info += '<div style="font-size:12px;color:#475569;margin-bottom:4px;">📅 '+acad.TRAIN_DAYS+(acad.TRAIN_TIME?' · '+acad.TRAIN_TIME:'')+'</div>';
+    if(acad.CATEGORIES) info += '<div style="font-size:12px;color:#475569;margin-bottom:4px;">🎯 '+acad.CATEGORIES+'</div>';
+    if(acad.GRASS)      info += '<div style="font-size:12px;color:#475569;margin-bottom:4px;">🌿 '+acad.GRASS+'</div>';
+    if(acad.FOUND_YEAR) info += '<div style="font-size:12px;color:#475569;margin-bottom:4px;">📆 تأسست: '+acad.FOUND_YEAR+'</div>';
+    var social = [
+      acad.INSTAGRAM ? '📸 '+acad.INSTAGRAM : '',
+      acad.TWITTER   ? '🐦 '+acad.TWITTER   : '',
+      acad.TIKTOK    ? '🎵 '+acad.TIKTOK    : '',
+      acad.SNAPCHAT  ? '👻 '+acad.SNAPCHAT  : ''
+    ].filter(Boolean).join(' · ');
+    if(social) info += '<div style="font-size:11px;color:#64748b;margin-top:6px;">'+social+'</div>';
+    infoCard.innerHTML = '<div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:8px;">معلومات الأكاديمية</div>'+info;
+  }
 }
 
 window.addEventListener('load',function(){
@@ -719,6 +748,23 @@ function loginNewAcad(acadKey){
       PRIMARY_COLOR: '#1e3a5f',
       ADMIN_PASS: [found['كلمة_المرور']||'1234'],
       WA_NUM: found['رقم الواتساب']||'',
+      LOGO: found['شعار الأكاديمية']||'',
+      PHONE2: found['هاتف ثانٍ']||'',
+      EMAIL: found['البريد الإلكتروني']||'',
+      FOUND_YEAR: found['سنة التأسيس']||'',
+      LICENSED: found['الترخيص']||'',
+      CITY: found['المحافظة']||'',
+      WILAYA: found['الولاية']||'',
+      LOCATION: found['الموقع الرئيسي']||'',
+      BRANCHES: found['عدد الأفرع']||'',
+      GRASS: found['نوع العشب']||'',
+      TRAIN_DAYS: found['أيام التدريب']||'',
+      TRAIN_TIME: found['وقت التدريب']||'',
+      CATEGORIES: found['الفئات العمرية']||'',
+      INSTAGRAM: found['إنستغرام']||'',
+      TWITTER: found['تويتر']||'',
+      TIKTOK: found['تيك توك']||'',
+      SNAPCHAT: found['سناب شات']||'',
       HIDE_SECTIONS: ['tournaments','festival','shamali_specific']
     });
     ACADEMIES[acadKey] = acad;
@@ -765,7 +811,24 @@ function showAcademyPicker(){
         NAME: r['اسم الأكاديمية'] || key,
         PRIMARY_COLOR: '#e67e22',
         ADMIN_PASS: [r['كلمة_المرور']||'1234'],
-        WA_NUM: r['رقم الواتساب']||''
+        WA_NUM: r['رقم الواتساب']||'',
+        LOGO: r['شعار الأكاديمية']||'',
+        PHONE2: r['هاتف ثانٍ']||'',
+        EMAIL: r['البريد الإلكتروني']||'',
+        FOUND_YEAR: r['سنة التأسيس']||'',
+        LICENSED: r['الترخيص']||'',
+        CITY: r['المحافظة']||'',
+        WILAYA: r['الولاية']||'',
+        LOCATION: r['الموقع الرئيسي']||'',
+        BRANCHES: r['عدد الأفرع']||'',
+        GRASS: r['نوع العشب']||'',
+        TRAIN_DAYS: r['أيام التدريب']||'',
+        TRAIN_TIME: r['وقت التدريب']||'',
+        CATEGORIES: r['الفئات العمرية']||'',
+        INSTAGRAM: r['إنستغرام']||'',
+        TWITTER: r['تويتر']||'',
+        TIKTOK: r['تيك توك']||'',
+        SNAPCHAT: r['سناب شات']||''
       });
     });
     _renderPicker();
