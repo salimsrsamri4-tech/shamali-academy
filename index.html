@@ -1132,12 +1132,6 @@ function saveRegistration(data) {
     'ملاحظات صحية': data.healthNotes || '',
     'صورة اللاعب': playerPhotoUrl
   };
-  var _gasUrl = CONFIG.GAS_URL || 'EMPTY';
-  var _key    = window.CURRENT_ACADEMY_KEY || 'EMPTY';
-  var _dbg = document.createElement('div');
-  _dbg.style.cssText='position:fixed;top:0;left:0;right:0;background:#000;color:#0f0;padding:10px;z-index:99999;font-size:11px;font-family:monospace;direction:ltr;';
-  _dbg.textContent='KEY='+_key+' | GAS='+(CONFIG.GAS_URL?'SET':'EMPTY')+' | SDB='+(CONFIG.SHEETDB_URL?'SET':'EMPTY');
-  document.body.appendChild(_dbg);
   return apiAppend('الورقة1', row).then(function(){ return id; });
 }
 
