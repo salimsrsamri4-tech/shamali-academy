@@ -603,79 +603,79 @@ function submitForm(){
   btn.disabled = true;
   btn.textContent = '⏳ جارٍ الإرسال...';
 
-  var payload = JSON.stringify({
-    action: 'append',
-    sheet: 'أكاديميات المنصة',
-    data: {
-      'رقم الطلب':           reqId,
-      'تاريخ الطلب':          today,
-      'اسم الأكاديمية':       name,
-      'اسم المسؤول':          contact,
-      'رقم الواتساب':         phone,
-      'المحافظة':             city,
-      'الولاية':              wilaya,
-      'الموقع الرئيسي':       mainLoc,
-      'عدد الأفرع':           branches,
-      'نوع العشب':            grassType,
-      'أيام التدريب':         trainDays,
-      'وقت التدريب':          trainTime,
-      'عدد اللاعبين':         count,
-      'الفئات العمرية':       cats,
-      'إنستغرام':             instagram,
-      'تويتر':                twitter,
-      'تيك توك':              tiktok,
-      'سناب شات':             snapchat,
-      'ملاحظات':              notes,
-      'الحالة':               'جديد',
-      'مفتاح_الأكاديمية':     acadKey,
-      'كلمة_المرور':           acadPass
-    }
-  });
-
   var gasStatus = document.getElementById('gasStatus');
-  if(gasStatus) gasStatus.textContent = '⏳ جارٍ الحفظ في السجل...';
-
-  // رفع الشعار إذا تم اختياره
   var logoFile = document.getElementById('logoFile').files[0];
+
+  function saveToSheet(logoUrl){
+    if(gasStatus) gasStatus.textContent = '⏳ جارٍ الحفظ في السجل...';
+    var payload = JSON.stringify({
+      action: 'append',
+      sheet: 'أكاديميات المنصة',
+      data: {
+        'رقم الطلب':         reqId,
+        'تاريخ الطلب':        today,
+        'اسم الأكاديمية':     name,
+        'اسم المسؤول':        contact,
+        'رقم الواتساب':       phone,
+        'المحافظة':           city,
+        'الولاية':            wilaya,
+        'الموقع الرئيسي':     mainLoc,
+        'عدد الأفرع':         branches,
+        'نوع العشب':          grassType,
+        'أيام التدريب':       trainDays,
+        'وقت التدريب':        trainTime,
+        'عدد اللاعبين':       count,
+        'الفئات العمرية':     cats,
+        'إنستغرام':           instagram,
+        'تويتر':              twitter,
+        'تيك توك':            tiktok,
+        'سناب شات':           snapchat,
+        'شعار الأكاديمية':    logoUrl || '',
+        'ملاحظات':            notes,
+        'الحالة':             'جديد',
+        'مفتاح_الأكاديمية':   acadKey,
+        'كلمة_المرور':         acadPass
+      }
+    });
+    fetch(CENTRAL_GAS, {method:'POST', headers:{'Content-Type':'text/plain'}, redirect:'follow', body:payload})
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if(gasStatus){
+          if(res && (res.status==='ok'||res.result==='success'||res.success)){
+            gasStatus.style.color='#16a34a';
+            gasStatus.textContent='✅ تم الحفظ في السجل بنجاح';
+          } else {
+            gasStatus.style.color='#f59e0b';
+            gasStatus.textContent='⚠️ رد الخادم: '+JSON.stringify(res);
+          }
+        }
+      })
+      .catch(function(err){
+        if(gasStatus){ gasStatus.style.color='#dc2626'; gasStatus.textContent='❌ خطأ: '+err.message; }
+      })
+      .finally(function(){
+        window.open('https://api.whatsapp.com/send?phone=96892126558&text='+encodeURIComponent(msg),'_blank');
+        document.getElementById('formBody').style.display='none';
+        document.getElementById('successMsg').style.display='block';
+      });
+  }
+
+  // رفع الشعار أولاً إذا تم اختياره
   if(logoFile){
+    if(gasStatus) gasStatus.textContent='⏳ جارٍ رفع الشعار...';
     var reader = new FileReader();
     reader.onload = function(e){
       var b64 = e.target.result.split(',')[1];
       fetch(CENTRAL_GAS,{method:'POST',headers:{'Content-Type':'text/plain'},redirect:'follow',
         body:JSON.stringify({action:'uploadFile',fileData:b64,mimeType:logoFile.type,fileName:'logo_'+reqId})
-      }).catch(function(){});
+      }).then(function(r){ return r.json(); })
+        .then(function(d){ saveToSheet(d.fileUrl||d.fileId||''); })
+        .catch(function(){ saveToSheet(''); });
     };
     reader.readAsDataURL(logoFile);
+  } else {
+    saveToSheet('');
   }
-
-  fetch(CENTRAL_GAS, {
-    method: 'POST',
-    headers: {'Content-Type': 'text/plain'},
-    redirect: 'follow',
-    body: payload
-  }).then(function(r){ return r.json(); })
-    .then(function(res){
-      if(gasStatus){
-        if(res && (res.status === 'ok' || res.result === 'success' || res.success)){
-          gasStatus.style.color = '#16a34a';
-          gasStatus.textContent = '✅ تم الحفظ في السجل بنجاح';
-        } else {
-          gasStatus.style.color = '#f59e0b';
-          gasStatus.textContent = '⚠️ رد الخادم: ' + JSON.stringify(res);
-        }
-      }
-    })
-    .catch(function(err){
-      if(gasStatus){
-        gasStatus.style.color = '#dc2626';
-        gasStatus.textContent = '❌ خطأ في الاتصال: ' + err.message;
-      }
-    })
-    .finally(function(){
-      window.open('https://api.whatsapp.com/send?phone=96892126558&text=' + encodeURIComponent(msg), '_blank');
-      document.getElementById('formBody').style.display = 'none';
-      document.getElementById('successMsg').style.display = 'block';
-    });
 }
 </script>
 </body>
