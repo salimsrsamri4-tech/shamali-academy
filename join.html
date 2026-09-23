@@ -478,6 +478,12 @@ textarea.inp{resize:vertical;min-height:88px;}
       </div>
 
       <div class="field">
+        <label for="acadPass">🔑 كلمة المرور <span class="req">*</span></label>
+        <input class="inp" id="acadPassInput" type="password" placeholder="اختر كلمة مرور للدخول إلى المنصة" required>
+        <div class="field-err" id="errPass">يرجى إدخال كلمة مرور</div>
+      </div>
+
+      <div class="field">
         <label for="notes">ملاحظات إضافية</label>
         <textarea class="inp" id="notes" placeholder="أي معلومات أو استفسارات..."></textarea>
       </div>
@@ -608,7 +614,8 @@ function submitForm(){
   var reqId    = 'JOIN-' + Date.now();
   var today    = new Date().toLocaleDateString('ar-SA');
   var acadKey  = 'acad_' + reqId.slice(-6);
-  var acadPass = '1234';
+  var acadPass = (document.getElementById('acadPassInput').value||'').trim() || '1234';
+  if(!acadPass){ document.getElementById('errPass').classList.add('show'); document.getElementById('acadPassInput').classList.add('invalid'); document.getElementById('acadPassInput').focus(); return; }
 
   var btn = document.getElementById('submitBtn');
   btn.disabled = true;
