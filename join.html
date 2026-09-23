@@ -356,6 +356,28 @@ textarea.inp{resize:vertical;min-height:88px;}
         </div>
       </div>
 
+      <div class="grid2">
+        <div class="field">
+          <label for="phone2">هاتف ثانٍ</label>
+          <input class="inp" id="phone2" type="tel" placeholder="968XXXXXXXX" dir="ltr" autocomplete="tel">
+        </div>
+        <div class="field">
+          <label for="email">البريد الإلكتروني</label>
+          <input class="inp" id="email" type="email" placeholder="example@email.com" dir="ltr" autocomplete="email">
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="foundYear">سنة التأسيس</label>
+          <input class="inp" id="foundYear" type="number" placeholder="مثال: 2018" min="1950" max="2030">
+        </div>
+        <div class="field">
+          <label for="license">الترخيص</label>
+          <input class="inp" id="license" type="text" placeholder="رقم الترخيص أو جهة الترخيص">
+        </div>
+      </div>
+
       <div class="sep"></div>
 
       <div class="grid2">
@@ -542,6 +564,10 @@ function submitForm(){
   var name        = document.getElementById('acadName').value.trim();
   var contact     = document.getElementById('contactName').value.trim();
   var phone       = document.getElementById('phone').value.trim();
+  var phone2      = document.getElementById('phone2').value.trim();
+  var email       = document.getElementById('email').value.trim();
+  var foundYear   = document.getElementById('foundYear').value.trim();
+  var license     = document.getElementById('license').value.trim();
   var city        = document.getElementById('city').value;
   var wilaya      = document.getElementById('wilaya').value.trim();
   var count       = document.getElementById('playerCount').value;
@@ -635,6 +661,10 @@ function submitForm(){
         'اسم الأكاديمية':     name,
         'اسم المسؤول':        contact,
         'رقم الواتساب':       phone,
+        'هاتف ثانٍ':          phone2,
+        'البريد الإلكتروني':  email,
+        'سنة التأسيس':        foundYear,
+        'الترخيص':            license,
         'المحافظة':           city,
         'الولاية':            wilaya,
         'الموقع الرئيسي':     mainLoc,
