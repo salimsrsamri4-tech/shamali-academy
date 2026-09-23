@@ -7,26 +7,26 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Space+Grotesk:wght@500;600;700&display=swap">
 <style>
 :root {
-  --bg:        #050810;
-  --surface:   #0d1117;
-  --surface2:  #161b25;
-  --surface3:  #1e2535;
-  --border:    rgba(255,255,255,.08);
-  --border2:   rgba(212,175,55,.25);
-  --text:      #f1f5f9;
-  --text2:     #94a3b8;
-  --text3:     #475569;
-  --gold:      #d4af37;
-  --gold2:     #f5d060;
-  --gold-dim:  rgba(212,175,55,.12);
+  --bg:        #f1f5f9;
+  --surface:   #ffffff;
+  --surface2:  #f8fafc;
+  --surface3:  #e2e8f0;
+  --border:    rgba(0,0,0,.08);
+  --border2:   rgba(184,29,34,.25);
+  --text:      #0f172a;
+  --text2:     #475569;
+  --text3:     #94a3b8;
+  --gold:      #b81d22;
+  --gold2:     #e53e3e;
+  --gold-dim:  rgba(184,29,34,.08);
   --red:       #b81d22;
   --red2:      #7a1015;
-  --green:     #10b981;
-  --err-bg:    rgba(220,38,38,.12);
-  --err-text:  #f87171;
-  --inp-bg:    rgba(255,255,255,.04);
-  --inp-focus: rgba(212,175,55,.3);
-  --shadow:    0 24px 64px rgba(0,0,0,.6);
+  --green:     #16a34a;
+  --err-bg:    rgba(220,38,38,.08);
+  --err-text:  #dc2626;
+  --inp-bg:    #ffffff;
+  --inp-focus: rgba(184,29,34,.15);
+  --shadow:    0 8px 32px rgba(0,0,0,.1);
   --radius:    14px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -50,16 +50,16 @@ body{
 .hero-bg{
   position:absolute;inset:0;
   background:
-    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(184,29,34,.22), transparent),
-    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(212,175,55,.08), transparent),
-    linear-gradient(180deg,#0d1117 0%,var(--bg) 100%);
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(184,29,34,.15), transparent),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(184,29,34,.06), transparent),
+    linear-gradient(180deg,#fff 0%,var(--bg) 100%);
   pointer-events:none;
 }
 .hero-grid{
   position:absolute;inset:0;
   background-image:
-    linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+    linear-gradient(rgba(0,0,0,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,0,0,.04) 1px,transparent 1px);
   background-size:48px 48px;
   pointer-events:none;
   mask-image:linear-gradient(180deg,rgba(0,0,0,.6) 0%,transparent 100%);
@@ -188,7 +188,7 @@ body{
 .inp.invalid{border-color:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.2);}
 .inp.valid{border-color:#10b981;}
 select.inp{cursor:pointer;}
-select.inp option{background:var(--surface2);color:var(--text);}
+select.inp option{background:#fff;color:#0f172a;}
 textarea.inp{resize:vertical;min-height:88px;}
 .field-err{
   display:none;font-size:11px;color:var(--err-text);
