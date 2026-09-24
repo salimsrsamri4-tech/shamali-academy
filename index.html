@@ -906,7 +906,7 @@ function _pickerCard(key, name, sub, logo, color, idx, isFeatured){
     +'<div class="ap-card-sub">'+(sub||'')+'</div>'
     +(isShamali ? '' :
       '<div id="passbox_'+key+'" class="ap-passbox">'
-      +'<input id="passinp_'+key+'" class="ap-passbox input" type="password" placeholder="كلمة المرور" onkeydown="if(event.key===\'Enter\')pickerLogin(\''+key+'\')">'
+      +'<input id="passinp_'+key+'" type="password" placeholder="كلمة المرور" style="width:100%;padding:9px;border-radius:10px;border:1.5px solid rgba(255,255,255,.15);background:rgba(0,0,0,.3);color:#fff;font-family:Cairo,sans-serif;font-size:13px;text-align:center;outline:none;box-sizing:border-box;" onkeydown="if(event.key===\'Enter\')pickerLogin(\''+key+'\')">'
       +'<div id="passerr_'+key+'" class="ap-passerr"></div>'
       +'<button onclick="pickerLogin(\''+key+'\')" class="ap-passlogin" style="background:'+color+';color:#fff;">دخول ←</button>'
       +'</div>'
