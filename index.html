@@ -939,13 +939,20 @@ function pickerLogin(key){
     if(!Array.isArray(rows)){ if(errEl) errEl.textContent='❌ خطأ في الاتصال'; return; }
     var found = null;
     rows.forEach(function(r){
-      var k = (r['مفتاح_الأكاديمية']||'').trim() || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
-      var storedPass = (r['كلمة_المرور']||'1234').toString().trim();
+      var k = (r['مفتاح_الأكاديمية']||r['مفتاح الأكاديمية']||'').trim() || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
+      var storedPass = (r['كلمة_المرور']||r['كلمة المرور']||'1234').toString().trim();
       var status = (r['الحالة']||'').trim();
       if(k === key && status === 'مقبول' && pass === storedPass) found = r;
     });
     if(!found){
-      if(errEl) errEl.textContent = '❌ كلمة المرور غير صحيحة';
+      // تشخيص: هل الأكاديمية موجودة بغض النظر عن كلمة المرور؟
+      var acadRow = rows.find(function(r){
+        var k = (r['مفتاح_الأكاديمية']||r['مفتاح الأكاديمية']||'').trim() || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
+        return k === key;
+      });
+      if(!acadRow) { if(errEl) errEl.textContent='❌ الأكاديمية غير موجودة في النظام'; }
+      else if((acadRow['الحالة']||'').trim() !== 'مقبول') { if(errEl) errEl.textContent='⏳ طلب الأكاديمية لم يُقبل بعد'; }
+      else { if(errEl) errEl.textContent='❌ كلمة المرور غير صحيحة'; }
       if(inp) inp.value = '';
       return;
     }
