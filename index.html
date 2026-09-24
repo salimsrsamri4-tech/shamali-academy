@@ -898,37 +898,49 @@ function apFilter(q){
 function _pickerCard(key, name, sub, logo, color, idx, isFeatured){
   var isShamali = key === 'shamali';
   var delay = (idx*0.07)+'s';
+  var onclick = isShamali ? 'selectAcademy(\''+key+'\')' : 'showPassModal(\''+key+'\',\''+name.replace(/'/g,'')+'\',\''+color+'\')';
   return '<div id="pcard_'+key+'" class="ap-card'+(isFeatured?' featured':'')+'" style="animation-delay:'+delay+';border-color:'+(isFeatured?'rgba(212,175,55,.4)':'rgba(255,255,255,.08)')+';">'
     +(isFeatured ? '<div class="ap-badge">⭐ الرئيسية</div>' : '')
     +'<div class="ap-avatar" style="border:3px solid '+(isFeatured?'#d4af37':color)+';box-shadow:0 0 0 4px '+(isFeatured?'rgba(212,175,55,.15)':'rgba(255,255,255,.06)')+',0 8px 24px rgba(0,0,0,.3);">'
     +'<img src="'+(logo||'logo.jpg')+'" onerror="this.src=\'logo.jpg\'" style="width:100%;height:100%;object-fit:contain;"></div>'
     +'<div class="ap-card-name">'+name+'</div>'
     +'<div class="ap-card-sub">'+(sub||'')+'</div>'
-    +(isShamali ? '' :
-      '<div id="passbox_'+key+'" class="ap-passbox">'
-      +'<input id="passinp_'+key+'" type="password" placeholder="كلمة المرور" style="width:100%;padding:9px;border-radius:10px;border:1.5px solid rgba(255,255,255,.15);background:rgba(0,0,0,.3);color:#fff;font-family:Cairo,sans-serif;font-size:13px;text-align:center;outline:none;box-sizing:border-box;" onkeydown="if(event.key===\'Enter\')pickerLogin(\''+key+'\')">'
-      +'<div id="passerr_'+key+'" class="ap-passerr"></div>'
-      +'<button onclick="pickerLogin(\''+key+'\')" class="ap-passlogin" style="background:'+color+';color:#fff;">دخول ←</button>'
-      +'</div>'
-    )
-    +'<button class="ap-enter-btn" onclick="'+(isShamali?'selectAcademy(\''+key+'\')':'togglePickerPass(\''+key+'\')')+'" '
+    +'<button class="ap-enter-btn" onclick="'+onclick+'" '
     +'style="background:'+(isFeatured?'linear-gradient(135deg,#d4af37,#b8860b)':color)+';color:'+(isFeatured?'#0a1628':'#fff')+';">'
     +(isShamali ? '⚡ دخول مباشر' : '🔑 دخول الأكاديمية')
     +'</button>'
     +'</div>';
 }
 
-function togglePickerPass(key){
-  var box = document.getElementById('passbox_'+key);
-  if(!box) return;
-  var isVisible = box.style.display !== 'none';
-  document.querySelectorAll('.ap-passbox').forEach(function(el){ el.style.display='none'; });
-  if(!isVisible){ box.style.display='block'; setTimeout(function(){ var i=document.getElementById('passinp_'+key); if(i)i.focus(); },50); }
+function showPassModal(key, name, color){
+  // إزالة أي modal سابق
+  var old = document.getElementById('passModal');
+  if(old) old.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'passModal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+  modal.innerHTML =
+    '<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);" onclick="document.getElementById(\'passModal\').remove()"></div>'
+    +'<div style="position:relative;background:linear-gradient(145deg,#0f172a,#1e293b);border:1.5px solid rgba(255,255,255,.15);border-radius:24px;padding:32px 24px;width:100%;max-width:320px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.6);">'
+    +'<div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:6px;letter-spacing:2px;">دخول الأكاديمية</div>'
+    +'<div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:24px;">'+name+'</div>'
+    +'<input id="modalPassInp" type="password" placeholder="أدخل كلمة المرور" autocomplete="off"'
+    +' style="width:100%;padding:14px;border-radius:12px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-family:Cairo,sans-serif;font-size:16px;text-align:center;outline:none;box-sizing:border-box;-webkit-appearance:none;"'
+    +' onkeydown="if(event.key===\'Enter\')pickerLogin(\''+key+'\')">'
+    +'<div id="modalPassErr" style="min-height:20px;color:#f87171;font-size:12px;margin-top:8px;"></div>'
+    +'<button onclick="pickerLogin(\''+key+'\')"'
+    +' style="width:100%;margin-top:12px;background:'+color+';color:#fff;border:none;border-radius:12px;padding:14px;font-family:Cairo,sans-serif;font-size:15px;font-weight:900;cursor:pointer;-webkit-appearance:none;">دخول ←</button>'
+    +'<button onclick="document.getElementById(\'passModal\').remove()"'
+    +' style="width:100%;margin-top:10px;background:transparent;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px;font-family:Cairo,sans-serif;font-size:13px;cursor:pointer;">إلغاء</button>'
+    +'</div>';
+  document.body.appendChild(modal);
+  setTimeout(function(){ var i=document.getElementById('modalPassInp'); if(i)i.focus(); },100);
 }
 
 function pickerLogin(key){
-  var inp = document.getElementById('passinp_'+key);
-  var errEl = document.getElementById('passerr_'+key);
+  var inp = document.getElementById('modalPassInp');
+  var errEl = document.getElementById('modalPassErr');
   if(!inp) return;
   var pass = inp.value.trim();
   if(!pass){ if(errEl) errEl.textContent='أدخل كلمة المرور'; return; }
@@ -953,7 +965,7 @@ function pickerLogin(key){
       if(!acadRow) { if(errEl) errEl.textContent='❌ الأكاديمية غير موجودة في النظام'; }
       else if((acadRow['الحالة']||'').trim() !== 'مقبول') { if(errEl) errEl.textContent='⏳ طلب الأكاديمية لم يُقبل بعد'; }
       else { if(errEl) errEl.textContent='❌ كلمة المرور غير صحيحة'; }
-      if(inp) inp.value = '';
+      inp.value = '';
       return;
     }
     // تسجيل الدخول
@@ -978,6 +990,8 @@ function pickerLogin(key){
     CONFIG.SHEET_ID = acad.SHEET_ID; CONFIG.SHEETDB_URL = acad.SHEETDB_URL;
     CONFIG.ADMIN_PASS = acad.ADMIN_PASS; CONFIG.COACH_PASS = acad.COACH_PASS;
     applyAcademy(acad);
+    var modal = document.getElementById('passModal');
+    if(modal) modal.remove();
     var overlay = document.getElementById('acadPickerOverlay');
     if(overlay){ overlay.style.transition='opacity .4s'; overlay.style.opacity='0'; setTimeout(function(){ overlay.remove(); },400); }
     history.replaceState(null,'','?academy='+key);
