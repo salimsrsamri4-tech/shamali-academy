@@ -277,6 +277,7 @@ window.addEventListener('load',function(){
       <div id="sbAcadNameEn" class="sb-hd-en">TAWFAH PLATFORM</div>
     </div>
   </div>
+  <button onclick="showAcademyPicker()" style="width:100%;background:linear-gradient(135deg,#d4af37,#b8860b);color:#0a1628;border:none;border-radius:12px;padding:12px;font-family:Cairo,sans-serif;font-size:13px;font-weight:900;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="fas fa-th-large"></i> كل الأكاديميات</button>
   <div class="sb-sec">خدمات ولي الأمر</div>
   <button class="sb-btn active" data-page="reg" data-pg="reg"><i class="fas fa-user-plus"></i> تسجيل لاعب جديد</button>
   <a class="sb-btn" href="feedback.html" style="display:none;text-decoration:none;color:rgba(99,202,183,.8);"><i class="fas fa-comment-dots"></i> ملاحظات ومقترحات</a>
@@ -657,7 +658,6 @@ function _fillAcadDefaults(k, a){
 (function(){
   var urlParam = new URLSearchParams(window.location.search).get('academy');
   if(!urlParam){
-    document.addEventListener('DOMContentLoaded', function(){ showAcademyPicker(); });
     urlParam = 'shamali';
   }
   var acad = ACADEMIES[urlParam];
