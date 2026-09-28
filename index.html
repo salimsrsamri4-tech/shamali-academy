@@ -986,6 +986,7 @@ function pickerLogin(key){
     ACADEMIES[key] = acad;
     window.CURRENT_ACADEMY = acad;
     window.CURRENT_ACADEMY_KEY = key;
+    window.CURRENT_ACADEMY_NAME = acad.NAME || found['اسم الأكاديمية'] || key;
     CONFIG.GAS_URL = acad.GAS_URL; CONFIG.UPLOAD_URL = acad.UPLOAD_URL;
     CONFIG.SHEET_ID = acad.SHEET_ID; CONFIG.SHEETDB_URL = acad.SHEETDB_URL;
     CONFIG.ADMIN_PASS = acad.ADMIN_PASS; CONFIG.COACH_PASS = acad.COACH_PASS;
@@ -1309,7 +1310,7 @@ function saveRegistration(data) {
   var parentIdUrl    = data.parentIdFileId  || '';
   var playerPhotoUrl = data.playerPhotoId   || '';
   var playerDocUrl   = data.playerDocId     || '';
-  var acadName = (window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) || (window.CURRENT_ACADEMY_KEY || '');
+  var acadName = window.CURRENT_ACADEMY_NAME || (window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) || (window.CURRENT_ACADEMY_KEY || '');
   var birthYear = data.playerBirthDate ? data.playerBirthDate.split('-')[0] : '';
   var row = {
     'التاريخ': now, 'رقم الملف': id,
@@ -1384,7 +1385,7 @@ function uploadFiles(files) {
     });
 
     Promise.all(promises).then(function(fileData) {
-      var body = {name: files[0] ? files[0].name : ''};
+      var body = {action: 'uploadFiles', name: files[0] ? files[0].name : ''};
       fileData.forEach(function(f) {
         if(f && f.base64) body[f.key] = f.base64;
       });
