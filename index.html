@@ -1176,9 +1176,11 @@ function apiAppend(sheetName, dataObj) {
     var acadKey = window.CURRENT_ACADEMY_KEY || 'shamali';
     var tabName = (acadKey === 'shamali') ? sheetName : (acadKey + '_' + sheetName);
     if(acadKey !== 'shamali') rowData['أكاديمية'] = acadKey;
+    var acadLabel = window.CURRENT_ACADEMY_NAME || (window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) || acadKey;
     var appendUrl = CONFIG.GAS_URL
       + '?action=append'
       + '&sheet=' + encodeURIComponent(sheetName)
+      + '&academy=' + encodeURIComponent(acadLabel)
       + '&data='  + encodeURIComponent(JSON.stringify(rowData));
     return fetch(appendUrl, {mode:'no-cors'}).then(function(){
       apiClearCache(sheetName); return {status:'ok'};
@@ -1388,6 +1390,7 @@ function uploadFiles(files) {
       var body = {action: 'uploadFiles', name: files[0] ? files[0].name : ''};
       fileData.forEach(function(f) {
         if(f && f.base64) body[f.key] = f.base64;
+        if(f && f.base64 && f.key === 'parentId') body.parentIdFile = f.base64;
       });
       fetch(CONFIG.UPLOAD_URL, {
         method: 'POST',
@@ -6200,7 +6203,7 @@ function submitReg() {
     }
 
   uploadFiles([
-    {key:'parentIdFile', file:parentIdFile, name: f.parentCivilId ? f.parentCivilId.value : ''},
+    {key:'parentId', file:parentIdFile, name: f.parentCivilId ? f.parentCivilId.value : ''},
     {key:'playerPhoto', file:playerPhoto, name: f.playerName ? f.playerName.value : ''},
     {key:'playerDoc', file:playerDoc, name: f.playerName ? f.playerName.value : ''}
   ]).then(function(fileIds){
@@ -6212,13 +6215,13 @@ function submitReg() {
       parentPhone2: f.parentPhone2 ? f.parentPhone2.value : '',
       parentRelation: f.parentRelation ? f.parentRelation.value : '',
       emergencyPhone: f.emergencyPhone ? f.emergencyPhone.value : '',
-      parentIdFileId: fileIds.parentIdFileId || '',
+      parentIdFileId: fileIds.parentIdUrl || fileIds.parentIdFileId || fileIds.parentIdId || '',
       playerName: f.playerName ? f.playerName.value : '',
       playerCivilId: f.playerCivilId ? f.playerCivilId.value : '',
       playerBirthDate: f.playerBirthDate ? f.playerBirthDate.value : '',
       playerNationality: f.playerNationality ? f.playerNationality.value : '',
-      playerPhotoId: fileIds.playerPhotoId || fileIds.playerPhotoUrl || '',
-      playerDocId: fileIds.playerDocId || fileIds.playerDocUrl || '',
+      playerPhotoId: fileIds.playerPhotoUrl || fileIds.playerPhotoId || '',
+      playerDocId: fileIds.playerDocUrl || fileIds.playerDocId || '',
       playerHealth: document.getElementById('hVal').value || 'لا يوجد',
       healthNotes: f.healthNotes ? f.healthNotes.value : '',
       paymentMethod: document.querySelector('.pay-btn.on') ?
