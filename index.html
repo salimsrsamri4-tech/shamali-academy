@@ -1314,7 +1314,7 @@ function saveRegistration(data) {
   var birthYear = data.playerBirthDate ? data.playerBirthDate.split('-')[0] : '';
   var row = {
     'التاريخ': now, 'رقم الملف': id,
-    'اسم الأكاديمية': acadName,
+    'الأكاديمية': acadName,
     'اسم ولي الأمر': data.parentName, 'الرقم المدني': data.parentCivilId,
     'صلة القرابة': data.parentRelation || '',
     'الهاتف': data.parentPhone, 'الطوارئ': data.emergencyPhone,
@@ -6200,7 +6200,7 @@ function submitReg() {
     }
 
   uploadFiles([
-    {key:'parentId', file:parentIdFile, name: f.parentCivilId ? f.parentCivilId.value : ''},
+    {key:'parentIdFile', file:parentIdFile, name: f.parentCivilId ? f.parentCivilId.value : ''},
     {key:'playerPhoto', file:playerPhoto, name: f.playerName ? f.playerName.value : ''},
     {key:'playerDoc', file:playerDoc, name: f.playerName ? f.playerName.value : ''}
   ]).then(function(fileIds){
@@ -6212,7 +6212,7 @@ function submitReg() {
       parentPhone2: f.parentPhone2 ? f.parentPhone2.value : '',
       parentRelation: f.parentRelation ? f.parentRelation.value : '',
       emergencyPhone: f.emergencyPhone ? f.emergencyPhone.value : '',
-      parentIdFileId: fileIds.parentIdId || fileIds.parentIdUrl || '',
+      parentIdFileId: fileIds.parentIdFileId || '',
       playerName: f.playerName ? f.playerName.value : '',
       playerCivilId: f.playerCivilId ? f.playerCivilId.value : '',
       playerBirthDate: f.playerBirthDate ? f.playerBirthDate.value : '',
