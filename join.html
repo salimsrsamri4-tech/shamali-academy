@@ -687,22 +687,30 @@ function submitForm(){
     });
     fetch(CENTRAL_GAS, {method:'POST', headers:{'Content-Type':'text/plain'}, redirect:'follow', body:payload})
       .then(function(r){ return r.json(); })
+      .catch(function(err){
+        if(gasStatus){ gasStatus.style.color='#dc2626'; gasStatus.textContent='❌ خطأ في الحفظ: '+err.message; }
+        // افتح واتساب حتى لو فشل الحفظ
+        setTimeout(function(){
+          window.open('https://api.whatsapp.com/send?phone=96892126558&text='+encodeURIComponent(msg),'_blank');
+        }, 800);
+        document.getElementById('formBody').style.display='none';
+        document.getElementById('successMsg').style.display='block';
+      })
       .then(function(res){
+        if(!res) return; // جاء من catch
         if(gasStatus){
           if(res && (res.status==='ok'||res.result==='success'||res.success)){
             gasStatus.style.color='#16a34a';
             gasStatus.textContent='✅ تم الحفظ في السجل بنجاح';
           } else {
             gasStatus.style.color='#f59e0b';
-            gasStatus.textContent='⚠️ رد الخادم: '+JSON.stringify(res);
+            gasStatus.textContent='⚠️ '+JSON.stringify(res);
           }
         }
-      })
-      .catch(function(err){
-        if(gasStatus){ gasStatus.style.color='#dc2626'; gasStatus.textContent='❌ خطأ: '+err.message; }
-      })
-      .finally(function(){
-        window.open('https://api.whatsapp.com/send?phone=96892126558&text='+encodeURIComponent(msg),'_blank');
+        // افتح واتساب بعد اكتمال الحفظ
+        setTimeout(function(){
+          window.open('https://api.whatsapp.com/send?phone=96892126558&text='+encodeURIComponent(msg),'_blank');
+        }, 600);
         document.getElementById('formBody').style.display='none';
         document.getElementById('successMsg').style.display='block';
       });
