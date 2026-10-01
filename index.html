@@ -6182,7 +6182,6 @@ function submitReg() {
       .replace(/\D/g, '');
   }
   var playerCivilIdVal = normId(f.playerCivilId ? f.playerCivilId.value : '');
-  var parentCivilIdVal = normId(f.parentCivilId ? f.parentCivilId.value : '');
 
   // تحقق من تكرار رقم هوية اللاعب أو ولي الأمر
   var checkPromise = apiGet('الورقة1', true).then(function(rows){
@@ -6190,9 +6189,6 @@ function submitReg() {
     for(var i=0; i<rows.length; i++){
       if(playerCivilIdVal && normId(rows[i]['رقم هوية اللاعب']) === playerCivilIdVal){
         return {ok:false, msg:'⚠️ رقم هوية اللاعب مسجّل مسبقاً في المنصة.\nيرجى التواصل مع الإدارة إذا كنت تريد تحديث البيانات.'};
-      }
-      if(parentCivilIdVal && normId(rows[i]['الرقم المدني']) === parentCivilIdVal){
-        return {ok:false, msg:'⚠️ رقم هوية ولي الأمر مسجّل مسبقاً في المنصة.\nيرجى التواصل مع الإدارة إذا كنت تريد تحديث البيانات.'};
       }
     }
     return {ok:true};
