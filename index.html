@@ -1198,6 +1198,19 @@ function apiGet(sheetName, forceRefresh, allAcads) {
         return a && a === curName;
       });
     }
+    if(!allAcads && _PLAYER_SHEETS.indexOf(sheetName) > -1 && data.length) {
+      // أوراق بلا عمود أكاديمية: تُفلتر بأرقام ملفات لاعبي الأكاديمية الحالية
+      return apiGet('الورقة1').then(function(players){
+        var ids = {};
+        players.forEach(function(p){ ids[String(p['رقم الملف']||'').trim()] = 1; });
+        data = data.filter(function(r){
+          var id = String(r['رقم الملف'] || r['ID'] || r['معرف اللاعب'] || '').trim();
+          return !id || ids[id];
+        });
+        _apiCache[cacheKey] = { data: data, ts: Date.now() };
+        return data;
+      }, function(){ return data; });
+    }
     _apiCache[cacheKey] = { data: data, ts: Date.now() };
     return data;
   }).catch(function(err){
@@ -1205,6 +1218,8 @@ function apiGet(sheetName, forceRefresh, allAcads) {
     throw new Error(_apiErrorMsg(err));
   });
 }
+
+var _PLAYER_SHEETS = ['سجل الحضور', 'سجل الحضور اليومي', 'تجديدات الاشتراكات', 'تقييمات اللاعبين', 'صور اللاعبين', 'تكريم المجيدين'];
 
 function apiClearCache(sheetName) {
   if(sheetName) { delete _apiCache[sheetName]; delete _apiCache['*all*' + sheetName]; }
@@ -7164,7 +7179,8 @@ function renderAttAdmin(){
       var list = byDate[d];
       var present = list.filter(function(r){return r['الحالة']==='حاضر';}).length;
       var absent = list.filter(function(r){return r['الحالة']==='غائب';}).length;
-      var label = list[0]?list[0]['اليوم']:d;
+      var label = String((list[0] && list[0]['اليوم']) || d);
+      if(/^\d{4}-\d\d-\d\dT/.test(label)) label = new Date(label).toLocaleDateString('ar-OM', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
       html +=
         '<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);">'+
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'+
