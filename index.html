@@ -6198,18 +6198,22 @@ function submitReg() {
     return {ok:true};
   }).catch(function(){ return {ok:true}; });
 
-  checkPromise.then(function(result){
+  // الرفع يبدأ مع فحص التكرار بالتوازي لتقليل وقت الانتظار
+  var uploadPromise = uploadFiles([
+    {key:'parentId', file:parentIdFile, name: f.parentCivilId ? f.parentCivilId.value : ''},
+    {key:'playerPhoto', file:playerPhoto, name: f.playerName ? f.playerName.value : ''},
+    {key:'playerDoc', file:playerDoc, name: f.playerName ? f.playerName.value : ''}
+  ]);
+
+  Promise.all([checkPromise, uploadPromise]).then(function(res){
+    var result = res[0];
     if(!result.ok){
       showL(false);
       alert(result.msg);
       return;
     }
 
-  uploadFiles([
-    {key:'parentId', file:parentIdFile, name: f.parentCivilId ? f.parentCivilId.value : ''},
-    {key:'playerPhoto', file:playerPhoto, name: f.playerName ? f.playerName.value : ''},
-    {key:'playerDoc', file:playerDoc, name: f.playerName ? f.playerName.value : ''}
-  ]).then(function(fileIds){
+  Promise.resolve(res[1]).then(function(fileIds){
     var data = {
       parentName: f.parentName ? f.parentName.value : '',
       parentCivilId: f.parentCivilId ? f.parentCivilId.value : '',
