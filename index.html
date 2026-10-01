@@ -1188,6 +1188,15 @@ function apiGet(sheetName, forceRefresh, allAcads) {
       data = data.filter(function(r){ return r['أكاديمية'] === currentKey; });
     } else if(currentKey === 'shamali' && data.length && data[0].hasOwnProperty('أكاديمية')) {
       data = data.filter(function(r){ return !r['أكاديمية'] || r['أكاديمية'] === 'shamali'; });
+    } else if(sheetName === 'الورقة1' && data.length && data[0].hasOwnProperty('الأكاديمية')) {
+      // عمود الأكاديمية يحمل الاسم؛ الصفوف القديمة بدون اسم تتبع الشمالي
+      var curName = String((window.CURRENT_ACADEMY_NAME || (window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) || '')).trim();
+      var shamaliName = ACADEMIES.shamali.NAME;
+      data = data.filter(function(r){
+        var a = String(r['الأكاديمية'] || '').trim();
+        if(currentKey === 'shamali') return !a || a === shamaliName;
+        return a && a === curName;
+      });
     }
     _apiCache[cacheKey] = { data: data, ts: Date.now() };
     return data;
