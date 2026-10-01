@@ -851,6 +851,9 @@ function showAcademyPicker(){
     <div class="ap-sub">الكابتن الصغير ⚽</div>
     <div class="ap-divider"><span></span><i class="fas fa-star"></i><span></span></div>
   </div>
+  <button onclick="document.getElementById('acadPickerOverlay').remove();go('parent_portal');" style="width:100%;max-width:400px;min-height:52px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;gap:10px;border:1.5px solid rgba(16,185,129,.5);background:rgba(16,185,129,.12);color:#fff;border-radius:14px;font-family:Cairo,sans-serif;font-size:14px;font-weight:900;cursor:pointer;">
+    👨‍👦 بوابة ولي الأمر <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.6);">· تابع أبناءك في كل الأكاديميات</span>
+  </button>
   <div class="ap-search">
     <input type="text" placeholder="🔍 ابحث عن أكاديميتك..." id="apSearchInput" oninput="apFilter(this.value)">
   </div>
@@ -1136,9 +1139,10 @@ function _apiErrorMsg(err){
   return 'حدث خطأ في الاتصال — حاول مجدداً';
 }
 
-function apiGet(sheetName, forceRefresh) {
+function apiGet(sheetName, forceRefresh, allAcads) {
   var now = Date.now();
-  var cached = _apiCache[sheetName];
+  var cacheKey = allAcads ? '*all*' + sheetName : sheetName;
+  var cached = _apiCache[cacheKey];
   if(!forceRefresh && cached && (now - cached.ts) < _CACHE_TTL) {
     return Promise.resolve(cached.data);
   }
@@ -1152,12 +1156,14 @@ function apiGet(sheetName, forceRefresh) {
     var data = _arraysToObjects(arr);
     // فلتر بيانات الأكاديمية الحالية (للأكاديميات الجديدة غير الشمالي)
     var currentKey = window.CURRENT_ACADEMY_KEY || 'shamali';
-    if(currentKey !== 'shamali' && data.length && data[0].hasOwnProperty('أكاديمية')) {
+    if(allAcads) {
+      // بدون فلترة: بوابة ولي الأمر الموحدة
+    } else if(currentKey !== 'shamali' && data.length && data[0].hasOwnProperty('أكاديمية')) {
       data = data.filter(function(r){ return r['أكاديمية'] === currentKey; });
     } else if(currentKey === 'shamali' && data.length && data[0].hasOwnProperty('أكاديمية')) {
       data = data.filter(function(r){ return !r['أكاديمية'] || r['أكاديمية'] === 'shamali'; });
     }
-    _apiCache[sheetName] = { data: data, ts: Date.now() };
+    _apiCache[cacheKey] = { data: data, ts: Date.now() };
     return data;
   }).catch(function(err){
     if(cached) return cached.data;
@@ -1166,7 +1172,7 @@ function apiGet(sheetName, forceRefresh) {
 }
 
 function apiClearCache(sheetName) {
-  if(sheetName) delete _apiCache[sheetName];
+  if(sheetName) { delete _apiCache[sheetName]; delete _apiCache['*all*' + sheetName]; }
   else _apiCache = {};
 }
 
@@ -1224,10 +1230,10 @@ function apiDelete(sheetName, column, value) {
 }
 
 // Get all players
-function getPlayers() {
+function getPlayers(allAcads) {
   return Promise.all([
-    apiGet('الورقة1'),
-    apiGet('صور اللاعبين').then(function(r){ return r; }, function(){ return []; })
+    apiGet('الورقة1', false, allAcads),
+    apiGet('صور اللاعبين', false, allAcads).then(function(r){ return r; }, function(){ return []; })
   ]).then(function(results){
     var r0 = results[0]; var r1 = results[1];
     // apiGet يُرجع مصفوفة كائنات مباشرة
@@ -1258,6 +1264,8 @@ function getPlayers() {
         health: r['الصحة'] || 'لا يوجد',
         phone: r['الهاتف'] || '',
         email: r['البريد'] || '',
+        parentCivilId: String(r['الرقم المدني'] || ''),
+        academy: r['الأكاديمية'] || r['اسم الأكاديمية'] || '',
         photo: photoId
       };
     }).filter(function(p){ return p.id && p.playerName; });
@@ -9247,43 +9255,57 @@ function renderParentPortal(){
     '<div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:32px 20px 28px;text-align:center;">'+
       '<div style="font-size:48px;margin-bottom:10px;">👨‍👦</div>'+
       '<div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:4px;">بوابة ولي الأمر</div>'+
-      '<div style="font-size:12px;color:rgba(255,255,255,.6);">أكاديمية الشمالي لكرة القدم</div>'+
+      '<div style="font-size:12px;color:rgba(255,255,255,.6);">منصة توفه · جميع الأكاديميات</div>'+
     '</div>'+
     '<div style="padding:24px 16px;">'+
       '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:20px;">'+
-        '<div style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:4px;">أدخل رقم هاتفك المسجل</div>'+
-        '<div style="font-size:11px;color:#94a3b8;margin-bottom:14px;">نفس الرقم الذي سجّلت به أبناءك في الأكاديمية</div>'+
-        '<div style="display:flex;gap:8px;">'+
-          '<input type="tel" id="ppPhone" class="inp" placeholder="مثال: 92126558" style="flex:1;font-size:15px;letter-spacing:1px;">'+
-          '<button onclick="loginParentPortal()" style="background:linear-gradient(135deg,#0f172a,#1e3a5f);color:#fff;border:none;border-radius:10px;padding:0 18px;font-size:18px;cursor:pointer;">←</button>'+
-        '</div>'+
-        '<div id="ppErr" style="display:none;margin-top:10px;" class="al al-err">❌ رقم الهاتف غير مسجل في الأكاديمية</div>'+
+        '<label for="ppPhone" style="display:block;font-size:13px;font-weight:800;color:#0f172a;margin-bottom:4px;">رقم الهاتف المسجل</label>'+
+        '<div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">نفس الرقم الذي سجّلت به أبناءك</div>'+
+        '<input type="tel" inputmode="numeric" id="ppPhone" class="inp" placeholder="مثال: 92126558" style="width:100%;font-size:16px;letter-spacing:1px;box-sizing:border-box;margin-bottom:14px;">'+
+        '<label for="ppCivil" style="display:block;font-size:13px;font-weight:800;color:#0f172a;margin-bottom:4px;">آخر 4 أرقام من رقمك المدني</label>'+
+        '<div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">للتأكد من هويتك وحماية بيانات أبنائك</div>'+
+        '<input type="tel" inputmode="numeric" maxlength="4" id="ppCivil" class="inp" placeholder="••••" style="width:100%;font-size:18px;letter-spacing:8px;text-align:center;box-sizing:border-box;">'+
+        '<div id="ppErr" style="display:none;margin-top:10px;" class="al al-err"></div>'+
+        '<button onclick="loginParentPortal()" style="width:100%;margin-top:16px;min-height:48px;background:linear-gradient(135deg,#0f172a,#1e3a5f);color:#fff;border:none;border-radius:12px;font-family:Cairo,sans-serif;font-size:15px;font-weight:900;cursor:pointer;">دخول</button>'+
       '</div>'+
-      '<div style="margin-top:16px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px;font-size:11px;color:#166534;text-align:center;">'+
-        '🔒 لا نحتاج كلمة مرور — رقم هاتفك هو هويتك'+
+      '<div style="margin-top:16px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px;font-size:11px;color:#166534;text-align:center;line-height:1.7;">'+
+        '🔒 تشاهد هنا جميع أبنائك في كل الأكاديميات المسجلة في المنصة'+
       '</div>'+
     '</div>';
 
-  // Enter key
   setTimeout(function(){
-    var inp = document.getElementById('ppPhone');
-    if(inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') loginParentPortal(); });
+    ['ppPhone','ppCivil'].forEach(function(id){
+      var inp = document.getElementById(id);
+      if(inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') loginParentPortal(); });
+    });
   }, 100);
 }
 
+function _ppDigits(v){
+  return String(v == null ? '' : v)
+    .replace(/[٠-٩]/g, function(d){ return d.charCodeAt(0) - 1632; })
+    .replace(/[۰-۹]/g, function(d){ return d.charCodeAt(0) - 1776; })
+    .replace(/\D/g, '');
+}
+
 function loginParentPortal(){
-  var phone = (document.getElementById('ppPhone').value||'').trim().replace(/\s/g,'');
-  if(!phone){ alert('أدخل رقم الهاتف'); return; }
+  var phone = _ppDigits(document.getElementById('ppPhone').value).replace(/^00968|^968/, '');
+  var civil4 = _ppDigits(document.getElementById('ppCivil').value);
+  var err = document.getElementById('ppErr');
+  function showErr(m){ err.textContent = m; err.style.display = 'block'; }
+  err.style.display = 'none';
+  if(!phone){ showErr('❌ أدخل رقم الهاتف'); return; }
+  if(civil4.length !== 4){ showErr('❌ أدخل آخر 4 أرقام من رقمك المدني'); return; }
   showL(true);
-  getPlayers().then(function(players){
+  getPlayers(true).then(function(players){
     showL(false);
-    // مطابقة برقم الهاتف (مع أو بدون 968)
     var children = players.filter(function(p){
-      var pp = (p.phone||'').replace(/\s/g,'');
-      return pp === phone || pp === '968'+phone || '968'+pp === phone;
+      var pp = _ppDigits(p.phone).replace(/^00968|^968/, '');
+      var cid = _ppDigits(p.parentCivilId);
+      return pp && pp === phone && cid.length >= 4 && cid.slice(-4) === civil4;
     });
     if(!children.length){
-      document.getElementById('ppErr').style.display = 'block';
+      showErr('❌ البيانات غير مطابقة. تأكد من رقم الهاتف وآخر 4 أرقام من الرقم المدني');
       return;
     }
     // حفظ في session
@@ -9307,9 +9329,9 @@ function renderParentHome(){
   var todayStr = now.toISOString().slice(0,10);
 
   Promise.all([
-    apiGet('تجديدات الاشتراكات'),
+    apiGet('تجديدات الاشتراكات', false, true),
     apiGet('تقويم الأكاديمية'),
-    apiGet('سجل الحضور اليومي')
+    apiGet('سجل الحضور اليومي', false, true)
   ]).then(function(res){
     var renewals = Array.isArray(res[0]) ? res[0] : [];
     var calendar = Array.isArray(res[1]) ? res[1] : [];
@@ -9372,6 +9394,7 @@ function renderParentHome(){
           '<div style="flex-shrink:0;">'+photoHtml+'</div>'+
           '<div style="flex:1;">'+
             '<div style="font-size:15px;font-weight:900;color:#0f172a;margin-bottom:2px;">'+p.playerName+'</div>'+
+            (p.academy ? '<div style="font-size:11px;font-weight:800;color:#1e3a5f;margin-bottom:2px;">🏟️ '+String(p.academy).replace(/[<>&"']/g,'')+'</div>' : '')+
             '<div style="font-size:11px;color:#64748b;">'+p.id+(age?' · '+age+' سنة':'')+'</div>'+
             badges+
           '</div>'+
@@ -9402,11 +9425,11 @@ function renderParentPlayer(){
   el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
 
   Promise.all([
-    apiGet('تجديدات الاشتراكات'),
-    apiGet('سجل الحضور اليومي'),
+    apiGet('تجديدات الاشتراكات', false, true),
+    apiGet('سجل الحضور اليومي', false, true),
     apiGet('تقويم الأكاديمية'),
-    apiGet('تقييمات اللاعبين'),
-    apiGet('المقترحات والملاحظات')
+    apiGet('تقييمات اللاعبين', false, true),
+    apiGet('المقترحات والملاحظات', false, true)
   ]).then(function(res){
     var renewals  = Array.isArray(res[0]) ? res[0] : [];
     var attAll    = Array.isArray(res[1]) ? res[1] : [];
