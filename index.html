@@ -9259,12 +9259,9 @@ function renderParentPortal(){
     '</div>'+
     '<div style="padding:24px 16px;">'+
       '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:20px;">'+
-        '<label for="ppPhone" style="display:block;font-size:13px;font-weight:800;color:#0f172a;margin-bottom:4px;">رقم الهاتف المسجل</label>'+
+        '<label for="ppCivil" style="display:block;font-size:13px;font-weight:800;color:#0f172a;margin-bottom:4px;">الرقم المدني لولي الأمر</label>'+
         '<div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">نفس الرقم الذي سجّلت به أبناءك</div>'+
-        '<input type="tel" inputmode="numeric" id="ppPhone" class="inp" placeholder="مثال: 92126558" style="width:100%;font-size:16px;letter-spacing:1px;box-sizing:border-box;margin-bottom:14px;">'+
-        '<label for="ppCivil" style="display:block;font-size:13px;font-weight:800;color:#0f172a;margin-bottom:4px;">آخر 4 أرقام من رقمك المدني</label>'+
-        '<div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">للتأكد من هويتك وحماية بيانات أبنائك</div>'+
-        '<input type="tel" inputmode="numeric" maxlength="4" id="ppCivil" class="inp" placeholder="••••" style="width:100%;font-size:18px;letter-spacing:8px;text-align:center;box-sizing:border-box;">'+
+        '<input type="tel" inputmode="numeric" id="ppCivil" class="inp" placeholder="أدخل رقمك المدني كاملاً" style="width:100%;font-size:17px;letter-spacing:2px;text-align:center;box-sizing:border-box;">'+
         '<div id="ppErr" style="display:none;margin-top:10px;" class="al al-err"></div>'+
         '<button onclick="loginParentPortal()" style="width:100%;margin-top:16px;min-height:48px;background:linear-gradient(135deg,#0f172a,#1e3a5f);color:#fff;border:none;border-radius:12px;font-family:Cairo,sans-serif;font-size:15px;font-weight:900;cursor:pointer;">دخول</button>'+
       '</div>'+
@@ -9274,7 +9271,7 @@ function renderParentPortal(){
     '</div>';
 
   setTimeout(function(){
-    ['ppPhone','ppCivil'].forEach(function(id){
+    ['ppCivil'].forEach(function(id){
       var inp = document.getElementById(id);
       if(inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') loginParentPortal(); });
     });
@@ -9289,27 +9286,23 @@ function _ppDigits(v){
 }
 
 function loginParentPortal(){
-  var phone = _ppDigits(document.getElementById('ppPhone').value).replace(/^00968|^968/, '');
-  var civil4 = _ppDigits(document.getElementById('ppCivil').value);
+  var civil = _ppDigits(document.getElementById('ppCivil').value);
   var err = document.getElementById('ppErr');
   function showErr(m){ err.textContent = m; err.style.display = 'block'; }
   err.style.display = 'none';
-  if(!phone){ showErr('❌ أدخل رقم الهاتف'); return; }
-  if(civil4.length !== 4){ showErr('❌ أدخل آخر 4 أرقام من رقمك المدني'); return; }
+  if(civil.length < 6){ showErr('❌ أدخل رقمك المدني كاملاً'); return; }
   showL(true);
   getPlayers(true).then(function(players){
     showL(false);
     var children = players.filter(function(p){
-      var pp = _ppDigits(p.phone).replace(/^00968|^968/, '');
-      var cid = _ppDigits(p.parentCivilId);
-      return pp && pp === phone && cid.length >= 4 && cid.slice(-4) === civil4;
+      return _ppDigits(p.parentCivilId) === civil;
     });
     if(!children.length){
-      showErr('❌ البيانات غير مطابقة. تأكد من رقم الهاتف وآخر 4 أرقام من الرقم المدني');
+      showErr('❌ الرقم المدني غير مسجّل في المنصة');
       return;
     }
     // حفظ في session
-    sessionStorage.setItem('parentPhone', phone);
+    sessionStorage.setItem('parentPhone', children[0].phone || '');
     sessionStorage.setItem('parentChildren', JSON.stringify(children.map(function(c){ return c.id; })));
     window._parentChildren = children;
     renderParentHome();
