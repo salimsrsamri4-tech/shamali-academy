@@ -1315,7 +1315,17 @@ function getStats() {
 
 // Save registration
 function saveRegistration(data) {
-  var id = 'SH-' + Math.floor(1000 + Math.random() * 9000);
+  // رقم ملف فريد على مستوى المنصة كلها (كل الأكاديميات تشترك في نفس الشيت)
+  return apiGet('الورقة1', false, true).catch(function(){ return []; }).then(function(rows){
+    var used = {};
+    (Array.isArray(rows) ? rows : []).forEach(function(r){ used[String(r['رقم الملف']||'').trim()] = 1; });
+    var id;
+    do { id = 'SH-' + Math.floor(10000 + Math.random() * 90000); } while(used[id]);
+    return _saveRegistrationWithId(data, id);
+  });
+}
+
+function _saveRegistrationWithId(data, id) {
   var _d = new Date(); var now = ('0'+_d.getDate()).slice(-2)+'/'+('0'+(_d.getMonth()+1)).slice(-2)+'/'+_d.getFullYear()+' '+('0'+_d.getHours()).slice(-2)+':'+('0'+_d.getMinutes()).slice(-2);
   var parentIdUrl    = data.parentIdFileId  || '';
   var playerPhotoUrl = data.playerPhotoId   || '';
@@ -6192,7 +6202,7 @@ function submitReg() {
   var playerCivilIdVal = normId(f.playerCivilId ? f.playerCivilId.value : '');
 
   // تحقق من تكرار رقم هوية اللاعب (يُسمح بتكرار ولي الأمر للإخوة)
-  var checkPromise = apiGet('الورقة1', true).then(function(rows){
+  var checkPromise = apiGet('الورقة1', true, true).then(function(rows){
     rows = Array.isArray(rows) ? rows : [];
     for(var i=0; i<rows.length; i++){
       if(playerCivilIdVal && normId(rows[i]['رقم هوية اللاعب']) === playerCivilIdVal){
