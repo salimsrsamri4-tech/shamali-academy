@@ -6183,7 +6183,7 @@ function submitReg() {
   }
   var playerCivilIdVal = normId(f.playerCivilId ? f.playerCivilId.value : '');
 
-  // تحقق من تكرار رقم هوية اللاعب أو ولي الأمر
+  // تحقق من تكرار رقم هوية اللاعب (يُسمح بتكرار ولي الأمر للإخوة)
   var checkPromise = apiGet('الورقة1', true).then(function(rows){
     rows = Array.isArray(rows) ? rows : [];
     for(var i=0; i<rows.length; i++){
