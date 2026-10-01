@@ -695,6 +695,13 @@ function loginNewAcad(acadKey){
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ التحقق...</div>';
 
+  _serverLogin(acadKey, pass, 'admin').then(function(res){
+    if(res === null){ legacy(); return; }
+    if(!res.ok){ showLoginErr(res.msg); return; }
+    applyFound(res.profile || {}, [pass], []);
+  });
+
+  function legacy(){
   var url = PLATFORM.CENTRAL_GAS + '?action=get&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET) + '&limit=200';
   fetch(url, {redirect:'follow'}).then(function(r){ return r.json(); }).then(function(rows){
     if(!Array.isArray(rows)){ showLoginErr('ليست مصفوفة'); return; }
@@ -715,11 +722,18 @@ function loginNewAcad(acadKey){
       }
       return;
     }
+    applyFound(found, [(found['كلمة_المرور']||'1234').toString().trim()], [(found['كلمة_المرور_المدرب']||'1234').toString().trim()]);
+  }).catch(function(e){
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:#dc2626;">❌ خطأ في الاتصال<br><small>'+e.message+'</small><br><br><button onclick="loginNewAcad(\''+acadKey+'\')" style="background:#b81d22;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-family:Cairo,sans-serif;cursor:pointer;">إعادة المحاولة</button></div>';
+  });
+  }
+
+  function applyFound(found, adminPass, coachPass){
     var acad = _fillAcadDefaults(acadKey, {
       NAME:        found['اسم الأكاديمية'] || acadKey,
       PRIMARY_COLOR: '#1e3a5f',
-      ADMIN_PASS:  [(found['كلمة_المرور']||'1234').toString().trim()],
-      COACH_PASS:  [(found['كلمة_المرور_المدرب']||'1234').toString().trim()],
+      ADMIN_PASS:  adminPass,
+      COACH_PASS:  coachPass,
       WA_NUM:      found['رقم الواتساب']||'',
       LOGO:        found['شعار الأكاديمية']||'',
       CITY:        found['المحافظة']||'',
@@ -754,9 +768,7 @@ function loginNewAcad(acadKey){
     CONFIG.WA_NUM      = acad.WA_NUM;
     applyAcademy(acad);
     go('home');
-  }).catch(function(e){
-    el.innerHTML = '<div style="padding:24px;text-align:center;color:#dc2626;">❌ خطأ في الاتصال<br><small>'+e.message+'</small><br><br><button onclick="loginNewAcad(\''+acadKey+'\')" style="background:#b81d22;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-family:Cairo,sans-serif;cursor:pointer;">إعادة المحاولة</button></div>';
-  });
+  }
 
   function showLoginErr(msg){
     el.innerHTML =
@@ -948,7 +960,18 @@ function pickerLogin(key){
   var pass = inp.value.trim();
   if(!pass){ if(errEl) errEl.textContent='أدخل كلمة المرور'; return; }
   if(errEl) errEl.textContent = '⏳ جاري التحقق...';
+  _serverLogin(key, pass, 'admin').then(function(res){
+    if(res === null){ _pickerLoginLegacy(key, pass, inp, errEl); return; }
+    if(!res.ok){ if(errEl) errEl.textContent = res.msg || '❌ كلمة المرور غير صحيحة'; inp.value = ''; return; }
+    if(!res.profile && ACADEMIES[key]){
+      var m = document.getElementById('passModal'); if(m) m.remove();
+      selectAcademy(key); return;
+    }
+    _pickerApply(key, res.profile || {}, [pass], []);
+  });
+}
 
+function _pickerLoginLegacy(key, pass, inp, errEl){
   var url = PLATFORM.CENTRAL_GAS + '?action=get&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET) + '&limit=200';
   fetch(url).then(function(r){ return r.json(); }).then(function(rows){
     if(!Array.isArray(rows)){ if(errEl) errEl.textContent='❌ خطأ في الاتصال'; return; }
@@ -971,12 +994,16 @@ function pickerLogin(key){
       inp.value = '';
       return;
     }
-    // تسجيل الدخول
+    _pickerApply(key, found, [(found['كلمة_المرور']||'1234').toString().trim()], [(found['كلمة_المرور_المدرب']||'1234').toString().trim()]);
+  }).catch(function(){ if(errEl) errEl.textContent='❌ خطأ في الاتصال'; });
+}
+
+function _pickerApply(key, found, adminPass, coachPass){
     var acad = _fillAcadDefaults(key, {
       NAME:        found['اسم الأكاديمية'] || key,
       PRIMARY_COLOR: '#1e3a5f',
-      ADMIN_PASS:  [(found['كلمة_المرور']||'1234').toString().trim()],
-      COACH_PASS:  [(found['كلمة_المرور_المدرب']||'1234').toString().trim()],
+      ADMIN_PASS:  adminPass,
+      COACH_PASS:  coachPass,
       WA_NUM:      found['رقم الواتساب']||'',
       LOGO:        found['شعار الأكاديمية']||'',
       CITY:        found['المحافظة']||'',
@@ -999,7 +1026,6 @@ function pickerLogin(key){
     var overlay = document.getElementById('acadPickerOverlay');
     if(overlay){ overlay.style.transition='opacity .4s'; overlay.style.opacity='0'; setTimeout(function(){ overlay.remove(); },400); }
     history.replaceState(null,'','?academy='+key);
-  }).catch(function(){ if(errEl) errEl.textContent='❌ خطأ في الاتصال'; });
 }
 
 function selectAcademy(key){
@@ -1074,13 +1100,13 @@ var _isSuperAdmin = false;
     rows.forEach(function(r){
       if(r['الحالة'] === 'مقبول'){
         var key = r['مفتاح_الأكاديمية'] || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
-        var pass = r['كلمة_المرور'] || '1234';
+        var pass = r['كلمة_المرور'] || '';
         found.push(key+' / '+r['اسم الأكاديمية']);
         if(!ACADEMIES[key]){
           ACADEMIES[key] = _fillAcadDefaults(key, {
             NAME: r['اسم الأكاديمية'] || key,
             PRIMARY_COLOR: '#1e3a5f',
-            ADMIN_PASS: [pass],
+            ADMIN_PASS: pass ? [pass] : [],
             WA_NUM: r['رقم الواتساب'] || ''
           });
         }
@@ -1148,7 +1174,7 @@ function apiGet(sheetName, forceRefresh, allAcads) {
   }
   var acadKey = window.CURRENT_ACADEMY_KEY || 'shamali';
   var url = CONFIG.GAS_URL
-    ? CONFIG.GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheetName) + '&limit=2000'
+    ? CONFIG.GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheetName) + '&limit=2000' + _tokenParam()
     : CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName) + '&limit=2000';
   return _fetchWithRetry(url).then(function(r){ return r.json(); }).then(function(raw){
     // تحويل الاستجابة إلى مصفوفة كائنات دائماً
@@ -1272,6 +1298,18 @@ function _mapPlayerRows(r0, r1) {
         photo: photoId
       };
     }).filter(function(p){ return p.id && p.playerName; });
+}
+
+function _authToken(){ try{ return sessionStorage.getItem('tawfaToken') || ''; }catch(e){ return ''; } }
+function _setAuthToken(t){ try{ if(t) sessionStorage.setItem('tawfaToken', t); else sessionStorage.removeItem('tawfaToken'); }catch(e){} }
+function _tokenParam(){ var t = _authToken(); return t ? '&token=' + encodeURIComponent(t) : ''; }
+
+// تحقق كلمة المرور في السكربت. null = السكربت قديم ← يُستخدم التحقق المحلي القديم
+function _serverLogin(acad, pass, role){
+  return _gasPrivate({action:'login', acad:acad || '', pass:pass, role:role || 'admin'}).then(function(res){
+    if(res && res.ok) _setAuthToken(res.token);
+    return res;
+  });
 }
 
 // عمليات السكربت الخاصة: ترجع null إذا لم تكن مضافة للسكربت بعد، فيُستخدم المسار القديم
@@ -3720,7 +3758,13 @@ function renderPage(page) {
 
 function checkAdm() {
   var p = document.getElementById('admPass').value;
-  if(CONFIG.ADMIN_PASS.indexOf(p) >= 0) {
+  _serverLogin(window.CURRENT_ACADEMY_KEY || 'shamali', p, 'admin').then(function(res){
+    _checkAdmResult(res === null ? CONFIG.ADMIN_PASS.indexOf(p) >= 0 : res.ok);
+  });
+}
+
+function _checkAdmResult(ok) {
+  if(ok) {
     isAdm = true;
     document.getElementById('admMenu').style.display = 'block';
     go('dashboard');
@@ -3733,8 +3777,13 @@ function checkAdm() {
 
 function checkCoach() {
   var p = document.getElementById('coachPass').value;
-  var all = CONFIG.ADMIN_PASS.concat(CONFIG.COACH_PASS);
-  if(all.indexOf(p) >= 0) {
+  _serverLogin(window.CURRENT_ACADEMY_KEY || 'shamali', p, 'coach').then(function(res){
+    _checkCoachResult(res === null ? CONFIG.ADMIN_PASS.concat(CONFIG.COACH_PASS).indexOf(p) >= 0 : res.ok);
+  });
+}
+
+function _checkCoachResult(ok) {
+  if(ok) {
     isCoach = true;
     document.getElementById('coachMenu').style.display = 'block';
     go('att');
@@ -3746,6 +3795,7 @@ function checkCoach() {
 
 function logout() {
   isAdm = false; isCoach = false;
+  _setAuthToken('');
   document.getElementById('admMenu').style.display = 'none';
   document.getElementById('coachMenu').style.display = 'none';
   go('reg');
@@ -11655,7 +11705,7 @@ if('serviceWorker' in navigator){
 // ========== نظام استعارة اللاعبين ==========
 
 function loanCentralFetch(params){
-  var url = PLATFORM.CENTRAL_GAS + '?' + Object.keys(params).map(function(k){ return k+'='+encodeURIComponent(params[k]); }).join('&');
+  var url = PLATFORM.CENTRAL_GAS + '?' + Object.keys(params).map(function(k){ return k+'='+encodeURIComponent(params[k]); }).join('&') + _tokenParam();
   return fetch(url, {redirect:'follow'}).then(function(r){ return r.json(); });
 }
 
@@ -11961,7 +12011,13 @@ function renderSuperLogin(){
 
 function checkSuperAdmin(){
   var p = document.getElementById('superPass').value;
-  if(p === PLATFORM.SUPER_PASS){
+  _serverLogin('', p, 'super').then(function(res){
+    _checkSuperResult(res === null ? p === PLATFORM.SUPER_PASS : res.ok);
+  });
+}
+
+function _checkSuperResult(ok){
+  if(ok){
     _isSuperAdmin = true;
     document.getElementById('superAdminMenu').style.display = 'block';
     document.getElementById('superAdminBtn').style.display = 'none';
@@ -11973,6 +12029,7 @@ function checkSuperAdmin(){
 
 function superLogout(){
   _isSuperAdmin = false;
+  _setAuthToken('');
   document.getElementById('superAdminMenu').style.display = 'none';
   document.getElementById('superAdminBtn').style.display = '';
   go('home');
