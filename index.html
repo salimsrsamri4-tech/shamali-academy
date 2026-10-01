@@ -12199,7 +12199,7 @@ function renderSuperAcademies(){
 
   var html = acadKeys.map(function(k){
     var a = ACADEMIES[k];
-    var link = baseUrl + '?acad=' + k;
+    var link = baseUrl + '?academy=' + k;
     var msg =
       '🏆 *أكاديمية '+a.NAME+'*\n'+
       'السلام عليكم ورحمة الله وبركاته\n\n'+
@@ -12372,7 +12372,7 @@ function sendAllAcadLinks(){
     if(i >= acadKeys.length){ alert('✅ تم فتح واتساب لجميع الأكاديميات ('+acadKeys.length+')'); return; }
     var k = acadKeys[i]; i++;
     var a = ACADEMIES[k];
-    var link = baseUrl + '?acad=' + k;
+    var link = baseUrl + '?academy=' + k;
     var msg =
       '🏆 *أكاديمية '+a.NAME+'*\n'+
       'السلام عليكم ورحمة الله وبركاته\n\n'+
