@@ -1235,8 +1235,11 @@ function getPlayers(allAcads) {
     apiGet('الورقة1', false, allAcads),
     apiGet('صور اللاعبين', false, allAcads).then(function(r){ return r; }, function(){ return []; })
   ]).then(function(results){
-    var r0 = results[0]; var r1 = results[1];
-    // apiGet يُرجع مصفوفة كائنات مباشرة
+    return _mapPlayerRows(results[0], results[1]);
+  });
+}
+
+function _mapPlayerRows(r0, r1) {
     var rows = Array.isArray(r0) ? r0 : [];
     var photoRows = Array.isArray(r1) ? r1 : [];
     // بناء خريطة صور من ورقة صور اللاعبين (الأحدث يسبق)
@@ -1269,7 +1272,15 @@ function getPlayers(allAcads) {
         photo: photoId
       };
     }).filter(function(p){ return p.id && p.playerName; });
-  });
+}
+
+// عمليات السكربت الخاصة: ترجع null إذا لم تكن مضافة للسكربت بعد، فيُستخدم المسار القديم
+function _gasPrivate(params) {
+  var qs = Object.keys(params).map(function(k){ return k + '=' + encodeURIComponent(params[k]); }).join('&');
+  return fetch(PLATFORM.CENTRAL_GAS + '?' + qs, {redirect:'follow'})
+    .then(function(r){ return r.json(); })
+    .then(function(res){ return (res && res.status === 'ok' && res.v === 1) ? res : null; })
+    .catch(function(){ return null; });
 }
 
 // Get coaches
@@ -1315,6 +1326,10 @@ function getStats() {
 
 // Save registration
 function saveRegistration(data) {
+  if(window._regNewId){
+    var preId = window._regNewId; window._regNewId = '';
+    return _saveRegistrationWithId(data, preId);
+  }
   // رقم ملف فريد على مستوى المنصة كلها (كل الأكاديميات تشترك في نفس الشيت)
   return apiGet('الورقة1', false, true).catch(function(){ return []; }).then(function(rows){
     var used = {};
@@ -6202,14 +6217,23 @@ function submitReg() {
   var playerCivilIdVal = normId(f.playerCivilId ? f.playerCivilId.value : '');
 
   // تحقق من تكرار رقم هوية اللاعب (يُسمح بتكرار ولي الأمر للإخوة)
-  var checkPromise = apiGet('الورقة1', true, true).then(function(rows){
+  var dupMsg = '⚠️ رقم هوية اللاعب مسجّل مسبقاً في المنصة.\nيرجى التواصل مع الإدارة إذا كنت تريد تحديث البيانات.';
+  window._regNewId = '';
+  var checkPromise = _gasPrivate({action:'regCheck', pid: playerCivilIdVal}).then(function(chk){
+    if(chk){
+      if(chk.exists) return {ok:false, msg:dupMsg};
+      window._regNewId = chk.newId || '';
+      return {ok:true};
+    }
+    return apiGet('الورقة1', true, true).then(function(rows){
     rows = Array.isArray(rows) ? rows : [];
     for(var i=0; i<rows.length; i++){
       if(playerCivilIdVal && normId(rows[i]['رقم هوية اللاعب']) === playerCivilIdVal){
-        return {ok:false, msg:'⚠️ رقم هوية اللاعب مسجّل مسبقاً في المنصة.\nيرجى التواصل مع الإدارة إذا كنت تريد تحديث البيانات.'};
+        return {ok:false, msg:dupMsg};
       }
     }
     return {ok:true};
+    });
   }).catch(function(){ return {ok:true}; });
 
   // الرفع يبدأ مع فحص التكرار بالتوازي لتقليل وقت الانتظار
@@ -9302,7 +9326,10 @@ function loginParentPortal(){
   err.style.display = 'none';
   if(civil.length < 6){ showErr('❌ أدخل رقمك المدني كاملاً'); return; }
   showL(true);
-  getPlayers(true).then(function(players){
+  _gasPrivate({action:'parentLookup', civil: civil}).then(function(res){
+    if(res) return _mapPlayerRows(res.data, res.photos);
+    return getPlayers(true);
+  }).then(function(players){
     showL(false);
     var children = players.filter(function(p){
       return _ppDigits(p.parentCivilId) === civil;
