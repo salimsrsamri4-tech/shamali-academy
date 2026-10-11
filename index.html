@@ -1118,7 +1118,8 @@ var _isSuperAdmin = false;
 
 // ===== API (يدعم Apps Script و SheetDB) =====
 function _arraysToObjects(data) {
-  if (!Array.isArray(data) || data.length < 2) return [];
+  if (!Array.isArray(data) || !data.length) return [];
+  if (Array.isArray(data[0]) && data.length < 2) return [];
   if (Array.isArray(data[0])) {
     var headers = data[0];
     return data.slice(1).map(function(row) {
@@ -1355,11 +1356,11 @@ function getCoaches(forceRefresh) {
     var phones = Array.isArray(results[1]) ? results[1] : [];
     var phoneMap = {};
     phones.forEach(function(p){
-      var n = (p['اسم المدرب'] || '').trim();
-      if(n && p['الهاتف']) phoneMap[n] = p['الهاتف'].trim();
+      var n = String(p['اسم المدرب'] || '').trim();
+      if(n && p['الهاتف']) phoneMap[n] = String(p['الهاتف']).trim();
     });
     return rows.map(function(r){
-      var name = (r['الاسم'] || r['اسم المدرب'] || r['الاسم الكامل'] || r['name'] || '').trim();
+      var name = String(r['الاسم'] || r['اسم المدرب'] || r['الاسم الكامل'] || r['name'] || '').trim();
       return {
         name: name,
         role: r['المنصب'] || r['الدور'] || r['الوظيفة'] || r['role'] || '',
@@ -1367,7 +1368,7 @@ function getCoaches(forceRefresh) {
         certificates: r['الشهادات'] || r['المؤهلات'] || r['certificates'] || '',
         experience: r['الخبرة'] || r['سنوات الخبرة'] || r['experience'] || '',
         bio: r['النبذة'] || r['نبذة'] || r['نبذة تعريفية'] || r['bio'] || '',
-        phone: phoneMap[name] || r['الهاتف'] || r['رقم الهاتف'] || r['phone'] || '',
+        phone: String(phoneMap[name] || r['الهاتف'] || r['رقم الهاتف'] || r['phone'] || ''),
         photo: r['الصورة'] || r['رابط الصورة'] || r['معرف الصورة'] || r['photo'] || ''
       };
     }).filter(function(c){ return c.name; });
