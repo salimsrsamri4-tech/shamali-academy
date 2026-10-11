@@ -1,0 +1,223 @@
+var SPREADSHEET_ID = '16Qc1DUjhpbT-kIra74YeFQxzVxvBY7tSquUrHdacZKI';
+var DRIVE_FOLDER_ID = '1AEsvtfftHBE6weOeLsqNoUr6LuHDYOnx';
+
+// الأوراق التي تُفصل بين الأكاديميات بعمود "الأكاديمية"
+var ACAD_COL = 'الأكاديمية';
+var ACAD_SHEETS = ['بيانات المدربين','أرقام المدربين','تقويم الأكاديمية','المقترحات والملاحظات',
+                   'تقارير المدربين','طلبات التقارير','المباريات','نتائج المباريات'];
+
+function json(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getOrCreateSheet(ss, sheetName) {
+  var sh = ss.getSheetByName(sheetName);
+  if (!sh) sh = ss.insertSheet(sheetName);
+  return sh;
+}
+
+function _ensureAcadCol(sh) {
+  var lc = sh.getLastColumn();
+  if (lc < 1 || sh.getLastRow() < 1) return;
+  var headers = sh.getRange(1, 1, 1, lc).getValues()[0];
+  if (headers.indexOf(ACAD_COL) < 0) sh.getRange(1, lc + 1).setValue(ACAD_COL);
+}
+
+function handleAppend(ss, sheetName, rowData) {
+  var sh = getOrCreateSheet(ss, sheetName);
+  if (sh.getLastRow() === 0) {
+    var hs = Object.keys(rowData);
+    sh.appendRow(hs);
+    sh.getRange(1,1,1,hs.length).setFontWeight('bold');
+  }
+  if (rowData[ACAD_COL] !== undefined) _ensureAcadCol(sh);
+  var headers = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0];
+  sh.appendRow(headers.map(function(h){ return rowData[h]!==undefined ? rowData[h] : ''; }));
+  return json({status:'ok'});
+}
+function doGet(e) {
+  var p = e.parameter;
+  var action = p.action || 'get';
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheetName = p.sheet || 'Sheet1';
+
+  if (action === 'get') return _actGet(ss, sheetName, p);
+  if (action === 'login') return _login(p);
+  if (action === 'append') return handleAppend(ss, sheetName, JSON.parse(p.data || '{}'));
+  if (action === 'update') return _actUpdate(ss, sheetName, p.column, p.value, JSON.parse(p.data || '{}'));
+  if (action === 'delete') return _actDelete(ss, sheetName, p.idCol || 'id', p.idVal, '');
+  if (action === 'parentLookup') return _parentLookup(p);
+  if (action === 'regCheck') return _regCheck(p);
+  return json({status:'error', message:'Unknown action'});
+}
+
+function _actGet(ss, sheetName, p) {
+  var sh = getOrCreateSheet(ss, sheetName);
+  if (ACAD_SHEETS.indexOf(sheetName) > -1) _ensureAcadCol(sh);
+  var data = sh.getDataRange().getValues();
+  if (data.length < 2) return json([]);
+  var headers = data[0];
+  var rows = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = {};
+    headers.forEach(function(h,j){ row[h] = data[i][j]; });
+    rows.push(row);
+  }
+  rows = _redact(sheetName, rows, p.token);
+  return json(rows.slice(0, parseInt(p.limit)||rows.length));
+}
+
+function _actUpdate(ss, sheetName, column, value, updateData) {
+  var sh = getOrCreateSheet(ss, sheetName);
+  var data = sh.getDataRange().getValues();
+  var headers = data[0];
+  var colIdx = headers.indexOf(column);
+  if (colIdx === -1) return json({status:'error', message:'Column not found'});
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][colIdx]) === String(value)) {
+      Object.keys(updateData).forEach(function(key) {
+        var idx = headers.indexOf(key);
+        if (idx !== -1) sh.getRange(i+1, idx+1).setValue(updateData[key]);
+      });
+      return json({status:'ok'});
+    }
+  }
+  return json({status:'error', message:'Row not found'});
+}
+
+// حذف صف؛ إذا أُرسل اسم أكاديمية لا يُحذف إلا صفها
+function _actDelete(ss, sheetName, column, value, acad) {
+  var sh = getOrCreateSheet(ss, sheetName);
+  var data = sh.getDataRange().getValues();
+  var headers = data[0] || [];
+  var colIdx = headers.indexOf(column);
+  if (colIdx === -1) return json({status:'error', message:'Column not found'});
+  var acadIdx = headers.indexOf(ACAD_COL);
+  acad = String(acad || '').trim();
+  for (var i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][colIdx]) !== String(value)) continue;
+    if (acad && acadIdx > -1) {
+      var rowAcad = String(data[i][acadIdx] || '').trim();
+      if (rowAcad !== acad && !(rowAcad === '' && acad === BUILTIN_PASS.shamali.name)) continue;
+    }
+    sh.deleteRow(i + 1);
+    return json({status:'ok'});
+  }
+  return json({status:'error', message:'Row not found'});
+}
+function _digits(v) {
+  return String(v == null ? '' : v)
+    .replace(/[٠-٩]/g, function(d){ return d.charCodeAt(0) - 1632; })
+    .replace(/\D/g, '');
+}
+
+function _sheetObjects(name) {
+  var sh = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(name);
+  if (!sh) return [];
+  var v = sh.getDataRange().getValues();
+  var h = v[0] || [];
+  return v.slice(1).map(function(row){
+    var o = {};
+    h.forEach(function(k, i){ o[k] = row[i]; });
+    return o;
+  });
+}
+
+// بوابة ولي الأمر: أبناء هذا الرقم المدني فقط
+function _parentLookup(p) {
+  var civil = _digits(p.civil);
+  if (civil.length < 6) return json({status:'ok', v:1, data:[], photos:[]});
+  var kids = _sheetObjects('الورقة1').filter(function(r){
+    return _digits(r['الرقم المدني']) === civil;
+  });
+  var ids = {};
+  kids.forEach(function(r){ ids[String(r['رقم الملف'])] = 1; });
+  var photos = _sheetObjects('صور اللاعبين').filter(function(r){
+    return ids[String(r['رقم الملف'])];
+  });
+  return json({status:'ok', v:1, data:kids, photos:photos});
+}
+
+// تسجيل لاعب: هل الهوية مكررة + رقم ملف جديد غير مستخدم
+function _regCheck(p) {
+  var pid = _digits(p.pid);
+  var used = {}, exists = false;
+  _sheetObjects('الورقة1').forEach(function(r){
+    used[String(r['رقم الملف']).trim()] = 1;
+    if (pid && _digits(r['رقم هوية اللاعب']) === pid) exists = true;
+  });
+  var newId;
+  do { newId = 'SH-' + Math.floor(10000 + Math.random() * 90000); } while (used[newId]);
+  return json({status:'ok', v:1, exists:exists, newId:newId});
+}
+function doPost(e) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  var body;
+  try {
+    body = JSON.parse(e.postData.contents || '{}');
+  } catch(err) {
+    body = {
+      action: e.parameter.action || 'append',
+      sheet:  e.parameter.sheet  || 'Sheet1',
+      data:   JSON.parse(e.parameter.data || '{}')
+    };
+  }
+
+  var action = body.action || '';
+  var sheetName = body.sheet || 'Sheet1';
+
+  if (action === 'append') return handleAppend(ss, sheetName, body.data || {});
+  if (action === 'update') return _actUpdate(ss, sheetName, body.column, body.value, body.data || {});
+  if (action === 'delete') {
+    var val = body.value !== undefined ? body.value : body.idVal;
+    return _actDelete(ss, sheetName, body.column || body.idCol || 'id', val, body.acad);
+  }
+  if (action === 'uploadFile') return _uploadOne(body);
+  if (action === 'uploadFiles' || (!action && (body.parentIdFile || body.playerPhoto || body.playerDoc))) {
+    return _uploadMany(body);
+  }
+  return json({status:'error', message:'Unknown action'});
+}
+
+// رفع ملف واحد (من نموذج تسجيل الأكاديمية)
+function _uploadOne(body) {
+  try {
+    var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+    var decoded = Utilities.base64Decode(body.fileData || '');
+    var blob = Utilities.newBlob(decoded, body.mimeType || 'image/jpeg', body.fileName || 'file');
+    var file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    var fileId = file.getId();
+    var fileUrl = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w400';
+    return json({status:'ok', fileUrl: fileUrl, fileId: fileId});
+  } catch(err) {
+    return json({status:'error', message: err.toString()});
+  }
+}
+
+// رفع ملفات متعددة (من نموذج تسجيل اللاعبين)
+function _uploadMany(body) {
+  try {
+    var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+    var result = {status: 'success', files: {}};
+    ['parentIdFile', 'playerPhoto', 'playerDoc'].forEach(function(key) {
+      if (!body[key]) return;
+      try {
+        var raw = body[key];
+        var base64Data = raw.indexOf(',') > -1 ? raw.split(',')[1] : raw;
+        var mimeType = raw.indexOf('data:') === 0 ? raw.split(';')[0].split(':')[1] : 'image/jpeg';
+        var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), mimeType, key + '_' + (body.name || Date.now()));
+        var file = folder.createFile(blob);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        result.files[key + 'Id'] = 'https://drive.google.com/thumbnail?id=' + file.getId() + '&sz=w400';
+      } catch(e) {
+        result.files[key + 'Id'] = '';
+      }
+    });
+    return json(result);
+  } catch(err) {
+    return json({status:'error', message: err.toString()});
+  }
+}
