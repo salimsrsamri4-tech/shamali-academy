@@ -1371,10 +1371,10 @@ function getCoaches(forceRefresh) {
       return {
         name: name,
         role: r['المنصب'] || r['الدور'] || r['الوظيفة'] || r['role'] || '',
-        category: r['الفئة'] || r['الفئة العمرية'] || r['category'] || '',
+        category: r['الفئة'] || r['الفئة العمرية'] || r['الفئة المستهدفة'] || r['category'] || '',
         certificates: r['الشهادات'] || r['المؤهلات'] || r['certificates'] || '',
         experience: r['الخبرة'] || r['سنوات الخبرة'] || r['experience'] || '',
-        bio: r['النبذة'] || r['نبذة'] || r['نبذة تعريفية'] || r['bio'] || '',
+        bio: r['النبذة'] || r['نبذة'] || r['نبذة تعريفية'] || r['النبذة الفنية'] || r['bio'] || '',
         phone: String(phoneMap[name] || r['الهاتف'] || r['رقم الهاتف'] || r['phone'] || ''),
         photo: r['الصورة'] || r['رابط الصورة'] || r['معرف الصورة'] || r['photo'] || ''
       };
@@ -2762,14 +2762,14 @@ function submitAddCoach(){
   var aliases = {
     name: ['الاسم','اسم المدرب','الاسم الكامل'],
     role: ['المنصب','الدور','الوظيفة'],
-    cat: ['الفئة','الفئة العمرية'],
+    cat: ['الفئة','الفئة العمرية','الفئة المستهدفة'],
     exp: ['الخبرة','سنوات الخبرة'],
     certs: ['الشهادات','المؤهلات'],
-    bio: ['النبذة','نبذة','نبذة تعريفية'],
+    bio: ['النبذة','نبذة','نبذة تعريفية','النبذة الفنية'],
     phone: ['الهاتف','رقم الهاتف'],
     photo: ['الصورة','رابط الصورة','معرف الصورة']
   };
-  var row = {};
+  var row = {'التوقيت': new Date().toISOString()};
   Object.keys(aliases).forEach(function(k){
     aliases[k].forEach(function(col){ row[col] = vals[k]; });
   });
