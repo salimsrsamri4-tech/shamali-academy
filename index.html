@@ -1353,6 +1353,13 @@ function _gasPrivate(params) {
     .catch(function(){ return null; });
 }
 
+// يقبل معرّف Drive أو رابطاً كاملاً ويُرجع المعرّف
+function _driveId(v){
+  v = String(v || '').trim();
+  var m = v.match(/[?&]id=([\w-]+)/) || v.match(/\/d\/([\w-]+)/);
+  return m ? m[1] : v;
+}
+
 // Get coaches
 function getCoaches(forceRefresh) {
   return Promise.all([
@@ -1376,7 +1383,7 @@ function getCoaches(forceRefresh) {
         experience: r['الخبرة'] || r['سنوات الخبرة'] || r['experience'] || '',
         bio: r['النبذة'] || r['نبذة'] || r['نبذة تعريفية'] || r['النبذة الفنية'] || r['bio'] || '',
         phone: String(phoneMap[name] || r['الهاتف'] || r['رقم الهاتف'] || r['phone'] || ''),
-        photo: r['الصورة'] || r['رابط الصورة'] || r['معرف الصورة'] || r['photo'] || ''
+        photo: _driveId(r['الصورة'] || r['رابط الصورة'] || r['معرف الصورة'] || r['photo'] || '')
       };
     }).filter(function(c){ return c.name; });
   });
@@ -2685,7 +2692,11 @@ function renderCoaches(forceRefresh){
       '<label style="font-size:11px;color:#64748b;font-weight:700;display:block;margin-bottom:4px;">نبذة تعريفية</label>'+
       '<textarea id="cBio" rows="2" placeholder="نبذة مختصرة عن المدرب..." style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 11px;font-family:Cairo,sans-serif;font-size:12px;box-sizing:border-box;resize:none;"></textarea></div>'+
       coachInp('cPhone','رقم واتساب المدرب *','tel','مثال: 96892126558')+
-      coachInp('cPhoto','معرّف صورة Google Drive','text','الرقم من رابط الصورة (اختياري)')+
+      '<div style="margin-top:10px;"><label for="cPhotoFile" style="font-size:11px;color:#64748b;font-weight:700;display:block;margin-bottom:4px;">صورة المدرب (اختياري)</label>'+
+      '<div style="display:flex;align-items:center;gap:10px;">'+
+      '<img id="cPhotoPrev" alt="" style="display:none;width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #16a34a;">'+
+      '<input id="cPhotoFile" type="file" accept="image/*" onchange="previewCoachPhoto(this)" style="flex:1;font-family:Cairo,sans-serif;font-size:12px;min-height:44px;">'+
+      '</div></div>'+
       '<div id="coachAddMsg" style="display:none;margin-top:8px;"></div>'+
       '<button onclick="submitAddCoach()" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#0d3320,#16a34a);color:#fff;border:none;border-radius:10px;padding:13px;font-size:13px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
       '<i class="fas fa-save"></i> حفظ المدرب</button>'+
@@ -2745,6 +2756,15 @@ function coachInp(id, label, type, ph){
     '<input id="'+id+'" type="'+type+'" placeholder="'+ph+'" style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 11px;font-family:Cairo,sans-serif;font-size:12px;box-sizing:border-box;"></div>';
 }
 
+function previewCoachPhoto(inp){
+  var img = document.getElementById('cPhotoPrev');
+  var f = inp.files && inp.files[0];
+  if(!img) return;
+  if(!f){ img.style.display = 'none'; return; }
+  img.src = URL.createObjectURL(f);
+  img.style.display = 'block';
+}
+
 function submitAddCoach(){
   var name  = (document.getElementById('cName').value||'').trim();
   var role  = (document.getElementById('cRole').value||'').trim();
@@ -2757,7 +2777,7 @@ function submitAddCoach(){
     certs: document.getElementById('cCerts').value.trim(),
     bio: document.getElementById('cBio').value.trim(),
     phone: document.getElementById('cPhone').value.trim(),
-    photo: document.getElementById('cPhoto').value.trim()
+    photo: ''
   };
   var aliases = {
     name: ['الاسم','اسم المدرب','الاسم الكامل'],
@@ -2775,11 +2795,20 @@ function submitAddCoach(){
   });
   var btn = document.querySelector('button[onclick="submitAddCoach()"]');
   if(btn){ btn.disabled=true; btn.textContent='جارٍ الحفظ...'; }
-  apiAppend('بيانات المدربين', row).then(function(){
+  var photoFile = document.getElementById('cPhotoFile') && document.getElementById('cPhotoFile').files[0];
+  var photoPromise = photoFile
+    ? compressImage(photoFile).then(function(f){ return uploadFileBlob(f || photoFile, 'coach_' + name); })
+    : Promise.resolve('');
+  photoPromise.then(function(photoId){
+    if(photoFile && !photoId) alert('تعذّر رفع الصورة، سيُحفظ المدرب بدون صورة');
+    aliases.photo.forEach(function(col){ row[col] = photoId; });
+    return apiAppend('بيانات المدربين', row);
+  }).then(function(){
     var msg = document.getElementById('coachAddMsg');
     if(msg){ msg.style.display='block'; msg.innerHTML='<div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:8px;padding:10px;color:#15803d;font-size:12px;font-weight:800;">✅ تم إضافة المدرب بنجاح!</div>'; }
     if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> حفظ المدرب'; }
-    ['cName','cRole','cCat','cExp','cCerts','cBio','cPhone','cPhoto'].forEach(function(id){
+    var prev=document.getElementById('cPhotoPrev'); if(prev) prev.style.display='none';
+    ['cName','cRole','cCat','cExp','cCerts','cBio','cPhone','cPhotoFile'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value='';
     });
     setTimeout(function(){ renderCoaches(); }, 1200);
@@ -8523,9 +8552,9 @@ function uploadFileBlob(blob, name){
       var base64 = e.target.result.split(',')[1];
       fetch(CONFIG.UPLOAD_URL,{
         method:'POST',
-        body: JSON.stringify({file:base64, mimeType:blob.type, filename:name})
+        body: JSON.stringify({action:'uploadFile', fileData:base64, mimeType:blob.type, fileName:name})
       }).then(function(r){ return r.json(); }).then(function(res){
-        resolve(res.id||'');
+        resolve(res.fileId || res.id || '');
       }).catch(function(){ resolve(''); });
     };
     reader.readAsDataURL(blob);
