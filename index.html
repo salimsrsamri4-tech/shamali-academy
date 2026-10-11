@@ -1189,9 +1189,9 @@ function apiGet(sheetName, forceRefresh, allAcads) {
       data = data.filter(function(r){ return r['أكاديمية'] === currentKey; });
     } else if(currentKey === 'shamali' && data.length && data[0].hasOwnProperty('أكاديمية')) {
       data = data.filter(function(r){ return !r['أكاديمية'] || r['أكاديمية'] === 'shamali'; });
-    } else if(sheetName === 'الورقة1' && data.length && data[0].hasOwnProperty('الأكاديمية')) {
+    } else if((sheetName === 'الورقة1' || _ACAD_SHEETS.indexOf(sheetName) > -1) && data.length && data[0].hasOwnProperty('الأكاديمية')) {
       // عمود الأكاديمية يحمل الاسم؛ الصفوف القديمة بدون اسم تتبع الشمالي
-      var curName = String((window.CURRENT_ACADEMY_NAME || (window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) || '')).trim();
+      var curName = _curAcadName();
       var shamaliName = ACADEMIES.shamali.NAME;
       data = data.filter(function(r){
         var a = String(r['الأكاديمية'] || '').trim();
@@ -1220,6 +1220,12 @@ function apiGet(sheetName, forceRefresh, allAcads) {
   });
 }
 
+// أوراق تُحفظ مع اسم الأكاديمية وتُفلتر به (تطابق ACAD_SHEETS في السكربت)
+var _ACAD_SHEETS = ['بيانات المدربين','أرقام المدربين','تقويم الأكاديمية','المقترحات والملاحظات','تقارير المدربين','طلبات التقارير','المباريات','نتائج المباريات'];
+function _curAcadName(){
+  return String((window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) || window.CURRENT_ACADEMY_NAME || '').trim();
+}
+
 var _PLAYER_SHEETS = ['سجل الحضور', 'سجل الحضور اليومي', 'تجديدات الاشتراكات', 'تقييمات اللاعبين', 'صور اللاعبين', 'تكريم المجيدين'];
 
 function apiClearCache(sheetName) {
@@ -1233,7 +1239,8 @@ function apiAppend(sheetName, dataObj) {
     var acadKey = window.CURRENT_ACADEMY_KEY || 'shamali';
     var tabName = (acadKey === 'shamali') ? sheetName : (acadKey + '_' + sheetName);
     if(acadKey !== 'shamali') rowData['أكاديمية'] = acadKey;
-    var acadLabel = window.CURRENT_ACADEMY_NAME || (window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) || acadKey;
+    var acadLabel = _curAcadName() || acadKey;
+    if(_ACAD_SHEETS.indexOf(sheetName) > -1) rowData['الأكاديمية'] = acadLabel;
     var appendUrl = CONFIG.GAS_URL
       + '?action=append'
       + '&sheet=' + encodeURIComponent(sheetName)
@@ -1270,7 +1277,7 @@ function apiDelete(sheetName, column, value) {
       method: 'POST',
       mode: 'no-cors',
       headers: {'Content-Type':'text/plain'},
-      body: JSON.stringify({action:'delete', sheet:sheetName, column:column, value:value})
+      body: JSON.stringify({action:'delete', sheet:sheetName, column:column, value:value, acad:_curAcadName()})
     }).then(function(){
       apiClearCache(sheetName);
     });
@@ -1408,7 +1415,7 @@ function _saveRegistrationWithId(data, id) {
   var parentIdUrl    = data.parentIdFileId  || '';
   var playerPhotoUrl = data.playerPhotoId   || '';
   var playerDocUrl   = data.playerDocId     || '';
-  var acadName = window.CURRENT_ACADEMY_NAME || (window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) || (window.CURRENT_ACADEMY_KEY || '');
+  var acadName = _curAcadName() || (window.CURRENT_ACADEMY_KEY || '');
   var birthYear = data.playerBirthDate ? data.playerBirthDate.split('-')[0] : '';
   var row = {
     'التاريخ': now, 'رقم الملف': id,
