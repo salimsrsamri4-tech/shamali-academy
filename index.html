@@ -2749,16 +2749,30 @@ function submitAddCoach(){
   var name  = (document.getElementById('cName').value||'').trim();
   var role  = (document.getElementById('cRole').value||'').trim();
   if(!name||!role){ alert('الاسم والمنصب مطلوبان'); return; }
-  var row = {
-    'الاسم': name,
-    'المنصب': role,
-    'الفئة': document.getElementById('cCat').value.trim(),
-    'الخبرة': document.getElementById('cExp').value.trim(),
-    'الشهادات': document.getElementById('cCerts').value.trim(),
-    'النبذة': document.getElementById('cBio').value.trim(),
-    'الهاتف': document.getElementById('cPhone').value.trim(),
-    'الصورة': document.getElementById('cPhoto').value.trim()
+  // أسماء الأعمدة تختلف بين الأوراق؛ تُكتب كل الأسماء التي تقرأها getCoaches والسكربت يملأ الموجود منها
+  var vals = {
+    name: name, role: role,
+    cat: document.getElementById('cCat').value.trim(),
+    exp: document.getElementById('cExp').value.trim(),
+    certs: document.getElementById('cCerts').value.trim(),
+    bio: document.getElementById('cBio').value.trim(),
+    phone: document.getElementById('cPhone').value.trim(),
+    photo: document.getElementById('cPhoto').value.trim()
   };
+  var aliases = {
+    name: ['الاسم','اسم المدرب','الاسم الكامل'],
+    role: ['المنصب','الدور','الوظيفة'],
+    cat: ['الفئة','الفئة العمرية'],
+    exp: ['الخبرة','سنوات الخبرة'],
+    certs: ['الشهادات','المؤهلات'],
+    bio: ['النبذة','نبذة','نبذة تعريفية'],
+    phone: ['الهاتف','رقم الهاتف'],
+    photo: ['الصورة','رابط الصورة','معرف الصورة']
+  };
+  var row = {};
+  Object.keys(aliases).forEach(function(k){
+    aliases[k].forEach(function(col){ row[col] = vals[k]; });
+  });
   var btn = document.querySelector('button[onclick="submitAddCoach()"]');
   if(btn){ btn.disabled=true; btn.textContent='جارٍ الحفظ...'; }
   apiAppend('بيانات المدربين', row).then(function(){
@@ -2778,7 +2792,12 @@ function submitAddCoach(){
 function deleteCoach(name){
   if(!confirm('هل تريد حذف المدرب "'+name+'" ؟')) return;
   showL(true);
+  // عمود الاسم قد يكون بأي من هذه الأسماء؛ الطلب على عمود غير موجود لا يحذف شيئاً
   apiDelete('بيانات المدربين','الاسم',name).then(function(){
+    return apiDelete('بيانات المدربين','اسم المدرب',name);
+  }).then(function(){
+    return apiDelete('بيانات المدربين','الاسم الكامل',name);
+  }).then(function(){
     showL(false);
     renderCoaches();
   }).catch(function(){
