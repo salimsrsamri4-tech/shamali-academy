@@ -4,7 +4,7 @@ var DRIVE_FOLDER_ID = '1AEsvtfftHBE6weOeLsqNoUr6LuHDYOnx';
 // الأوراق التي تُفصل بين الأكاديميات بعمود "الأكاديمية"
 var ACAD_COL = 'الأكاديمية';
 var ACAD_SHEETS = ['بيانات المدربين','أرقام المدربين','تقويم الأكاديمية','المقترحات والملاحظات',
-                   'تقارير المدربين','طلبات التقارير','المباريات','نتائج المباريات'];
+                   'تقارير المدربين','طلبات التقارير','المباريات','نتائج المباريات','جدول التدريب'];
 
 function json(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))

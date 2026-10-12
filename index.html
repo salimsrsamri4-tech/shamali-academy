@@ -322,6 +322,7 @@ window.addEventListener('load',function(){
     <button class="sb-btn gold" data-page="groupmsg" data-pg="groupmsg"><i class="fas fa-paper-plane"></i> إشعار جماعي</button>
     <button class="sb-btn gold" data-page="substrack" data-pg="substrack"><i class="fas fa-bell"></i> متابعة الاشتراكات <span id="subsBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
     <button class="sb-btn gold" data-page="calendaradmin" data-pg="calendaradmin"><i class="fas fa-calendar-plus"></i> إدارة التقويم</button>
+    <button class="sb-btn gold" data-page="schedadmin" data-pg="schedadmin"><i class="fas fa-calendar-alt"></i> إدارة جدول التدريب</button>
     <button class="sb-btn gold" data-page="reportreqs" data-pg="reportreqs"><i class="fas fa-file-export"></i> طلبات التقارير <span id="reqBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px;"></span></button>
     <button class="sb-btn" style="color:#a78bfa;" data-pg="loans" onclick="go('loans')"><i class="fas fa-exchange-alt"></i> استعارة اللاعبين</button>
     <button class="sb-btn gold" data-page="admintools" data-pg="admintools"><i class="fas fa-tools"></i> أدوات الإدارة</button>
@@ -1221,7 +1222,7 @@ function apiGet(sheetName, forceRefresh, allAcads) {
 }
 
 // أوراق تُحفظ مع اسم الأكاديمية وتُفلتر به (تطابق ACAD_SHEETS في السكربت)
-var _ACAD_SHEETS = ['بيانات المدربين','أرقام المدربين','تقويم الأكاديمية','المقترحات والملاحظات','تقارير المدربين','طلبات التقارير','المباريات','نتائج المباريات'];
+var _ACAD_SHEETS = ['بيانات المدربين','أرقام المدربين','تقويم الأكاديمية','المقترحات والملاحظات','تقارير المدربين','طلبات التقارير','المباريات','نتائج المباريات','جدول التدريب'];
 function _curAcadName(){
   return String((window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME) || window.CURRENT_ACADEMY_NAME || '').trim();
 }
@@ -1695,56 +1696,166 @@ function renderRen(){
 
 // ===== SCHEDULE =====
 function renderSched(){
-  var html =
-    '<div style="background:linear-gradient(135deg,#3b0a0a,#b81d22);padding:28px 16px 24px;text-align:center;color:#fff;">'+
-      '<div style="font-size:40px;margin-bottom:8px;">⚽</div>'+
-      '<div style="font-size:20px;font-weight:900;">جدول التدريب</div>'+
-      '<div style="font-size:12px;opacity:.75;margin-top:4px;">'+_acadTitle()+'</div>'+
-    '</div>'+
-    '<div style="padding:20px 16px;">'+
-
-    // بطاقة الموعد
-    '<div style="background:#fff;border-radius:18px;box-shadow:0 4px 20px rgba(184,29,34,.15);border:2px solid #f1e4e4;overflow:hidden;margin-bottom:16px;">'+
-      '<div style="background:linear-gradient(135deg,#b81d22,#7a1015);padding:14px 18px;display:flex;align-items:center;gap:12px;">'+
-        '<div style="font-size:28px;">🗓️</div>'+
-        '<div>'+
-          '<div style="color:#d4af37;font-size:11px;font-weight:800;letter-spacing:1px;">أيام التدريب</div>'+
-          '<div style="color:#fff;font-size:18px;font-weight:900;">الاثنين والأربعاء</div>'+
-        '</div>'+
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
+  apiGet('جدول التدريب').then(function(rows){
+    rows = (Array.isArray(rows) ? rows : []).filter(function(r){ return r['أيام التدريب'] || r['الملعب']; });
+    var html =
+      '<div style="background:linear-gradient(135deg,#3b0a0a,#b81d22);padding:28px 16px 24px;text-align:center;color:#fff;">'+
+        '<div style="font-size:40px;margin-bottom:8px;">⚽</div>'+
+        '<div style="font-size:20px;font-weight:900;">جدول التدريب</div>'+
+        '<div style="font-size:12px;opacity:.75;margin-top:4px;">'+_acadTitle()+'</div>'+
       '</div>'+
-      '<div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px;">'+
-        '<div style="display:flex;align-items:center;gap:12px;">'+
-          '<div style="width:42px;height:42px;background:#fff7ed;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🌅</div>'+
+      '<div style="padding:20px 16px;">';
+
+    if(!rows.length){
+      html +=
+        '<div style="background:#fff;border-radius:18px;box-shadow:0 4px 20px rgba(0,0,0,.08);border:2px solid #f1f5f9;padding:28px 16px;text-align:center;color:#94a3b8;font-size:13px;">'+
+        'لم تُضف مواعيد التدريب بعد.</div>';
+    }
+    rows.forEach(function(r){
+      var branch = r['الفرع'] || '';
+      var mapLink = r['موقع الملعب'] || '';
+      html +=
+      '<div style="background:#fff;border-radius:18px;box-shadow:0 4px 20px rgba(184,29,34,.15);border:2px solid #f1e4e4;overflow:hidden;margin-bottom:16px;">'+
+        '<div style="background:linear-gradient(135deg,#b81d22,#7a1015);padding:14px 18px;display:flex;align-items:center;gap:12px;">'+
+          '<div style="font-size:28px;">🗓️</div>'+
           '<div>'+
-            '<div style="font-size:11px;color:#94a3b8;font-weight:700;">الوقت</div>'+
-            '<div style="font-size:16px;font-weight:900;color:#0f172a;">عصراً</div>'+
+            '<div style="color:#d4af37;font-size:11px;font-weight:800;letter-spacing:1px;">'+(branch?branch+' · ':'')+'أيام التدريب</div>'+
+            '<div style="color:#fff;font-size:18px;font-weight:900;">'+(r['أيام التدريب']||'—')+'</div>'+
           '</div>'+
         '</div>'+
-        '<div style="display:flex;align-items:center;gap:12px;">'+
-          '<div style="width:42px;height:42px;background:#fef2f2;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📍</div>'+
-          '<div>'+
-            '<div style="font-size:11px;color:#94a3b8;font-weight:700;">الملعب</div>'+
-            '<div style="font-size:16px;font-weight:900;color:#0f172a;">ملعب فريق الشمالي</div>'+
+        '<div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px;">'+
+          '<div style="display:flex;align-items:center;gap:12px;">'+
+            '<div style="width:42px;height:42px;background:#fff7ed;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🌅</div>'+
+            '<div><div style="font-size:11px;color:#94a3b8;font-weight:700;">الوقت</div>'+
+            '<div style="font-size:16px;font-weight:900;color:#0f172a;">'+(r['التوقيت']||'—')+'</div></div>'+
+          '</div>'+
+          '<div style="display:flex;align-items:center;gap:12px;">'+
+            '<div style="width:42px;height:42px;background:#fef2f2;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📍</div>'+
+            '<div style="flex:1;"><div style="font-size:11px;color:#94a3b8;font-weight:700;">الملعب</div>'+
+            '<div style="font-size:16px;font-weight:900;color:#0f172a;">'+(r['الملعب']||'—')+'</div></div>'+
+            (mapLink?'<a href="'+mapLink+'" target="_blank" style="background:#eff6ff;color:#1d4ed8;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:800;text-decoration:none;white-space:nowrap;"><i class="fas fa-map-marker-alt"></i> الموقع</a>':'')+
+          '</div>'+
+          '<div style="display:flex;align-items:center;gap:12px;">'+
+            '<div style="width:42px;height:42px;background:#f0fdf4;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👥</div>'+
+            '<div><div style="font-size:11px;color:#94a3b8;font-weight:700;">الفئات</div>'+
+            '<div style="font-size:16px;font-weight:900;color:#0f172a;">'+(r['الفئات العمرية']||'جميع الفئات العمرية')+'</div></div>'+
           '</div>'+
         '</div>'+
-        '<div style="display:flex;align-items:center;gap:12px;">'+
-          '<div style="width:42px;height:42px;background:#f0fdf4;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👥</div>'+
-          '<div>'+
-            '<div style="font-size:11px;color:#94a3b8;font-weight:700;">الفئات</div>'+
-            '<div style="font-size:16px;font-weight:900;color:#0f172a;">جميع الفئات العمرية</div>'+
-          '</div>'+
-        '</div>'+
+      '</div>';
+    });
+
+    html +=
+      '<div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;padding:13px 16px;display:flex;align-items:center;gap:10px;">'+
+        '<div style="font-size:20px;">💡</div>'+
+        '<div style="font-size:12px;color:#92400e;font-weight:700;line-height:1.6;">يُرجى الحضور قبل موعد التدريب بـ 15 دقيقة والالتزام بالزي الرسمي للأكاديمية</div>'+
       '</div>'+
-    '</div>'+
+      '</div>';
+    el.innerHTML = html;
+  }).catch(function(){
+    el.innerHTML = '<div class="card"><div class="al al-warn">تعذّر تحميل جدول التدريب. تحقق من الاتصال.</div></div>';
+  });
+}
 
-    // تنبيه
-    '<div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;padding:13px 16px;display:flex;align-items:center;gap:10px;">'+
-      '<div style="font-size:20px;">💡</div>'+
-      '<div style="font-size:12px;color:#92400e;font-weight:700;line-height:1.6;">يُرجى الحضور قبل موعد التدريب بـ 15 دقيقة والالتزام بالزي الرسمي للأكاديمية</div>'+
-    '</div>'+
-    '</div>';
+function renderSchedAdmin(){
+  var el = document.getElementById('content');
+  el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
+  apiGet('جدول التدريب', true).then(function(rows){
+    rows = Array.isArray(rows) ? rows : [];
+    var html =
+      '<div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:20px 16px;text-align:center;color:#fff;">'+
+      '<div style="font-size:28px;margin-bottom:4px;">🗓️</div>'+
+      '<div style="font-size:18px;font-weight:900;">إدارة جدول التدريب</div>'+
+      '<div style="font-size:11px;opacity:.6;margin-top:3px;">أضف فرعاً لكل ملعب تتدرب فيه الأكاديمية</div></div>'+
 
-  document.getElementById('content').innerHTML = html;
+      '<div style="padding:14px;background:#f8fafc;border-bottom:2px solid #e2e8f0;">'+
+      '<div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1.5px solid #e2e8f0;">'+
+      '<div style="font-size:13px;font-weight:900;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:8px;">'+
+      '<i class="fas fa-plus-circle" style="color:#16a34a;"></i> إضافة فرع / موعد تدريب</div>'+
+      schedInp('sBranch','اسم الفرع (اختياري)','text','مثال: الفرع الرئيسي')+
+      schedInp('sDays','أيام التدريب *','text','مثال: الاثنين والأربعاء')+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0;">'+
+      schedInp('sTime','التوقيت *','text','مثال: 4:30 عصراً')+
+      schedInp('sCats','الفئات العمرية','text','مثال: جميع الفئات')+
+      '</div>'+
+      schedInp('sField','الملعب *','text','مثال: ملعب الأكاديمية الرئيسي')+
+      schedInp('sMap','رابط موقع الملعب (خرائط جوجل)','url','الصق رابط Google Maps هنا')+
+      '<div id="schedAddMsg" style="display:none;margin-top:8px;"></div>'+
+      '<button onclick="submitAddSched()" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#0d3320,#16a34a);color:#fff;border:none;border-radius:10px;padding:13px;font-size:13px;font-weight:900;cursor:pointer;font-family:Cairo,sans-serif;">'+
+      '<i class="fas fa-save"></i> حفظ الموعد</button>'+
+      '</div></div>'+
+      '<div style="padding:14px;">';
+
+    if(!rows.length){
+      html += '<div style="text-align:center;padding:30px;color:#94a3b8;font-size:13px;">لا توجد مواعيد تدريب مضافة بعد</div>';
+    } else {
+      rows.forEach(function(r, i){
+        html +=
+          '<div style="background:#fff;border-radius:12px;margin-bottom:10px;border:1.5px solid #e2e8f0;box-shadow:0 1px 6px rgba(0,0,0,.05);padding:14px;">'+
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">'+
+          '<div style="flex:1;min-width:0;">'+
+          (r['الفرع']?'<div style="font-size:11px;font-weight:800;color:#b81d22;margin-bottom:3px;">'+r['الفرع']+'</div>':'')+
+          '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-bottom:3px;">'+(r['أيام التدريب']||'—')+' · '+(r['التوقيت']||'—')+'</div>'+
+          '<div style="font-size:12px;color:#64748b;">📍 '+(r['الملعب']||'—')+'</div>'+
+          (r['الفئات العمرية']?'<div style="font-size:11px;color:#94a3b8;margin-top:2px;">👥 '+r['الفئات العمرية']+'</div>':'')+
+          '</div>'+
+          '<button onclick="deleteSched(\''+i+'\')" style="background:#fef2f2;border:1.5px solid #fecaca;color:#dc2626;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;flex-shrink:0;">'+
+          '<i class="fas fa-trash"></i></button>'+
+          '</div></div>';
+      });
+    }
+    html += '</div>';
+    el.innerHTML = html;
+    window._schedRows = rows;
+  }).catch(function(){
+    el.innerHTML = '<div class="card"><div class="al al-warn">تعذّر تحميل الجدول. تحقق من الاتصال.</div></div>';
+  });
+}
+
+function schedInp(id, label, type, ph){
+  return '<div style="margin-bottom:10px;"><label style="font-size:11px;color:#64748b;font-weight:700;display:block;margin-bottom:4px;">'+label+'</label>'+
+    '<input id="'+id+'" type="'+type+'" placeholder="'+ph+'" style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 11px;font-family:Cairo,sans-serif;font-size:12px;box-sizing:border-box;"></div>';
+}
+
+function submitAddSched(){
+  var days = (document.getElementById('sDays').value||'').trim();
+  var time = (document.getElementById('sTime').value||'').trim();
+  var field = (document.getElementById('sField').value||'').trim();
+  if(!days||!time||!field){ alert('أيام التدريب والتوقيت والملعب مطلوبة'); return; }
+  var row = {
+    'معرف الموعد': 'SCH-' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    'الفرع': (document.getElementById('sBranch').value||'').trim(),
+    'أيام التدريب': days,
+    'التوقيت': time,
+    'الملعب': field,
+    'موقع الملعب': (document.getElementById('sMap').value||'').trim(),
+    'الفئات العمرية': (document.getElementById('sCats').value||'').trim()
+  };
+  var btn = document.querySelector('button[onclick="submitAddSched()"]');
+  if(btn){ btn.disabled=true; btn.textContent='جارٍ الحفظ...'; }
+  apiAppend('جدول التدريب', row).then(function(){
+    var msg = document.getElementById('schedAddMsg');
+    if(msg){ msg.style.display='block'; msg.innerHTML='<div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:8px;padding:10px;color:#15803d;font-size:12px;font-weight:800;">✅ تم إضافة الموعد بنجاح!</div>'; }
+    setTimeout(function(){ renderSchedAdmin(); }, 1000);
+  }).catch(function(e){
+    if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> حفظ الموعد'; }
+    alert('خطأ في الحفظ: '+(e&&e.message?e.message:'تحقق من الاتصال'));
+  });
+}
+
+function deleteSched(idx){
+  var r = window._schedRows && window._schedRows[idx];
+  if(!r) return;
+  if(!confirm('هل تريد حذف هذا الموعد؟')) return;
+  showL(true);
+  apiDelete('جدول التدريب','معرف الموعد', r['معرف الموعد']).then(function(){
+    showL(false);
+    renderSchedAdmin();
+  }).catch(function(){
+    showL(false);
+    alert('تعذّر الحذف، تحقق من الاتصال');
+  });
 }
 
 // ===== COACHES =====
@@ -3805,6 +3916,7 @@ function renderPage(page) {
     case 'coachreqreports': renderCoachReqReports(); break;
     case 'calendar': renderCalendar(); break;
     case 'calendaradmin': renderCalendarAdmin(); break;
+    case 'schedadmin': renderSchedAdmin(); break;
     case 'tournlogin': renderTournLogin(); break;
     case 'tournaments': if(!sessionStorage.getItem('tournAuth')){ go('tournlogin'); return; } renderTournaments(); break;
     case 'tournament_reg': renderTournamentReg(); break;
