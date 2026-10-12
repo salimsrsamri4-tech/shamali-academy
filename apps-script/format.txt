@@ -1,0 +1,67 @@
+// تنظيم شكل الشيت: فهرس، ألوان، ترتيب، عناوين ثابتة. لا يغيّر أي بيانات أو أسماء.
+// للتشغيل: اختر organizeSheets من القائمة أعلى المحرر ثم اضغط "تنفيذ".
+var FMT_GROUPS = [
+  {name:'اللاعبون', color:'#16a34a', sheets:['الورقة1','صور اللاعبين','تجديدات الاشتراكات','سجل الحضور اليومي',
+    'سجل الحضور','تقييمات اللاعبين','تكريم المجيدين','طلبات اللاعبين','حذف اللاعبين']},
+  {name:'المدربون', color:'#2563eb', sheets:['بيانات المدربين','أرقام المدربين','تقارير المدربين','طلبات التقارير']},
+  {name:'الأكاديمية', color:'#7c3aed', sheets:['تقويم الأكاديمية','المقترحات والملاحظات','المباريات',
+    'نتائج المباريات','تحديث المباريات']},
+  {name:'المنصة', color:'#b81d22', sheets:['أكاديميات المنصة','الأكاديميات المسجلة','استعارات']},
+  {name:'البطولات والمهرجانات', color:'#d97706', sheets:['البطولات','لاعبو البطولة','مقبولو البطولة',
+    'شكاوى البطولة','مراجعة الطلبات','حذف البطولات','تسجيل مهرجان نبض المستقبل 2026',
+    'الجهاز الفني والإداري - مهرجان نبض المستقبل 2026','مقترحات أعضاء الفريق']}
+];
+var FMT_INDEX = '📋 الفهرس';
+
+function organizeSheets() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var index = ss.getSheetByName(FMT_INDEX) || ss.insertSheet(FMT_INDEX, 0);
+  var order = [FMT_INDEX];
+  var rows = [['القسم', 'الورقة', 'عدد الصفوف']];
+  function add(sh, group, color) {
+    _fmtSheet(sh, color);
+    order.push(sh.getName());
+    rows.push([group, '=HYPERLINK("#gid=' + sh.getSheetId() + '","' + sh.getName() + '")',
+               Math.max(sh.getLastRow() - 1, 0)]);
+  }
+  FMT_GROUPS.forEach(function(g) {
+    g.sheets.forEach(function(n) {
+      var sh = ss.getSheetByName(n);
+      if (sh) add(sh, g.name, g.color);
+    });
+  });
+  ss.getSheets().forEach(function(sh) {
+    if (order.indexOf(sh.getName()) < 0) add(sh, 'أخرى', '#94a3b8');
+  });
+  order.forEach(function(n, i) {
+    ss.setActiveSheet(ss.getSheetByName(n));
+    ss.moveActiveSheet(i + 1);
+  });
+  index.clear();
+  index.getRange(1, 1, rows.length, 3).setValues(rows);
+  _fmtSheet(index, '#0f172a');
+  ss.setActiveSheet(index);
+}
+
+function _fmtSheet(sh, color) {
+  sh.setTabColor(color);
+  sh.setRightToLeft(true);
+  var lc = sh.getLastColumn();
+  if (lc < 1) return;
+  var all = sh.getRange(1, 1, sh.getMaxRows(), lc);
+  all.setFontFamily('Cairo').setFontSize(10).setVerticalAlignment('middle');
+  sh.getBandings().forEach(function(b) { b.remove(); });
+  all.applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY, true, false)
+     .setHeaderRowColor('#1e3a5f').setFirstRowColor('#ffffff').setSecondRowColor('#f1f5f9');
+  sh.getRange(1, 1, 1, lc).setFontColor('#ffffff').setFontWeight('bold')
+    .setHorizontalAlignment('center').setWrap(true);
+  sh.setRowHeight(1, 36);
+  sh.setFrozenRows(1);
+  if (!sh.getFilter()) all.createFilter();
+  sh.autoResizeColumns(1, lc);
+  for (var c = 1; c <= lc; c++) {
+    var w = sh.getColumnWidth(c);
+    if (w < 90) sh.setColumnWidth(c, 90);
+    else if (w > 260) sh.setColumnWidth(c, 260);
+  }
+}

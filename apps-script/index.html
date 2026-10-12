@@ -18,7 +18,8 @@
 <pre id="code"></pre>
 <script>
 var text = '';
-fetch('code.txt', {cache: 'no-store'}).then(function(r){ return r.text(); }).then(function(t){
+var file = new URLSearchParams(location.search).get('f') === 'format' ? 'format.txt' : 'code.txt';
+fetch(file, {cache: 'no-store'}).then(function(r){ return r.text(); }).then(function(t){
   text = t;
   document.getElementById('code').textContent = t;
   document.getElementById('copy').disabled = false;
@@ -26,7 +27,7 @@ fetch('code.txt', {cache: 'no-store'}).then(function(r){ return r.text(); }).the
 });
 document.getElementById('copy').onclick = function(){
   navigator.clipboard.writeText(text).then(function(){
-    document.getElementById('msg').textContent = '✅ تم النسخ — الصقه في Code.gs';
+    document.getElementById('msg').textContent = '✅ تم النسخ';
   });
 };
 </script>
