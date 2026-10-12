@@ -1353,6 +1353,14 @@ function _gasPrivate(params) {
     .catch(function(){ return null; });
 }
 
+// اسم الأكاديمية الحالية للعناوين والتقارير
+function _acadTitle(){
+  return (window.CURRENT_ACADEMY_KEY || 'shamali') === 'shamali' ? 'أكاديمية الشمالي لكرة القدم' : (_curAcadName() || 'أكاديمية');
+}
+function _acadTitleEn(){
+  return (window.CURRENT_ACADEMY_KEY || 'shamali') === 'shamali' ? 'AL-SHAMALI FOOTBALL ACADEMY' : String((window.CURRENT_ACADEMY && window.CURRENT_ACADEMY.NAME_EN) || '').toUpperCase();
+}
+
 // يقبل معرّف Drive أو رابطاً كاملاً ويُرجع المعرّف
 function _driveId(v){
   v = String(v || '').trim();
@@ -1691,7 +1699,7 @@ function renderSched(){
     '<div style="background:linear-gradient(135deg,#3b0a0a,#b81d22);padding:28px 16px 24px;text-align:center;color:#fff;">'+
       '<div style="font-size:40px;margin-bottom:8px;">⚽</div>'+
       '<div style="font-size:20px;font-weight:900;">جدول التدريب</div>'+
-      '<div style="font-size:12px;opacity:.75;margin-top:4px;">أكاديمية الشمالي لكرة القدم</div>'+
+      '<div style="font-size:12px;opacity:.75;margin-top:4px;">'+_acadTitle()+'</div>'+
     '</div>'+
     '<div style="padding:20px 16px;">'+
 
@@ -1748,7 +1756,7 @@ function renderCch(){
         '<div style="background:linear-gradient(135deg,#0d3320,#16a34a);padding:24px 16px;text-align:center;color:#fff;">'+
         '<div style="font-size:40px;margin-bottom:6px;">👨‍🏫</div>'+
         '<div style="font-size:18px;font-weight:900;">الطاقم التدريبي</div>'+
-        '<div style="font-size:11px;opacity:.7;margin-top:4px;">أكاديمية الشمالي لكرة القدم</div></div>'+
+        '<div style="font-size:11px;opacity:.7;margin-top:4px;">'+_acadTitle()+'</div></div>'+
         '<div class="card"><div class="al al-warn" style="text-align:center;">لا توجد بيانات مدربين بعد.</div></div>';
       return;
     }
@@ -1756,7 +1764,7 @@ function renderCch(){
       '<div style="background:linear-gradient(135deg,#0d3320,#16a34a);padding:28px 16px 20px;text-align:center;color:#fff;">'+
       '<div style="font-size:11px;color:rgba(212,175,55,.9);font-weight:800;letter-spacing:2px;margin-bottom:6px;">COACHING STAFF</div>'+
       '<div style="font-size:20px;font-weight:900;">الطاقم التدريبي</div>'+
-      '<div style="font-size:11px;opacity:.7;margin-top:4px;">أكاديمية الشمالي لكرة القدم 🇴🇲</div></div>';
+      '<div style="font-size:11px;opacity:.7;margin-top:4px;">'+_acadTitle()+' 🇴🇲</div></div>';
 
     coaches.forEach(function(c, i){
       var img = c.photo ? 'https://drive.google.com/thumbnail?id='+c.photo+'&sz=w300' : '';
@@ -4070,7 +4078,7 @@ function exportEvalPDF(btn){
     '<div class="header">'+
       '<div class="logo-row">'+
         '<div class="logo-circle">⚽</div>'+
-        '<div><div class="acad-name">أكاديمية الشمالي لكرة القدم</div>'+
+        '<div><div class="acad-name">'+_acadTitle()+'</div>'+
         '<div class="acad-sub">AL-SHAMALI FOOTBALL ACADEMY</div></div>'+
       '</div>'+
       '<div class="report-title">📊 تقرير التقييم الشهري للاعب</div>'+
@@ -4473,7 +4481,7 @@ function sendReportFromReq(playerId, playerName, phone){
         '@media print{body{background:#fff;padding:0;}.page{box-shadow:none;width:100%;min-height:auto;}.no-print{display:none!important;}}</style></head><body>'+
         '<div class="page">'+
         '<div class="header"><div class="logo-row"><div class="logo-circle">⚽</div>'+
-        '<div><div class="acad-name">أكاديمية الشمالي لكرة القدم</div><div class="acad-sub">AL-SHAMALI FOOTBALL ACADEMY</div></div></div>'+
+        '<div><div class="acad-name">'+_acadTitle()+'</div><div class="acad-sub">'+_acadTitleEn()+'</div></div></div>'+
         '<div class="report-title">📊 تقرير التقييم الشهري للاعب</div></div>'+
         '<div class="body">'+
         '<div class="player-card"><div class="player-avatar">👤</div><div>'+
@@ -4777,7 +4785,7 @@ function generateMonthlyReport(){
         '</div>'+
         // فوتر
         '<div style="background:#3b0a0a;padding:12px;text-align:center;margin-top:8px;">'+
-          '<div style="font-size:9px;color:rgba(255,255,255,.5);">أكاديمية الشمالي لكرة القدم · تقرير سري للاستخدام الداخلي · '+month+'</div>'+
+          '<div style="font-size:9px;color:rgba(255,255,255,.5);">'+_acadTitle()+' · تقرير سري للاستخدام الداخلي · '+month+'</div>'+
           '<div style="font-size:9px;color:#d4af37;margin-top:3px;">shamali-academy.github.io</div>'+
         '</div>'+
       '</div>';
@@ -5597,7 +5605,7 @@ function renderBirthdays(){
         '🎂 عيد ميلاد سعيد ' + p.playerName + '!\n\n' +
         'تهنئكم أكاديمية الشمالي بهذه المناسبة السعيدة 🎉\n' +
         'نتمنى لك عاماً مليئاً بالنجاح والتألق ⚽\n\n' +
-        '— أكاديمية الشمالي لكرة القدم'
+        '— '+_acadTitle()+''
       );
       var waLink = 'https://wa.me/'+waNum+'?text='+msg;
       var bg = highlight ? 'background:linear-gradient(135deg,#fff7ed,#fef3c7);border:2px solid #f59e0b;' : 'background:#fff;border:1px solid #e2e8f0;';
@@ -6197,7 +6205,7 @@ function exportMatchPDF() {
     '.info{text-align:center;color:#555;margin:4px 0;font-size:13px;}'+
     '.footer{text-align:center;margin-top:20px;font-size:11px;color:#999;}'+
     '</style></head><body>'+
-    '<h2>🦅 أكاديمية الشمالي لكرة القدم</h2>'+
+    '<h2>🦅 '+_acadTitle()+'</h2>'+
     '<h3>قائمة مباراة: الشمالي vs '+sel.opponent+'</h3>'+
     (dateStr ? '<p class="info">📅 '+dateStr+(sel.time?' &nbsp;⏰ '+sel.time:'')+'</p>' : '')+
     (sel.venue ? '<p class="info">📍 '+sel.venue+'</p>' : '')+
@@ -6952,7 +6960,7 @@ function initSponsorTrack(){
 // ── Share ──
 function shareApp() {
   var data = {
-    title: '🦅 أكاديمية الشمالي لكرة القدم',
+    title: '🦅 '+_acadTitle()+'',
     text: 'البوابة الإلكترونية لأكاديمية الشمالي — التسجيل · الحضور · التكريم · المدربون',
     url: 'https://salimsrsamri4-tech.github.io/shamali-academy'
   };
