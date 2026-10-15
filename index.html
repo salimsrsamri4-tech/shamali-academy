@@ -235,6 +235,22 @@ function applyAcademy(acad){
     });
   }
   document.title = 'بوابة ' + acad.NAME;
+  _applyTermsFees(acad);
+}
+
+// يحدّث نص الرسوم في نافذة الشروط بما يطابق رسوم الأكاديمية الحالية
+function _applyTermsFees(acad){
+  var reg = acad.REG_FEE != null ? acad.REG_FEE : 10;
+  var monthly = acad.MONTHLY_FEE != null ? acad.MONTHLY_FEE : 20;
+  var sessions = acad.SESSIONS != null ? acad.SESSIONS : 8;
+  var modal = document.getElementById('termsModal');
+  if(!modal) return;
+  var box = modal.querySelector('div[style*="line-height:1.8"]');
+  if(!box) return;
+  var b1 = box.querySelector('b');
+  if(b1 && b1.nextSibling) b1.nextSibling.textContent = ' ' + reg + ' ريال عماني مع الزي.';
+  var items = box.querySelectorAll('b');
+  if(items[1] && items[1].nextSibling) items[1].nextSibling.textContent = ' ' + monthly + ' ريال شهرياً مقابل ' + sessions + ' حصص.';
 }
 
 window.addEventListener('load',function(){
@@ -447,6 +463,31 @@ window.addEventListener('load',function(){
   </div>
   <i class="fas fa-external-link-alt" style="font-size:12px;opacity:.6;"></i>
 </a>
+<!-- نافذة الشروط - خارج #content حتى لا تُحذف عند تغيير المحتوى -->
+<div id="termsModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:9000;align-items:center;justify-content:center;overflow-y:auto;padding:20px;">
+  <div style="background:#fff;border-radius:14px;max-width:600px;width:100%;margin:auto;">
+    <div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:16px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:15px;font-weight:900;color:#fff;">شروط وأحكام الانضمام</div>
+      <button data-act="closeTerms" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+    </div>
+    <div style="padding:16px;">
+      <div style="background:#f1f5f9;border-radius:10px;padding:14px;margin-bottom:12px;font-size:12px;line-height:1.8;">
+        <b>1. رسوم التسجيل:</b> 10 ريال عماني مع الزي.<br>
+        <b>2. الرسوم الشهرية:</b> 20 ريال شهرياً مقابل 8 حصص.<br>
+        <b>3. الالتزام:</b> الرسوم واجبة بغض النظر عن الحضور.<br>
+        <b>4. المباريات:</b> للأكاديمية حق إشراك اللاعب في البطولات.<br>
+        <b>5. الانضباط:</b> الالتزام بلوائح الأكاديمية.<br>
+        <b>6. الصحة:</b> اللاعب يتمتع بصحة جيدة.<br>
+        <b>7. التصوير:</b> الموافقة على نشر الصور.
+      </div>
+      <div style="margin-bottom:8px;"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px;"><input type="checkbox" class="tm-check"> <span style="font-size:12px;">أوافق على رسوم التسجيل والرسوم الشهرية</span></label></div>
+      <div style="margin-bottom:8px;"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px;"><input type="checkbox" class="tm-check"> <span style="font-size:12px;">أقر بالحالة الصحية لابني</span></label></div>
+      <div style="margin-bottom:12px;"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px;"><input type="checkbox" class="tm-check"> <span style="font-size:12px;">أوافق على نشر صور ابني</span></label></div>
+      <button class="btn-sub" data-act="acceptTerms">أوافق على الشروط وأغلق ✅</button>
+    </div>
+  </div>
+</div>
+
 <div id="content" style="padding:12px;max-width:700px;margin:0 auto;">
 <div class="card" id="regPage">
 
@@ -576,30 +617,6 @@ window.addEventListener('load',function(){
 
 </div>
 
-<!-- نافذة الشروط - خارج #content حتى لا تُحذف عند تغيير المحتوى -->
-<div id="termsModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:9000;align-items:center;justify-content:center;overflow-y:auto;padding:20px;">
-  <div style="background:#fff;border-radius:14px;max-width:600px;width:100%;margin:auto;">
-    <div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:16px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center;">
-      <div style="font-size:15px;font-weight:900;color:#fff;">شروط وأحكام الانضمام</div>
-      <button data-act="closeTerms" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
-    </div>
-    <div style="padding:16px;">
-      <div style="background:#f1f5f9;border-radius:10px;padding:14px;margin-bottom:12px;font-size:12px;line-height:1.8;">
-        <b>1. رسوم التسجيل:</b> 10 ريال عماني مع الزي.<br>
-        <b>2. الرسوم الشهرية:</b> 20 ريال شهرياً مقابل 8 حصص.<br>
-        <b>3. الالتزام:</b> الرسوم واجبة بغض النظر عن الحضور.<br>
-        <b>4. المباريات:</b> للأكاديمية حق إشراك اللاعب في البطولات.<br>
-        <b>5. الانضباط:</b> الالتزام بلوائح الأكاديمية.<br>
-        <b>6. الصحة:</b> اللاعب يتمتع بصحة جيدة.<br>
-        <b>7. التصوير:</b> الموافقة على نشر الصور.
-      </div>
-      <div style="margin-bottom:8px;"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px;"><input type="checkbox" class="tm-check"> <span style="font-size:12px;">أوافق على رسوم التسجيل والرسوم الشهرية</span></label></div>
-      <div style="margin-bottom:8px;"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px;"><input type="checkbox" class="tm-check"> <span style="font-size:12px;">أقر بالحالة الصحية لابني</span></label></div>
-      <div style="margin-bottom:12px;"><label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px;"><input type="checkbox" class="tm-check"> <span style="font-size:12px;">أوافق على نشر صور ابني</span></label></div>
-      <button class="btn-sub" data-act="acceptTerms">أوافق على الشروط وأغلق ✅</button>
-    </div>
-  </div>
-</div>
 
 <script>
 // ===== نظام تعدد الأكاديميات =====
@@ -652,7 +669,16 @@ function _fillAcadDefaults(k, a){
   if(!a.LOGO)       a.LOGO       = '';
   if(!a.DARK_COLOR) a.DARK_COLOR = a.PRIMARY_COLOR || '#1e3a5f';
   if(!a.COACH_PASS) a.COACH_PASS = ['1234'];
+  if(a.REG_FEE == null)     a.REG_FEE     = 10;
+  if(a.MONTHLY_FEE == null) a.MONTHLY_FEE = 20;
+  if(a.SESSIONS == null)    a.SESSIONS    = 8;
   return a;
+}
+
+// يحوّل نص الرسوم من الشيت إلى رقم؛ يُرجع الافتراضي إذا كان الحقل فارغاً أو غير رقمي
+function _feeNum(v, def){
+  var n = parseFloat(String(v == null ? '' : v).replace(/[^\d.]/g, ''));
+  return isNaN(n) ? def : n;
 }
 
 // قراءة معامل الأكاديمية من الرابط (?academy=shamali)
@@ -743,6 +769,9 @@ function loginNewAcad(acadKey){
       TRAIN_DAYS:  found['أيام التدريب']||'',
       TRAIN_TIME:  found['وقت التدريب']||'',
       CATEGORIES:  found['الفئات العمرية']||'',
+      REG_FEE:     _feeNum(found['رسوم التسجيل'], 10),
+      MONTHLY_FEE: _feeNum(found['الرسوم الشهرية'], 20),
+      SESSIONS:    _feeNum(found['عدد الحصص'], 8),
       GRASS:       found['نوع العشب']||'',
       BRANCHES:    found['عدد الأفرع']||'',
       FOUND_YEAR:  found['سنة التأسيس']||'',
@@ -1012,6 +1041,9 @@ function _pickerApply(key, found, adminPass, coachPass){
       TRAIN_DAYS:  found['أيام التدريب']||'',
       TRAIN_TIME:  found['وقت التدريب']||'',
       CATEGORIES:  found['الفئات العمرية']||'',
+      REG_FEE:     _feeNum(found['رسوم التسجيل'], 10),
+      MONTHLY_FEE: _feeNum(found['الرسوم الشهرية'], 20),
+      SESSIONS:    _feeNum(found['عدد الحصص'], 8),
       HIDE_SECTIONS: ['tournaments','festival','shamali_specific']
     });
     ACADEMIES[key] = acad;
@@ -4705,6 +4737,30 @@ function renderAdminTools(){
       '</div>'+
     '</div>'+
 
+    // رسوم التسجيل والاشتراك
+    '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.07);overflow:hidden;">'+
+      '<div style="background:linear-gradient(135deg,#0d3320,#16a34a);padding:14px 16px;display:flex;align-items:center;gap:10px;">'+
+        '<div style="font-size:24px;">💰</div>'+
+        '<div><div style="font-size:14px;font-weight:900;color:#fff;">رسوم التسجيل والاشتراك</div>'+
+        '<div style="font-size:10px;color:rgba(255,255,255,.7);">تظهر في شروط الانضمام عند تسجيل لاعب</div></div>'+
+      '</div>'+
+      '<div style="padding:14px;display:flex;flex-direction:column;gap:10px;">'+
+        (window.CURRENT_ACADEMY_KEY === 'shamali'
+          ? '<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;">رسوم أكاديمية الشمالي ثابتة حالياً: 10 ريال تسجيل، 20 ريال شهرياً مقابل 8 حصص.</div>'
+          :
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+
+        '<div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">رسوم التسجيل (ريال)</label>'+
+        '<input id="feeReg" type="number" min="0" step="0.5" value="'+((window.CURRENT_ACADEMY&&window.CURRENT_ACADEMY.REG_FEE)||10)+'" class="inp"></div>'+
+        '<div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">الرسوم الشهرية (ريال)</label>'+
+        '<input id="feeMonthly" type="number" min="0" step="0.5" value="'+((window.CURRENT_ACADEMY&&window.CURRENT_ACADEMY.MONTHLY_FEE)||20)+'" class="inp"></div>'+
+        '</div>'+
+        '<div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">عدد الحصص الشهرية</label>'+
+        '<input id="feeSessions" type="number" min="0" step="1" value="'+((window.CURRENT_ACADEMY&&window.CURRENT_ACADEMY.SESSIONS)||8)+'" class="inp"></div>'+
+        '<div id="feeChangeMsg" style="display:none;font-size:12px;font-weight:700;padding:8px;border-radius:8px;text-align:center;"></div>'+
+        '<button onclick="saveAcadFees()" style="width:100%;background:linear-gradient(135deg,#0d3320,#16a34a);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">💾 حفظ الرسوم</button>')+
+      '</div>'+
+    '</div>'+
+
     // تغيير كلمات المرور
     '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.07);overflow:hidden;">'+
       '<div style="background:linear-gradient(135deg,#b45309,#92400e);padding:14px 16px;display:flex;align-items:center;gap:10px;">'+
@@ -4743,6 +4799,42 @@ function renderAdminTools(){
     '</div>'+
 
     '</div>';
+}
+
+function saveAcadFees(){
+  var acadKey = window.CURRENT_ACADEMY_KEY;
+  var msg = document.getElementById('feeChangeMsg');
+  if(!acadKey || acadKey==='shamali'){
+    if(msg){ msg.style.display='block'; msg.style.background='#fef2f2'; msg.style.color='#dc2626'; msg.textContent='❌ هذه الميزة للأكاديميات المسجّلة فقط'; }
+    return;
+  }
+  var reg = _feeNum(document.getElementById('feeReg').value, 10);
+  var monthly = _feeNum(document.getElementById('feeMonthly').value, 20);
+  var sessions = _feeNum(document.getElementById('feeSessions').value, 8);
+  msg.style.display='block'; msg.style.background='#fffbeb'; msg.style.color='#92400e';
+  msg.textContent='⏳ جارٍ الحفظ...';
+  fetch(PLATFORM.CENTRAL_GAS,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({action:'update',sheet:PLATFORM.JOIN_SHEET,column:'مفتاح_الأكاديمية',value:acadKey,
+      data:{'رسوم التسجيل':reg,'الرسوم الشهرية':monthly,'عدد الحصص':sessions}})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.status==='ok'){
+      window.CURRENT_ACADEMY.REG_FEE = reg;
+      window.CURRENT_ACADEMY.MONTHLY_FEE = monthly;
+      window.CURRENT_ACADEMY.SESSIONS = sessions;
+      ACADEMIES[acadKey].REG_FEE = reg;
+      ACADEMIES[acadKey].MONTHLY_FEE = monthly;
+      ACADEMIES[acadKey].SESSIONS = sessions;
+      _applyTermsFees(window.CURRENT_ACADEMY);
+      msg.style.background='#f0fdf4'; msg.style.color='#16a34a';
+      msg.textContent='✅ تم حفظ الرسوم بنجاح';
+    } else {
+      msg.style.background='#fef2f2'; msg.style.color='#dc2626';
+      msg.textContent='❌ '+(d.message||'فشل الحفظ');
+    }
+  }).catch(function(){
+    msg.style.background='#fef2f2'; msg.style.color='#dc2626';
+    msg.textContent='❌ خطأ في الاتصال';
+  });
 }
 
 function changeAcadPasswords(){
