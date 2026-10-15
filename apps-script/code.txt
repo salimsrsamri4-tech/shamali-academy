@@ -32,7 +32,13 @@ function handleAppend(ss, sheetName, rowData) {
     sh.getRange(1,1,1,hs.length).setFontWeight('bold');
   }
   if (rowData[ACAD_COL] !== undefined) _ensureAcadCol(sh);
+  // أضف أي عمود جديد موجود في البيانات ولم يكن في صف العناوين بعد، بدل تجاهل قيمته
   var headers = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0];
+  var missing = Object.keys(rowData).filter(function(k){ return headers.indexOf(k) === -1; });
+  if (missing.length) {
+    sh.getRange(1, headers.length + 1, 1, missing.length).setValues([missing]).setFontWeight('bold');
+    headers = headers.concat(missing);
+  }
   sh.appendRow(headers.map(function(h){ return rowData[h]!==undefined ? rowData[h] : ''; }));
   return json({status:'ok'});
 }
