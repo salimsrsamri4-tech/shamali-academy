@@ -1,0 +1,89 @@
+// أداة تنظيف الشيت قبل الإطلاق: لا تحذف شيئاً من تلقاء نفسها.
+// الخطوة 1: شغّل auditCleanup — تبني ورقة مراجعة فيها كل صف من الأوراق التالية مع مربع اختيار.
+// الخطوة 2: افتح ورقة "🧹 مراجعة الحذف" وفعّل المربع ✅ أمام كل صف تريد حذفه فعلاً، واتركه فارغاً لما تريد إبقاءه.
+// الخطوة 3: شغّل deleteCheckedRows — يحذف من مصدرها كل الصفوف التي فعّلت مربعها فقط، ويزيلها من ورقة المراجعة.
+// يمكن تكرار الخطوتين 1-3 أكثر من مرة بأمان.
+
+var CLEAN_SHEETS = ['الورقة1', 'بيانات المدربين', 'جدول التدريب', 'أكاديميات المنصة'];
+var CLEAN_REVIEW = '🧹 مراجعة الحذف';
+
+// أهم الأعمدة لعرضها كملخص لكل ورقة؛ أي عمود غير موجود يُتجاهل بصمت
+var CLEAN_SUMMARY_COLS = {
+  'الورقة1': ['التاريخ', 'الأكاديمية', 'رقم الملف', 'اسم ولي الأمر', 'اسم اللاعب', 'الهاتف'],
+  'بيانات المدربين': ['التوقيت', 'اسم المدرب', 'الاسم', 'الهاتف', 'الأكاديمية'],
+  'جدول التدريب': ['الفرع', 'أيام التدريب', 'الملعب', 'الأكاديمية'],
+  'أكاديميات المنصة': ['تاريخ الطلب', 'اسم الأكاديمية', 'اسم المسؤول', 'الحالة', 'رقم الواتساب']
+};
+
+function auditCleanup() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var review = ss.getSheetByName(CLEAN_REVIEW) || ss.insertSheet(CLEAN_REVIEW, 0);
+  review.clear();
+  review.getRange(1, 1, 1, 4).setValues([['احذف؟', 'الورقة', 'ملخص الصف', 'رقم الصف الأصلي']]);
+
+  var rows = [];
+  CLEAN_SHEETS.forEach(function(name) {
+    var sh = ss.getSheetByName(name);
+    if (!sh || sh.getLastRow() < 2) return;
+    var data = sh.getDataRange().getValues();
+    var headers = data[0];
+    var wanted = CLEAN_SUMMARY_COLS[name] || [];
+    var idx = wanted.map(function(h) { return headers.indexOf(h); }).filter(function(i) { return i > -1; });
+    var cols = idx.length ? idx : headers.map(function(_, i) { return i; }).slice(0, 5);
+    for (var r = 1; r < data.length; r++) {
+      var summary = cols.map(function(i) { return headers[i] + ': ' + data[r][i]; }).join(' | ');
+      rows.push([false, name, summary, r + 1]);
+    }
+  });
+
+  if (rows.length) {
+    review.getRange(2, 1, rows.length, 4).setValues(rows);
+    review.getRange(2, 1, rows.length, 1).insertCheckboxes();
+  }
+  review.setFrozenRows(1);
+  review.getRange(1, 1, 1, 4).setFontWeight('bold').setBackground('#1e3a5f').setFontColor('#fff');
+  review.setColumnWidth(1, 70);
+  review.setColumnWidth(2, 140);
+  review.setColumnWidth(3, 500);
+  review.setColumnWidth(4, 110);
+  review.setRightToLeft(true);
+  ss.setActiveSheet(review);
+  SpreadsheetApp.getUi().alert('تمت إضافة ' + rows.length + ' صفاً للمراجعة. فعّل مربع الاختيار أمام ما تريد حذفه، ثم شغّل deleteCheckedRows.');
+}
+
+function deleteCheckedRows() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var review = ss.getSheetByName(CLEAN_REVIEW);
+  if (!review || review.getLastRow() < 2) {
+    SpreadsheetApp.getUi().alert('لا توجد ورقة مراجعة. شغّل auditCleanup أولاً.');
+    return;
+  }
+  var data = review.getRange(2, 1, review.getLastRow() - 1, 4).getValues();
+
+  // تُحذف الصفوف من الأسفل للأعلى داخل كل ورقة مصدر حتى لا تتغيّر أرقام الصفوف أثناء الحذف
+  var bySheet = {};
+  data.forEach(function(row, i) {
+    if (row[0] !== true) return;
+    var name = row[1], srcRow = row[3];
+    if (!bySheet[name]) bySheet[name] = [];
+    bySheet[name].push({srcRow: srcRow, reviewIdx: i});
+  });
+
+  var deletedCount = 0;
+  Object.keys(bySheet).forEach(function(name) {
+    var sh = ss.getSheetByName(name);
+    if (!sh) return;
+    var list = bySheet[name].sort(function(a, b) { return b.srcRow - a.srcRow; });
+    list.forEach(function(item) {
+      sh.deleteRow(item.srcRow);
+      deletedCount++;
+    });
+  });
+
+  // إزالة الصفوف المحذوفة من ورقة المراجعة نفسها (من الأسفل للأعلى أيضاً)
+  for (var i = data.length - 1; i >= 0; i--) {
+    if (data[i][0] === true) review.deleteRow(i + 2);
+  }
+
+  SpreadsheetApp.getUi().alert('تم حذف ' + deletedCount + ' صفاً.');
+}

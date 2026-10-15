@@ -18,7 +18,8 @@
 <pre id="code"></pre>
 <script>
 var text = '';
-var file = new URLSearchParams(location.search).get('f') === 'format' ? 'format.txt' : 'code.txt';
+var fparam = new URLSearchParams(location.search).get('f');
+var file = (fparam === 'format' || fparam === 'cleanup') ? fparam + '.txt' : 'code.txt';
 fetch(file, {cache: 'no-store'}).then(function(r){ return r.text(); }).then(function(t){
   text = t;
   document.getElementById('code').textContent = t;
