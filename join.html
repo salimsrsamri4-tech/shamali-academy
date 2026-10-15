@@ -448,6 +448,23 @@ textarea.inp{resize:vertical;min-height:88px;}
         <input class="inp" id="trainTime" type="text" placeholder="مثال: من ٤ عصراً إلى ٦ مساءً">
       </div>
 
+      <div class="sep"></div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="regFee">رسوم التسجيل (ريال عماني)</label>
+          <input class="inp" id="regFee" type="number" min="0" step="0.5" placeholder="مثال: 10">
+        </div>
+        <div class="field">
+          <label for="monthlyFee">الرسوم الشهرية (ريال عماني)</label>
+          <input class="inp" id="monthlyFee" type="number" min="0" step="0.5" placeholder="مثال: 20">
+        </div>
+      </div>
+      <div class="field">
+        <label for="sessionsCount">عدد الحصص الشهرية</label>
+        <input class="inp" id="sessionsCount" type="number" min="0" step="1" placeholder="مثال: 8">
+      </div>
+
       <div class="field">
         <label for="cats">الفئات العمرية</label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;" id="catsCheckboxes">
@@ -576,6 +593,9 @@ function submitForm(){
   var grassType   = document.getElementById('grassType').value;
   var trainDays   = document.getElementById('trainDays').value.trim();
   var trainTime   = document.getElementById('trainTime').value.trim();
+  var regFee      = document.getElementById('regFee').value.trim();
+  var monthlyFee  = document.getElementById('monthlyFee').value.trim();
+  var sessionsCount = document.getElementById('sessionsCount').value.trim();
   var cats        = document.getElementById('cats').value.trim();
   var instagram   = document.getElementById('instagram').value.trim();
   var twitter     = document.getElementById('twitter').value.trim();
@@ -672,6 +692,9 @@ function submitForm(){
         'نوع العشب':          grassType,
         'أيام التدريب':       trainDays,
         'وقت التدريب':        trainTime,
+        'رسوم التسجيل':       regFee,
+        'الرسوم الشهرية':     monthlyFee,
+        'عدد الحصص':          sessionsCount,
         'عدد اللاعبين':       count,
         'الفئات العمرية':     cats,
         'إنستغرام':           instagram,
