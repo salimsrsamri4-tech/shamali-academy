@@ -48,14 +48,14 @@ function auditCleanup() {
   review.setColumnWidth(4, 110);
   review.setRightToLeft(true);
   ss.setActiveSheet(review);
-  SpreadsheetApp.getUi().alert('تمت إضافة ' + rows.length + ' صفاً للمراجعة. فعّل مربع الاختيار أمام ما تريد حذفه، ثم شغّل deleteCheckedRows.');
+  Logger.log('تمت إضافة ' + rows.length + ' صفاً للمراجعة. افتح ورقة "' + CLEAN_REVIEW + '" وفعّل مربع الاختيار أمام ما تريد حذفه، ثم شغّل deleteCheckedRows.');
 }
 
 function deleteCheckedRows() {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var review = ss.getSheetByName(CLEAN_REVIEW);
   if (!review || review.getLastRow() < 2) {
-    SpreadsheetApp.getUi().alert('لا توجد ورقة مراجعة. شغّل auditCleanup أولاً.');
+    Logger.log('لا توجد ورقة مراجعة. شغّل auditCleanup أولاً.');
     return;
   }
   var data = review.getRange(2, 1, review.getLastRow() - 1, 4).getValues();
@@ -85,5 +85,5 @@ function deleteCheckedRows() {
     if (data[i][0] === true) review.deleteRow(i + 2);
   }
 
-  SpreadsheetApp.getUi().alert('تم حذف ' + deletedCount + ' صفاً.');
+  Logger.log('تم حذف ' + deletedCount + ' صفاً.');
 }
