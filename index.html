@@ -1239,7 +1239,7 @@ function apiGet(sheetName, forceRefresh, allAcads) {
         players.forEach(function(p){ ids[String(p['رقم الملف']||'').trim()] = 1; });
         data = data.filter(function(r){
           var id = String(r['رقم الملف'] || r['ID'] || r['معرف اللاعب'] || '').trim();
-          return !id || ids[id];
+          return id ? !!ids[id] : (window.CURRENT_ACADEMY_KEY || 'shamali') === 'shamali';
         });
         _apiCache[cacheKey] = { data: data, ts: Date.now() };
         return data;
@@ -1267,6 +1267,14 @@ function apiClearCache(sheetName) {
 }
 
 function apiAppend(sheetName, dataObj) {
+  if(Array.isArray(dataObj)) {
+    if(dataObj.length > 1) {
+      return dataObj.reduce(function(p, row){
+        return p.then(function(){ return apiAppend(sheetName, row); });
+      }, Promise.resolve());
+    }
+    dataObj = dataObj[0] || {};
+  }
   if(CONFIG.GAS_URL) {
     var rowData = Array.isArray(dataObj) ? dataObj[0] : dataObj;
     var acadKey = window.CURRENT_ACADEMY_KEY || 'shamali';
@@ -1495,13 +1503,43 @@ function saveRenewal(data) {
 }
 
 // Save attendance
-function saveAttendance(records) {
-  var now = new Date().toISOString();
+function saveAttendanceRecords(records) {
+  var today = _localDate(new Date());
   var date = new Date().toLocaleDateString('ar-SA');
   var rows = records.map(function(r){
-    return {'التاريخ': now, 'اليوم': date, 'رقم الملف': r.id, 'اسم اللاعب': r.name, 'الحضور': r.status};
+    return {'التاريخ': today, 'اليوم': date, 'رقم الملف': r.id, 'اسم اللاعب': r.name, 'الحالة': r.status,
+            'وقت التسجيل': new Date().toLocaleString('ar-SA')};
   });
-  return apiAppend('سجل الحضور اليومي', rows);
+  return apiAppend('سجل الحضور', rows);
+}
+
+// تاريخ محلي YYYY-MM-DD (toISOString يُرجع تاريخ غرينتش فيسبق يوماً في عُمان بعد منتصف الليل)
+function _localDate(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+// كل سجلات الحضور: الورقة الحالية "سجل الحضور" + القديمة "سجل الحضور اليومي"، بحقول موحّدة
+function getAttendance(allAcads){
+  return Promise.all([
+    apiGet('سجل الحضور', false, allAcads).catch(function(){ return []; }),
+    apiGet('سجل الحضور اليومي', false, allAcads).catch(function(){ return []; })
+  ]).then(function(res){
+    return [].concat(res[0] || [], res[1] || []).map(function(r){
+      var o = {};
+      Object.keys(r).forEach(function(k){ o[k] = r[k]; });
+      var status = String(r['الحالة'] || r['الحضور'] || '').trim();
+      o['الحالة'] = status; o['الحضور'] = status;
+      var d = r['التاريخ'];
+      if(d instanceof Date) d = _localDate(d);
+      else {
+        d = String(d || '');
+        if(/^\d{4}-\d\d-\d\dT/.test(d)) d = _localDate(new Date(d));
+      }
+      o['التاريخ'] = d;
+      o['رقم الملف'] = String(r['رقم الملف'] || r['ID'] || '').trim();
+      return o;
+    });
+  });
 }
 
 // Save award
@@ -2221,7 +2259,7 @@ function renderDashboard(){
     apiGet('بيانات المدربين').catch(function(){ return []; }),
     apiGet('تقويم الأكاديمية').catch(function(){ return []; }),
     apiGet('نتائج المباريات').catch(function(){ return []; }),
-    apiGet('سجل الحضور اليومي').catch(function(){ return []; })
+    getAttendance()
   ]).then(function(res){
     var players  = res[0];
     var renewals = Array.isArray(res[1]) ? res[1] : [];
@@ -4036,7 +4074,7 @@ function logout() {
 // ===== PLAYER STATS =====
 function renderPlayerStats(){
   document.getElementById('content').innerHTML='<div class="ldg"><span class="sp"></span></div>';
-  Promise.all([getPlayers().catch(function(){ return []; }), apiGet('سجل الحضور اليومي').catch(function(){ return []; })]).then(function(res){
+  Promise.all([getPlayers().catch(function(){ return []; }), getAttendance()]).then(function(res){
     var players = res[0];
     var attRows = Array.isArray(res[1]) ? res[1] : [];
     var attMap = {};
@@ -4901,7 +4939,7 @@ function generateMonthlyReport(){
   Promise.all([
     getPlayers().catch(function(){ return []; }),
     apiGet('تجديدات الاشتراكات').catch(function(){ return []; }),
-    apiGet('سجل الحضور اليومي').catch(function(){ return []; }),
+    getAttendance(),
     apiGet('نتائج المباريات').catch(function(){ return []; }),
     apiGet('بيانات المدربين').catch(function(){ return []; })
   ]).then(function(res){
@@ -7048,7 +7086,7 @@ function submitAtt() {
     records.push({id:id, name:name, status: pres ? 'حاضر' : 'غائب'});
   });
   showL(true);
-  saveAttendance(records).then(function(){
+  saveAttendanceRecords(records).then(function(){
     showL(false);
     alert('✅ تم حفظ الحضور!');
   });
@@ -7247,14 +7285,13 @@ function renderCoachAttend(){
     years.sort(function(a,b){return b-a;});
     _attSelectedYears = [];
 
-    // حساب تاريخ الاثنين والأربعاء القادمين/الحاليين
+    // آخر 7 أيام (اليوم أولاً) لأن أيام التدريب تختلف بين الأكاديميات
     var now = new Date();
     var days = [];
-    for(var i=-1; i<=7; i++){
-      var d = new Date(now); d.setDate(now.getDate()+i);
-      if(d.getDay()===1 || d.getDay()===3) days.push(d);
+    for(var i=0; i<7; i++){
+      var d = new Date(now); d.setDate(now.getDate()-i);
+      days.push(d);
     }
-    days = days.slice(0,4);
 
     var html =
       '<div style="background:linear-gradient(135deg,#0d3320,#16a34a);padding:24px 16px 18px;text-align:center;color:#fff;">'+
@@ -7282,7 +7319,7 @@ function renderCoachAttend(){
     var dayNames = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
     days.forEach(function(d,i){
       var label = dayNames[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
-      var val = d.toISOString().split('T')[0];
+      var val = _localDate(d);
       html += '<button onclick="selectAttDay(\''+val+'\',\''+label+'\')" id="db_'+i+'" data-val="'+val+'" '+
         'style="padding:10px 14px;border-radius:10px;border:2px solid #cbd5e1;background:#fff;color:#475569;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;text-align:right;">'+label+'</button>';
     });
@@ -7423,7 +7460,7 @@ function saveAttendance(){
 function renderAttAdmin(){
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
-  apiGet('سجل الحضور').then(function(rows){
+  getAttendance().then(function(rows){
     if(!Array.isArray(rows)||!rows.length){
       el.innerHTML = '<div class="card"><div style="text-align:center;padding:32px;color:#64748b;">لا يوجد سجل حضور بعد</div></div>';
       return;
@@ -9704,7 +9741,7 @@ function renderParentHome(){
   Promise.all([
     apiGet('تجديدات الاشتراكات', false, true),
     apiGet('تقويم الأكاديمية'),
-    apiGet('سجل الحضور اليومي', false, true)
+    getAttendance(true)
   ]).then(function(res){
     var renewals = Array.isArray(res[0]) ? res[0] : [];
     var calendar = Array.isArray(res[1]) ? res[1] : [];
@@ -9799,7 +9836,7 @@ function renderParentPlayer(){
 
   Promise.all([
     apiGet('تجديدات الاشتراكات', false, true),
-    apiGet('سجل الحضور اليومي', false, true),
+    getAttendance(true),
     apiGet('تقويم الأكاديمية'),
     apiGet('تقييمات اللاعبين', false, true),
     apiGet('المقترحات والملاحظات', false, true)
