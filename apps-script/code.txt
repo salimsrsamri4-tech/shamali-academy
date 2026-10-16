@@ -50,9 +50,9 @@ function doGet(e) {
 
   if (action === 'get') return _actGet(ss, sheetName, p);
   if (action === 'login') return _login(p);
-  if (action === 'append') return handleAppend(ss, sheetName, JSON.parse(p.data || '{}'));
-  if (action === 'update') return _actUpdate(ss, sheetName, p.column, p.value, JSON.parse(p.data || '{}'));
-  if (action === 'delete') return _actDelete(ss, sheetName, p.idCol || 'id', p.idVal, '');
+  if (action === 'append') return _guardAppend(ss, sheetName, JSON.parse(p.data || '{}'), p.token);
+  if (action === 'update') return _guardUpdate(ss, sheetName, p.column, p.value, JSON.parse(p.data || '{}'), p.token);
+  if (action === 'delete') return _guardDelete(ss, sheetName, p.idCol || p.column || 'id', p.idVal !== undefined ? p.idVal : p.value, p.token);
   if (action === 'parentLookup') return _parentLookup(p);
   if (action === 'regCheck') return _regCheck(p);
   return json({status:'error', message:'Unknown action'});
@@ -71,7 +71,11 @@ function _actGet(ss, sheetName, p) {
     rows.push(row);
   }
   rows = _redact(sheetName, rows, p.token);
-  return json(rows.slice(0, parseInt(p.limit)||rows.length));
+  if (p.acad) rows = _acadFilter(sheetName, rows, String(p.acad).trim());
+  var lim = parseInt(p.limit) || rows.length;
+  // عند تجاوز الحد تُرجع الأحدث (آخر الصفوف) بدل الأقدم
+  if (rows.length > lim) rows = rows.slice(rows.length - lim);
+  return json(rows);
 }
 
 function _actUpdate(ss, sheetName, column, value, updateData) {
@@ -80,6 +84,11 @@ function _actUpdate(ss, sheetName, column, value, updateData) {
   var headers = data[0];
   var colIdx = headers.indexOf(column);
   if (colIdx === -1) return json({status:'error', message:'Column not found'});
+  var missing = Object.keys(updateData).filter(function(k){ return headers.indexOf(k) === -1; });
+  if (missing.length) {
+    sh.getRange(1, headers.length + 1, 1, missing.length).setValues([missing]).setFontWeight('bold');
+    headers = headers.concat(missing);
+  }
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][colIdx]) === String(value)) {
       Object.keys(updateData).forEach(function(key) {
@@ -174,11 +183,11 @@ function doPost(e) {
   var action = body.action || '';
   var sheetName = body.sheet || 'Sheet1';
 
-  if (action === 'append') return handleAppend(ss, sheetName, body.data || {});
-  if (action === 'update') return _actUpdate(ss, sheetName, body.column, body.value, body.data || {});
+  if (action === 'append') return _guardAppend(ss, sheetName, body.data || {}, body.token);
+  if (action === 'update') return _guardUpdate(ss, sheetName, body.column, body.value, body.data || {}, body.token);
   if (action === 'delete') {
     var val = body.value !== undefined ? body.value : body.idVal;
-    return _actDelete(ss, sheetName, body.column || body.idCol || 'id', val, body.acad);
+    return _guardDelete(ss, sheetName, body.column || body.idCol || 'id', val, body.token);
   }
   if (action === 'uploadFile') return _uploadOne(body);
   if (action === 'uploadFiles' || (!action && (body.parentIdFile || body.playerPhoto || body.playerDoc))) {
@@ -192,6 +201,7 @@ function _uploadOne(body) {
   try {
     var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
     var decoded = Utilities.base64Decode(body.fileData || '');
+    if (!_okMime(body.mimeType || 'image/jpeg')) return json({status:'error', message:'نوع الملف غير مسموح'});
     var blob = Utilities.newBlob(decoded, body.mimeType || 'image/jpeg', body.fileName || 'file');
     var file = folder.createFile(blob);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
@@ -214,6 +224,7 @@ function _uploadMany(body) {
         var raw = body[key];
         var base64Data = raw.indexOf(',') > -1 ? raw.split(',')[1] : raw;
         var mimeType = raw.indexOf('data:') === 0 ? raw.split(';')[0].split(':')[1] : 'image/jpeg';
+        if (!_okMime(mimeType)) { result.files[key + 'Id'] = ''; return; }
         var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), mimeType, key + '_' + (body.name || Date.now()));
         var file = folder.createFile(blob);
         file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
@@ -226,4 +237,114 @@ function _uploadMany(body) {
   } catch(err) {
     return json({status:'error', message: err.toString()});
   }
+}
+
+// ===== الحماية: من يحق له الإضافة والتعديل والحذف =====
+// تحتاج من Auth.gs: _session, BUILTIN_PASS, PASS_COLS, JOIN_SHEET, _acadKey
+
+// نماذج يملؤها الزوار بدون دخول
+var PUBLIC_APPEND = ['الورقة1', 'أكاديميات المنصة', 'المقترحات والملاحظات', 'طلبات التقارير',
+  'تجديدات الاشتراكات', 'شكاوى البطولة', 'لاعبو البطولة', 'الأكاديميات المسجلة', 'طلبات اللاعبين',
+  'حذف اللاعبين', 'تسجيل مهرجان نبض المستقبل 2026', 'الجهاز الفني والإداري - مهرجان نبض المستقبل 2026'];
+var PLAYER_SHEETS = ['سجل الحضور', 'سجل الحضور اليومي', 'تجديدات الاشتراكات', 'تقييمات اللاعبين',
+  'صور اللاعبين', 'تكريم المجيدين'];
+var DENY_SHEET = 'سجل الرفض';
+
+function _okMime(m) { return /^image\//.test(String(m)) || String(m) === 'application/pdf'; }
+
+// تنقية النصوص من الأكواد قبل حفظها (كلمات المرور تُترك كما هي)
+function _cleanRow(row) {
+  var out = {};
+  Object.keys(row || {}).forEach(function(k) {
+    var v = row[k];
+    if (typeof v === 'string' && PASS_COLS.indexOf(k) < 0) {
+      v = v.replace(/[<>]/g, '').replace(/"/g, '”').replace(/'/g, '’');
+      if (/^\s*(javascript|vbscript|data):/i.test(v)) v = '';
+    }
+    out[k] = v;
+  });
+  return out;
+}
+
+function _deny(action, sheetName, reason) {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var sh = getOrCreateSheet(ss, DENY_SHEET);
+    if (sh.getLastRow() === 0) sh.appendRow(['الوقت', 'العملية', 'الورقة', 'السبب']);
+    sh.appendRow([new Date(), action, sheetName, reason]);
+  } catch (e) {}
+  return json({status:'error', message: reason});
+}
+
+function _guardAppend(ss, sheetName, rowData, token) {
+  if (Array.isArray(rowData)) {
+    var res = json({status:'ok'});
+    rowData.forEach(function(r) { res = _guardAppend(ss, sheetName, r || {}, token); });
+    return res;
+  }
+  var s = _session(token);
+  if (!s && PUBLIC_APPEND.indexOf(sheetName) < 0) return _deny('إضافة', sheetName, 'تحتاج تسجيل دخول');
+  if (!s || s.role !== 'super') {
+    rowData = _cleanRow(rowData);
+    if (sheetName === JOIN_SHEET) {
+      rowData['الحالة'] = 'جديد';
+      var key = String(rowData['مفتاح_الأكاديمية'] || '').trim();
+      if (key && _sheetObjects(JOIN_SHEET).some(function(r) { return _acadKey(r) === key; }))
+        return _deny('إضافة', sheetName, 'مفتاح أكاديمية مكرر');
+    }
+    if (s && s.name && ACAD_SHEETS.indexOf(sheetName) > -1) rowData[ACAD_COL] = s.name;
+  }
+  return handleAppend(ss, sheetName, rowData);
+}
+
+function _guardUpdate(ss, sheetName, column, value, data, token) {
+  var s = _session(token);
+  if (!s) return _deny('تعديل', sheetName, 'تحتاج تسجيل دخول');
+  if (s.role === 'super') return _actUpdate(ss, sheetName, column, value, data);
+  if (s.role !== 'admin') return _deny('تعديل', sheetName, 'صلاحية المدير مطلوبة');
+  data = _cleanRow(data);
+  if (sheetName === JOIN_SHEET) {
+    if (column !== 'مفتاح_الأكاديمية' || String(value) !== String(s.acad))
+      return _deny('تعديل', sheetName, 'لا يمكن تعديل أكاديمية أخرى');
+    ['الحالة', 'مفتاح_الأكاديمية', 'رقم الطلب', 'اسم الأكاديمية'].forEach(function(k) { delete data[k]; });
+  }
+  return _actUpdate(ss, sheetName, column, value, data);
+}
+
+function _guardDelete(ss, sheetName, column, value, token) {
+  var s = _session(token);
+  if (!s) return _deny('حذف', sheetName, 'تحتاج تسجيل دخول');
+  if (s.role === 'super') return _actDelete(ss, sheetName, column, value, '');
+  if (s.role !== 'admin') return _deny('حذف', sheetName, 'صلاحية المدير مطلوبة');
+  if (sheetName === JOIN_SHEET) return _deny('حذف', sheetName, 'غير مسموح');
+  var sh = ss.getSheetByName(sheetName);
+  var lc = sh ? sh.getLastColumn() : 0;
+  var hasAcad = lc > 0 && sh.getRange(1, 1, 1, lc).getValues()[0].indexOf(ACAD_COL) > -1;
+  if (!hasAcad && s.acad !== 'shamali') return _deny('حذف', sheetName, 'لا يمكن الحذف من هذه الورقة');
+  return _actDelete(ss, sheetName, column, value, hasAcad ? s.name : '');
+}
+
+// تقليل البيانات المرسلة: صفوف أكاديمية واحدة فقط (الحماية الفعلية في _redact والحراس أعلاه)
+function _acadMatch(rowAcad, acad) {
+  rowAcad = String(rowAcad || '').trim();
+  return rowAcad === acad || (rowAcad === '' && acad === BUILTIN_PASS.shamali.name);
+}
+
+function _acadFilter(sheetName, rows, acad) {
+  if (sheetName === 'الورقة1' || ACAD_SHEETS.indexOf(sheetName) > -1) {
+    if (!rows.length || !(ACAD_COL in rows[0])) return rows;
+    return rows.filter(function(r) { return _acadMatch(r[ACAD_COL], acad); });
+  }
+  if (PLAYER_SHEETS.indexOf(sheetName) > -1) {
+    var ids = {};
+    _sheetObjects('الورقة1').forEach(function(r) {
+      if (_acadMatch(r[ACAD_COL], acad)) ids[String(r['رقم الملف']).trim()] = 1;
+    });
+    var isShamali = acad === BUILTIN_PASS.shamali.name;
+    return rows.filter(function(r) {
+      var id = String(r['رقم الملف'] || r['ID'] || r['معرف اللاعب'] || '').trim();
+      return id ? !!ids[id] : isShamali;
+    });
+  }
+  return rows;
 }

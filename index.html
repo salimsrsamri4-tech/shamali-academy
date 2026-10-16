@@ -943,13 +943,13 @@ function apFilter(q){
 function _pickerCard(key, name, sub, logo, color, idx, isFeatured){
   var isShamali = key === 'shamali';
   var delay = (idx*0.07)+'s';
-  var onclick = isShamali ? 'selectAcademy(\''+key+'\')' : 'showPassModal(\''+key+'\',\''+name.replace(/'/g,'')+'\',\''+color+'\')';
+  var onclick = isShamali ? 'selectAcademy(\''+key+'\')' : 'showPassModal(\''+esc(key)+'\',\''+esc(String(name).replace(/['"\\]/g,''))+'\',\''+esc(color)+'\')';
   return '<div id="pcard_'+key+'" class="ap-card'+(isFeatured?' featured':'')+'" style="animation-delay:'+delay+';border-color:'+(isFeatured?'rgba(212,175,55,.4)':'rgba(255,255,255,.08)')+';">'
     +(isFeatured ? '<div class="ap-badge">⭐ الرئيسية</div>' : '')
     +'<div class="ap-avatar" style="border:3px solid '+(isFeatured?'#d4af37':color)+';box-shadow:0 0 0 4px '+(isFeatured?'rgba(212,175,55,.15)':'rgba(255,255,255,.06)')+',0 8px 24px rgba(0,0,0,.3);">'
-    +'<img src="'+(logo||'logo.jpg')+'" onerror="this.src=\'logo.jpg\'" style="width:100%;height:100%;object-fit:contain;"></div>'
-    +'<div class="ap-card-name">'+name+'</div>'
-    +'<div class="ap-card-sub">'+(sub||'')+'</div>'
+    +'<img src="'+esc(/^https:\/\//.test(logo) ? logo : 'logo.jpg')+'" onerror="this.src=\'logo.jpg\'" style="width:100%;height:100%;object-fit:contain;"></div>'
+    +'<div class="ap-card-name">'+esc(name)+'</div>'
+    +'<div class="ap-card-sub">'+esc(sub||'')+'</div>'
     +'<button class="ap-enter-btn" onclick="'+onclick+'" '
     +'style="background:'+(isFeatured?'linear-gradient(135deg,#d4af37,#b8860b)':color)+';color:'+(isFeatured?'#0a1628':'#fff')+';">'
     +(isShamali ? '⚡ دخول مباشر' : '🔑 دخول الأكاديمية')
@@ -1208,7 +1208,9 @@ function apiGet(sheetName, forceRefresh, allAcads) {
   }
   var acadKey = window.CURRENT_ACADEMY_KEY || 'shamali';
   var url = CONFIG.GAS_URL
-    ? CONFIG.GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheetName) + '&limit=2000' + _tokenParam()
+    ? CONFIG.GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheetName) + '&limit=20000' + _tokenParam()
+      + ((!allAcads && (sheetName === 'الورقة1' || _ACAD_SHEETS.indexOf(sheetName) > -1 || _PLAYER_SHEETS.indexOf(sheetName) > -1))
+          ? '&acad=' + encodeURIComponent(_curAcadName() || ACADEMIES.shamali.NAME) : '')
     : CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName) + '&limit=2000';
   return _fetchWithRetry(url).then(function(r){ return r.json(); }).then(function(raw){
     // تحويل الاستجابة إلى مصفوفة كائنات دائماً
@@ -1376,6 +1378,35 @@ function _mapPlayerRows(r0, r1) {
 function _authToken(){ try{ return sessionStorage.getItem('tawfaToken') || ''; }catch(e){ return ''; } }
 function _setAuthToken(t){ try{ if(t) sessionStorage.setItem('tawfaToken', t); else sessionStorage.removeItem('tawfaToken'); }catch(e){} }
 function _tokenParam(){ var t = _authToken(); return t ? '&token=' + encodeURIComponent(t) : ''; }
+
+// يُرفق رمز الدخول بكل طلب إلى السكربت، لأن السكربت يرفض الإضافة/التعديل/الحذف الإداري بدونه
+(function(){
+  var origFetch = window.fetch.bind(window);
+  window.fetch = function(url, opts){
+    try {
+      var t = _authToken();
+      if(t && typeof url === 'string' && url.indexOf('script.google.com/macros/') > -1){
+        if(opts && String(opts.method || '').toUpperCase() === 'POST' && typeof opts.body === 'string'){
+          var b = JSON.parse(opts.body);
+          if(b && typeof b === 'object' && !Array.isArray(b) && !b.token){
+            b.token = t;
+            opts = Object.assign({}, opts, {body: JSON.stringify(b)});
+          }
+        } else if(url.indexOf('token=') === -1){
+          url += (url.indexOf('?') > -1 ? '&' : '?') + 'token=' + encodeURIComponent(t);
+        }
+      }
+    } catch(e){}
+    return origFetch(url, opts);
+  };
+})();
+
+// لعرض نصوص من الشيت داخل HTML بأمان
+function esc(v){
+  return String(v == null ? '' : v).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
 
 // تحقق كلمة المرور في السكربت. null = السكربت قديم ← يُستخدم التحقق المحلي القديم
 function _serverLogin(acad, pass, role){
@@ -7571,7 +7602,13 @@ function renderTournLogin(){
 function doTournLogin(){
   var pass = (document.getElementById('tournPass').value||'').trim();
   var err = document.getElementById('tournErr');
-  if(CONFIG.ADMIN_PASS.indexOf(pass)===-1){
+  _serverLogin(window.CURRENT_ACADEMY_KEY || 'shamali', pass, 'admin').then(function(res){
+    _doTournLoginResult(res === null ? CONFIG.ADMIN_PASS.indexOf(pass) > -1 : res.ok, err);
+  });
+}
+
+function _doTournLoginResult(ok, err){
+  if(!ok){
     err.style.display='block'; err.textContent='كلمة المرور غير صحيحة';
     return;
   }
@@ -12540,7 +12577,7 @@ function renderSuperAcademies(){
         '<div style="font-size:14px;font-weight:900;color:#0f172a;">'+a.NAME+'</div>'+
         '<span style="background:#0891b2;color:#fff;border-radius:20px;padding:2px 10px;font-size:10px;font-weight:700;">'+k+'</span>'+
       '</div>'+
-      '<div style="font-size:11px;color:#64748b;margin-bottom:4px;">📱 '+a.WA_NUM+' &nbsp;·&nbsp; 🔑 '+((a.ADMIN_PASS&&a.ADMIN_PASS[0])||'—')+'</div>'+
+      '<div style="font-size:11px;color:#64748b;margin-bottom:4px;">📱 '+esc(a.WA_NUM)+' &nbsp;·&nbsp; 🔑 '+esc((a.ADMIN_PASS&&a.ADMIN_PASS[0])||'—')+'</div>'+
       '<div style="background:#f8fafc;border-radius:8px;padding:8px;font-size:10px;color:#475569;margin-bottom:10px;direction:ltr;word-break:break-all;">'+link+'</div>'+
       '<div style="display:flex;gap:6px;">'+
         '<a href="'+link+'" target="_blank" '+
@@ -12630,22 +12667,20 @@ function approveJoinRequest(reqId, waNum, acadName, acadKey){
 
   // اشتق المفتاح من reqId إذا كان الحقل فارغاً
   if(!acadKey) acadKey = 'acad_' + (reqId||'').replace('JOIN-','').slice(-6);
-  var adminPass = '1234';
   var baseUrl   = window.location.origin + window.location.pathname;
   var acadLink  = baseUrl + '?academy=' + acadKey;
 
   // استخدم GET لتحديث الشيت (أكثر موثوقية مع GAS)
   var updateData = encodeURIComponent(JSON.stringify({
     'الحالة': 'مقبول',
-    'مفتاح_الأكاديمية': acadKey,
-    'كلمة_المرور': adminPass
+    'مفتاح_الأكاديمية': acadKey
   }));
   var updateUrl = PLATFORM.CENTRAL_GAS
     + '?action=update'
     + '&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET)
     + '&column=' + encodeURIComponent('رقم الطلب')
     + '&value='  + encodeURIComponent(reqId)
-    + '&data='   + updateData;
+    + '&data='   + updateData + _tokenParam();
 
   var img = new Image();
   img.onload = img.onerror = function(){
@@ -12656,7 +12691,7 @@ function approveJoinRequest(reqId, waNum, acadName, acadKey){
       '🏫 *أكاديمية:* '+acadName+'\n\n'+
       'يسعدنا انضمامكم إلى *منصة توفة | الكابتن الصغير* 🏆\n\n'+
       '📲 *رابط منصتكم:*\n'+acadLink+'\n\n'+
-      '🔑 *كلمة مرور الإدارة:* '+adminPass+'\n\n'+
+      '🔑 *كلمة مرور الإدارة:* كلمة المرور التي اخترتموها عند التسجيل\n\n'+
       'للدعم الفني تواصل معنا مباشرة.\n'+
       '_منصة توفة للأكاديميات الرياضية في سلطنة عُمان 🇴🇲_';
     window.open('https://api.whatsapp.com/send?phone='+waNum+'&text='+encodeURIComponent(msg),'_blank');
