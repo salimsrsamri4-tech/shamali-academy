@@ -235,7 +235,9 @@ function applyAcademy(acad){
     });
   }
   document.title = 'بوابة ' + acad.NAME;
+  CONFIG.WA_NUM = acad.WA_NUM || '';
   _applyTermsFees(acad);
+  _applyBranding(acad);
 }
 
 // يحدّث نص الرسوم في نافذة الشروط بما يطابق رسوم الأكاديمية الحالية
@@ -385,7 +387,7 @@ window.addEventListener('load',function(){
     <a href="services.html" target="_blank" style="color:#d4af37;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
       <i class="fas fa-globe"></i> خدماتنا الرقمية
     </a>
-    <a href="https://api.whatsapp.com/send?phone=96892126558" target="_blank">
+    <a id="sbWaLink" href="https://api.whatsapp.com/send?phone=96892126558" target="_blank">
       <i class="fab fa-whatsapp"></i> تواصل واتساب
     </a>
   </div>
@@ -592,7 +594,7 @@ window.addEventListener('load',function(){
 </form>
 </div>
 <!-- شركاء النجاح -->
-<div style="border-top:3px solid #b81d22;background:#fff;margin-top:0;">
+<div id="staticPartners" style="border-top:3px solid #b81d22;background:#fff;margin-top:0;">
   <div style="padding:12px;text-align:center;border-bottom:1px solid #e2e8f0;">
     <div style="font-size:14px;font-weight:900;color:#0f172a;">شركاء أكاديمية الشمالي</div>
   </div>
@@ -634,7 +636,8 @@ var ACADEMIES = {
     SHEETDB_URL: 'https://sheetdb.io/api/v1/19dnaxf04au5l',
     ADMIN_PASS: ['98555987'],
     COACH_PASS: ['1234'],
-    WA_NUM: '96892126558'
+    WA_NUM: '96892126558',
+    BANK_INFO: 'سالم راشد العامري | 92126558'
   },
   salem: {
     NAME: 'أكاديمية سالم',
@@ -672,6 +675,7 @@ function _fillAcadDefaults(k, a){
   if(a.REG_FEE == null)     a.REG_FEE     = 10;
   if(a.MONTHLY_FEE == null) a.MONTHLY_FEE = 20;
   if(a.SESSIONS == null)    a.SESSIONS    = 8;
+  if(a.BANK_INFO == null)   a.BANK_INFO   = '';
   return a;
 }
 
@@ -772,6 +776,7 @@ function loginNewAcad(acadKey){
       REG_FEE:     _feeNum(found['رسوم التسجيل'], 10),
       MONTHLY_FEE: _feeNum(found['الرسوم الشهرية'], 20),
       SESSIONS:    _feeNum(found['عدد الحصص'], 8),
+      BANK_INFO:   String(found['بيانات التحويل البنكي']||'').trim(),
       GRASS:       found['نوع العشب']||'',
       BRANCHES:    found['عدد الأفرع']||'',
       FOUND_YEAR:  found['سنة التأسيس']||'',
@@ -1044,6 +1049,7 @@ function _pickerApply(key, found, adminPass, coachPass){
       REG_FEE:     _feeNum(found['رسوم التسجيل'], 10),
       MONTHLY_FEE: _feeNum(found['الرسوم الشهرية'], 20),
       SESSIONS:    _feeNum(found['عدد الحصص'], 8),
+      BANK_INFO:   String(found['بيانات التحويل البنكي']||'').trim(),
       HIDE_SECTIONS: ['tournaments','festival','shamali_specific']
     });
     ACADEMIES[key] = acad;
@@ -1425,6 +1431,26 @@ function _gasPrivate(params) {
     .catch(function(){ return null; });
 }
 
+function _isShamali(){ return (window.CURRENT_ACADEMY_KEY || 'shamali') === 'shamali'; }
+function _acN(){ return _curAcadName() || 'أكاديمية الشمالي'; }
+function _monthlyFee(){ var a = window.CURRENT_ACADEMY || {}; return a.MONTHLY_FEE != null ? a.MONTHLY_FEE : 20; }
+// نص خانة التحويل البنكي: بيانات الأكاديمية، أو توجيه للتواصل إذا لم تضف بياناتها بعد
+function _bankText(){
+  var a = window.CURRENT_ACADEMY || {};
+  return a.BANK_INFO ? 'الحساب: ' + a.BANK_INFO : 'للتحويل البنكي تواصل مع الأكاديمية لتزويدكم ببيانات الحساب';
+}
+function _bankLines(){
+  var a = window.CURRENT_ACADEMY || {};
+  return a.BANK_INFO ? 'للتحويل البنكي: ' + a.BANK_INFO : 'للتحويل تواصل مع الأكاديمية';
+}
+function _applyBranding(acad){
+  var wa = document.getElementById('sbWaLink');
+  if(wa) wa.href = acad.WA_NUM ? 'https://api.whatsapp.com/send?phone=' + acad.WA_NUM : '#';
+  document.querySelectorAll('.bank-box').forEach(function(b){ b.textContent = _bankText(); });
+  var pb = document.getElementById('staticPartners');
+  if(pb) pb.style.display = (window.CURRENT_ACADEMY_KEY || 'shamali') === 'shamali' ? '' : 'none';
+}
+
 // اسم الأكاديمية الحالية للعناوين والتقارير
 function _acadTitle(){
   return (window.CURRENT_ACADEMY_KEY || 'shamali') === 'shamali' ? 'أكاديمية الشمالي لكرة القدم' : (_curAcadName() || 'أكاديمية');
@@ -1738,7 +1764,7 @@ function renderReg(){
   html += '<button type="button" class="pay-btn on" data-pay="cash" data-section="reg" id="payRCash" data-pay2="reg">نقداً 💵</button>';
   html += '<button type="button" class="pay-btn" data-pay="bank" data-section="reg" id="payRBank" data-pay2="reg">تحويل بنكي 🏦</button>';
   html += '</div>';
-  html += '<div class="bank-box" id="bankBox-reg">الحساب: سالم راشد العامري | 92126558</div>';
+  html += '<div class="bank-box" id="bankBox-reg">'+esc(_bankText())+'</div>';
   
   html += '<div class="fchk mb" style="margin-top:10px;">';
   html += '<input type="checkbox" id="regTerms" required>';
@@ -1747,6 +1773,7 @@ function renderReg(){
   
   html += '<button type="button" class="btn-sub" id="submitRegBtn" data-act="submitReg">📤 إرسال طلب التسجيل</button>';
   html += '</form></div>';
+  if(_isShamali()){
   // شريط الرعاة المبسط
   html += '<div style="border-top:3px solid #b81d22;background:#fff;margin-top:0;">';
   html += '<div style="padding:10px;text-align:center;border-bottom:1px solid #e2e8f0;">';
@@ -1764,6 +1791,7 @@ function renderReg(){
   html += '<div style="padding:8px;text-align:center;">';
   html += '<button data-pg="partners" style="background:none;border:none;color:#b81d22;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;font-size:11px;">عرض جميع الرعاة ←</button>';
   html += '</div></div>';
+  }
   html += '</div>';
   
   el.innerHTML = html;
@@ -1790,7 +1818,7 @@ function renderRen(){
     '<div class="pay-row">'+
     '<button type="button" class="pay-btn on" data-pay="cash" data-section="ren" data-pay2="ren">نقداً</button>'+
     '<button type="button" class="pay-btn" data-pay="bank" data-section="ren" data-pay2="ren">تحويل</button>'+
-    '</div><div class="bank-box" id="bankBox-ren">الحساب: سالم راشد العامري | 92126558</div>'+
+    '</div><div class="bank-box" id="bankBox-ren">'+esc(_bankText())+'</div>'+
     '<button class="btn-sub" onclick="submitRen2()">✅ تأكيد التجديد</button>'+
     '</div></div>';
 }
@@ -2372,7 +2400,7 @@ function renderDashboard(){
       '<div style="background:linear-gradient(135deg,#3b0a0a,#1e3a5f);padding:22px 16px 18px;">'+
         '<div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:2px;">'+now.toLocaleDateString('ar-OM',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+'</div>'+
         '<div style="font-size:19px;font-weight:900;color:#fff;">لوحة التحكم 🏟️</div>'+
-        '<div style="font-size:11px;color:#d4af37;margin-top:3px;">أكاديمية الشمالي · '+curMonth+'</div>'+
+        '<div style="font-size:11px;color:#d4af37;margin-top:3px;">'+_acN()+' · '+curMonth+'</div>'+
       '</div>'+
 
       '<div style="padding:14px;">'+
@@ -2731,7 +2759,7 @@ function sharePlayerCard(){
     canvas.toBlob(function(blob){
       var file = new File([blob],'بطاقة-لاعب.png',{type:'image/png'});
       if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-        navigator.share({title:'بطاقة لاعب - أكاديمية الشمالي',files:[file]})
+        navigator.share({title:'بطاقة لاعب - '+_acN()+'',files:[file]})
         .then(function(){ if(btn){btn.disabled=false;btn.textContent='📲 مشاركة واتساب';} })
         .catch(function(){ downloadPlayerCard(); });
       } else {
@@ -4323,7 +4351,7 @@ function exportEvalPDF(btn){
       (note?'<div class="note-box"><div class="note-label">💬 ملاحظة المدرب</div><div class="note-text">'+note+'</div></div>':'')+
     '</div>'+
     '<div class="footer">'+
-      '<div class="footer-logo">أكاديمية الشمالي ⚽</div>'+
+      '<div class="footer-logo">'+_acN()+' ⚽</div>'+
       '<div>هذا التقرير صادر من المنصة الرسمية للأكاديمية</div>'+
       '<div>'+dateStr+'</div>'+
     '</div>'+
@@ -4710,7 +4738,7 @@ function sendReportFromReq(playerId, playerName, phone){
         '<div><div class="total-label">المعدل</div><div class="total-score">'+avg+'<span style="font-size:16px;opacity:.6;"> / 5</span></div></div></div>'+
         (note?'<div class="note-box"><div class="note-label">💬 ملاحظة المدرب</div><div class="note-text">'+note+'</div></div>':'')+
         '</div>'+
-        '<div class="footer"><div class="footer-logo">أكاديمية الشمالي ⚽</div><div>هذا التقرير صادر من المنصة الرسمية للأكاديمية</div><div>'+dateStr+'</div></div>'+
+        '<div class="footer"><div class="footer-logo">'+_acN()+' ⚽</div><div>هذا التقرير صادر من المنصة الرسمية للأكاديمية</div><div>'+dateStr+'</div></div>'+
         '<div class="no-print" style="text-align:center;padding:20px;background:#f8fafc;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">'+
         '<button onclick="window.print()" style="padding:12px 28px;background:#b81d22;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">🖨️ طباعة / حفظ PDF</button>'+
         '<button onclick="shareToWA()" style="padding:12px 28px;background:#25d366;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;">📲 إرسال واتساب</button>'+
@@ -4825,6 +4853,8 @@ function renderAdminTools(){
         '</div>'+
         '<div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">عدد الحصص الشهرية</label>'+
         '<input id="feeSessions" type="number" min="0" step="1" value="'+((window.CURRENT_ACADEMY&&window.CURRENT_ACADEMY.SESSIONS)||8)+'" class="inp"></div>'+
+        '<div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">بيانات التحويل البنكي</label>'+
+        '<input id="feeBank" type="text" maxlength="120" placeholder="مثال: بنك مسقط - باسم الأكاديمية - رقم الحساب" value="'+esc((window.CURRENT_ACADEMY&&window.CURRENT_ACADEMY.BANK_INFO)||'')+'" class="inp"></div>'+
         '<div id="feeChangeMsg" style="display:none;font-size:12px;font-weight:700;padding:8px;border-radius:8px;text-align:center;"></div>'+
         '<button onclick="saveAcadFees()" style="width:100%;background:linear-gradient(135deg,#0d3320,#16a34a);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;">💾 حفظ الرسوم</button>')+
       '</div>'+
@@ -4880,16 +4910,20 @@ function saveAcadFees(){
   var reg = _feeNum(document.getElementById('feeReg').value, 10);
   var monthly = _feeNum(document.getElementById('feeMonthly').value, 20);
   var sessions = _feeNum(document.getElementById('feeSessions').value, 8);
+  var bank = (document.getElementById('feeBank').value || '').trim();
   msg.style.display='block'; msg.style.background='#fffbeb'; msg.style.color='#92400e';
   msg.textContent='⏳ جارٍ الحفظ...';
   fetch(PLATFORM.CENTRAL_GAS,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},
     body:JSON.stringify({action:'update',sheet:PLATFORM.JOIN_SHEET,column:'مفتاح_الأكاديمية',value:acadKey,
-      data:{'رسوم التسجيل':reg,'الرسوم الشهرية':monthly,'عدد الحصص':sessions}})
+      data:{'رسوم التسجيل':reg,'الرسوم الشهرية':monthly,'عدد الحصص':sessions,'بيانات التحويل البنكي':bank}})
   }).then(function(r){return r.json();}).then(function(d){
     if(d.status==='ok'){
       window.CURRENT_ACADEMY.REG_FEE = reg;
       window.CURRENT_ACADEMY.MONTHLY_FEE = monthly;
       window.CURRENT_ACADEMY.SESSIONS = sessions;
+      window.CURRENT_ACADEMY.BANK_INFO = bank;
+      ACADEMIES[acadKey].BANK_INFO = bank;
+      _applyBranding(window.CURRENT_ACADEMY);
       ACADEMIES[acadKey].REG_FEE = reg;
       ACADEMIES[acadKey].MONTHLY_FEE = monthly;
       ACADEMIES[acadKey].SESSIONS = sessions;
@@ -5103,7 +5137,7 @@ function exportPlayersCSV(){
     players.forEach(function(p){
       rows.push([p.id, p.playerName, p.birthDate||p.birthYear||'', p.nationality||'', p.parentName||'', p.phone||'', p.health||'']);
     });
-    _downloadCSV(rows, 'لاعبو-أكاديمية-الشمالي');
+    _downloadCSV(rows, 'لاعبو-'+_acN().replace(/\s+/g,'-'));
     if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-file-excel"></i> تصدير Excel'; }
   });
 }
@@ -5963,10 +5997,10 @@ function renderGroupMsg(){
 function loadMsgTemplate(){
   var t=document.getElementById('msgType').value;
   var templates={
-    training:'🦅 أكاديمية الشمالي\n\nنذكّركم بموعد التدريب\n📅 اليوم: \n⏰ الوقت: \n📍 الملعب: \n\nنرجو الالتزام بالحضور في الوقت المحدد 🙏',
-    match:'🦅 أكاديمية الشمالي\n\n⚽ دعوة لمشاهدة مباراة أبنائنا\n🆚 المنافس: \n📅 التاريخ: \n⏰ الوقت: \n📍 الملعب: \n\nتفضّلوا بالحضور ودعم الفريق 💚',
-    fee:'🦅 أكاديمية الشمالي\n\n💰 تذكير بالرسوم الشهرية\nنرجو سداد رسوم شهر: \nالمبلغ: 20 ريال عماني\n\nللتحويل البنكي: سالم راشد العامري\nرقم التواصل: 92126558',
-    event:'🦅 أكاديمية الشمالي\n\n🎉 نسعد بدعوتكم لحضور\nاسم الفعالية: \n📅 التاريخ: \n📍 المكان: \n\nنتشرّف بحضوركم 🌟',
+    training:'🦅 '+_acN()+'\n\nنذكّركم بموعد التدريب\n📅 اليوم: \n⏰ الوقت: \n📍 الملعب: \n\nنرجو الالتزام بالحضور في الوقت المحدد 🙏',
+    match:'🦅 '+_acN()+'\n\n⚽ دعوة لمشاهدة مباراة أبنائنا\n🆚 المنافس: \n📅 التاريخ: \n⏰ الوقت: \n📍 الملعب: \n\nتفضّلوا بالحضور ودعم الفريق 💚',
+    fee:'🦅 '+_acN()+'\n\n💰 تذكير بالرسوم الشهرية\nنرجو سداد رسوم شهر: \nالمبلغ: '+_monthlyFee()+' ريال عماني\n\n'+_bankLines(),
+    event:'🦅 '+_acN()+'\n\n🎉 نسعد بدعوتكم لحضور\nاسم الفعالية: \n📅 التاريخ: \n📍 المكان: \n\nنتشرّف بحضوركم 🌟',
     custom:''
   };
   if(t&&templates[t]!==undefined) document.getElementById('msgText').value=templates[t];
@@ -6083,7 +6117,7 @@ function renderSubsTrack(){
 }
 function remindParent(phone,name){
   if(!phone){alert('لا يوجد رقم هاتف محفوظ لهذا اللاعب');return;}
-  var msg='🦅 أكاديمية الشمالي\n\nنذكّركم بسداد رسوم اشتراك '+name+' لشهر '+MONTHS[new Date().getMonth()]+'\nالمبلغ: 20 ريال عماني\n\nشكراً لتعاونكم 🙏';
+  var msg='🦅 '+_acN()+'\n\nنذكّركم بسداد رسوم اشتراك '+name+' لشهر '+MONTHS[new Date().getMonth()]+'\nالمبلغ: '+_monthlyFee()+' ريال عماني\n\nشكراً لتعاونكم 🙏';
   var cleanPhone=phone.replace(/\s/g,'');
   var waPhone=cleanPhone.startsWith('968')?cleanPhone:'968'+cleanPhone;
   window.open('https://api.whatsapp.com/send?phone='+waPhone+'&text='+encodeURIComponent(msg),'_blank');
@@ -6112,8 +6146,8 @@ function renderVerify(playerId){
   var curMonthPrefix = yr+'-'+String(now.getMonth()+1).padStart(2,'0');
 
   Promise.all([
-    checkPlayer(playerId),
-    apiGet('تجديدات الاشتراكات').catch(function(){ return []; }),
+    getPlayers(true).then(function(all){ return all.find(function(x){ return x.id === playerId; }) || null; }),
+    apiGet('تجديدات الاشتراكات', false, true).catch(function(){ return []; }),
     loanCentralFetch({action:'get', sheet: PLATFORM.LOAN_SHEET, limit:500}).catch(function(){ return []; })
   ]).then(function(res){
     var p = res[0];
@@ -6177,7 +6211,7 @@ function renderVerify(playerId){
       /* هيدر */
       '<div style="background:linear-gradient(135deg,#0f172a,#b81d22);border-radius:18px 18px 0 0;padding:18px;text-align:center;">'+
         '<div style="font-size:10px;color:#d4af37;font-weight:900;letter-spacing:1px;margin-bottom:4px;">بطاقة تحقق رسمية — منصة توفة</div>'+
-        '<div style="font-size:16px;font-weight:900;color:#fff;">🦅 أكاديمية الشمالي</div>'+
+        '<div style="font-size:16px;font-weight:900;color:#fff;">🦅 '+esc(p.academy||'أكاديمية الشمالي')+'</div>'+
       '</div>'+
 
       /* الجسم */
@@ -6309,7 +6343,7 @@ function submitMatchResult(){
   apiAppend('نتائج المباريات', data).then(function(){
     showL(false);
     var emoji = res==='فوز'?'🏆':res==='خسارة'?'😤':'🤝';
-    var msg = '⚽ *نتيجة مباراة أكاديمية الشمالي*\n'+
+    var msg = '⚽ *نتيجة مباراة '+_acN()+'*\n'+
       '━━━━━━━━━━━━━━\n'+
       '🆚 المنافس: *'+opponent+'*\n'+
       '📋 الفئة: '+cat+'\n'+
@@ -6321,7 +6355,7 @@ function submitMatchResult(){
       (scorers?'⚽ الهدافون: '+scorers+'\n':'')+
       (comment?'📝 '+comment+'\n':'')+
       '━━━━━━━━━━━━━━\n'+
-      '🇴🇲 أكاديمية الشمالي للقدم';
+      '🇴🇲 '+_acN()+' للقدم';
     window.open('https://api.whatsapp.com/send?phone='+CONFIG.WA_NUM+'&text='+encodeURIComponent(msg),'_blank');
     alert('✅ تم حفظ النتيجة!');
     go('matchresult');
@@ -6420,7 +6454,7 @@ function sendMatchList(){
   if(!selected.length){ alert('اختر لاعباً واحداً على الأقل'); return; }
 
   var dateStr = date ? new Date(date).toLocaleDateString('ar-SA') : '';
-  var msg = '🦅 *أكاديمية الشمالي*\n';
+  var msg = '🦅 *'+_acN()+'*\n';
   msg += '⚽ *قائمة المباراة*\n';
   msg += '━━━━━━━━━━━━━━\n';
   if(opponent) msg += '🆚 المنافس: *'+opponent+'*\n';
@@ -6485,7 +6519,7 @@ function exportMatchPDF() {
     '<p class="info">عدد اللاعبين: '+sel.selected.length+'</p>'+
     '<table><thead><tr><th>#</th><th>اسم اللاعب</th><th>رقم الملف</th><th>المواليد</th><th>الفئة</th><th>التوقيع</th></tr></thead>'+
     '<tbody>'+rows+'</tbody></table>'+
-    '<div class="footer">أكاديمية الشمالي · '+new Date().toLocaleDateString('ar-SA')+'</div>'+
+    '<div class="footer">'+_acN()+' · '+new Date().toLocaleDateString('ar-SA')+'</div>'+
     '</body></html>');
   win.document.close();
   setTimeout(function(){ win.print(); }, 500);
@@ -6504,7 +6538,7 @@ function exportPlayerIdsPDF() {
     return '<div class="card">'+
       '<div class="card-header">'+
         '<div style="font-size:7px;color:#d4af37;letter-spacing:2px;">SHAMALI FOOTBALL ACADEMY</div>'+
-        '<div style="font-size:13px;font-weight:900;color:#fff;">🦅 أكاديمية الشمالي</div>'+
+        '<div style="font-size:13px;font-weight:900;color:#fff;">🦅 '+_acN()+'</div>'+
       '</div>'+
       '<div class="card-body">'+
         '<div class="photo-area">'+(photoUrl
@@ -6592,7 +6626,7 @@ function submitCoachReport(){
       '\n📊 الأداء: '+data['ملخص الأداء']+
       '\n⚠️ التحديات: '+data['التحديات']+
       '\n✅ الحلول: '+data['الحلول']+
-      '\n🦅 أكاديمية الشمالي';
+      '\n🦅 '+_acN()+'';
     window.open('https://api.whatsapp.com/send?phone='+CONFIG.WA_NUM+'&text='+encodeURIComponent(msg),'_blank');
     alert('✅ تم إرسال التقرير بنجاح!');
     go('att');
@@ -7042,7 +7076,7 @@ function shareCardPDF() {
       var file = new File([blob], 'بطاقة-لاعب.png', {type:'image/png'});
       if(btn){ btn.disabled=false; btn.innerHTML='<i class="fab fa-whatsapp"></i> مشاركة PDF'; }
       if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-        navigator.share({title:'بطاقة لاعب - أكاديمية الشمالي', files:[file]});
+        navigator.share({title:'بطاقة لاعب - '+_acN()+'', files:[file]});
       } else {
         // fallback: تنزيل الصورة
         var a = document.createElement('a');
@@ -7234,7 +7268,7 @@ function initSponsorTrack(){
 function shareApp() {
   var data = {
     title: '🦅 '+_acadTitle()+'',
-    text: 'البوابة الإلكترونية لأكاديمية الشمالي — التسجيل · الحضور · التكريم · المدربون',
+    text: 'البوابة الإلكترونية لـ'+_acN()+' — التسجيل · الحضور · التكريم · المدربون',
     url: 'https://salimsrsamri4-tech.github.io/shamali-academy'
   };
   if(navigator.share) {

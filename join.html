@@ -466,6 +466,11 @@ textarea.inp{resize:vertical;min-height:88px;}
       </div>
 
       <div class="field">
+        <label for="bankInfo">بيانات التحويل البنكي (اختياري)</label>
+        <input class="inp" id="bankInfo" type="text" maxlength="120" placeholder="مثال: بنك مسقط - باسم الأكاديمية - رقم الحساب">
+      </div>
+
+      <div class="field">
         <label for="cats">الفئات العمرية</label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;" id="catsCheckboxes">
           <label style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;">
@@ -596,6 +601,7 @@ function submitForm(){
   var regFee      = document.getElementById('regFee').value.trim();
   var monthlyFee  = document.getElementById('monthlyFee').value.trim();
   var sessionsCount = document.getElementById('sessionsCount').value.trim();
+  var bankInfo = document.getElementById('bankInfo').value.trim();
   var cats        = document.getElementById('cats').value.trim();
   var instagram   = document.getElementById('instagram').value.trim();
   var twitter     = document.getElementById('twitter').value.trim();
@@ -695,6 +701,7 @@ function submitForm(){
         'رسوم التسجيل':       regFee,
         'الرسوم الشهرية':     monthlyFee,
         'عدد الحصص':          sessionsCount,
+        'بيانات التحويل البنكي': bankInfo,
         'عدد اللاعبين':       count,
         'الفئات العمرية':     cats,
         'إنستغرام':           instagram,
