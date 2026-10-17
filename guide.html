@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>دليل استخدام منصة توفة</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap">
+<style>
+:root{
+  --bg:#f1f5f9; --surface:#fff; --text:#0f172a; --text2:#475569; --text3:#94a3b8;
+  --red:#b81d22; --red2:#7a1015; --navy:#0f172a; --navy2:#1e3a5f; --green:#16a34a; --line:#e2e8f0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Cairo,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;padding-bottom:40px}
+.hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;text-align:center;padding:32px 16px 56px}
+.hero h1{font-size:24px;font-weight:900}
+.hero p{font-size:13px;opacity:.75;margin-top:4px}
+.wrap{max-width:720px;margin:-34px auto 0;padding:0 16px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:var(--surface);border-radius:16px;padding:8px;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.tab{min-height:48px;border:0;border-radius:12px;background:transparent;font:700 14px Cairo,sans-serif;color:var(--text2);cursor:pointer}
+.tab[aria-selected="true"]{background:linear-gradient(135deg,var(--red),var(--red2));color:#fff}
+.tab:focus-visible{outline:3px solid var(--navy2);outline-offset:2px}
+.panel{display:none;margin-top:16px}
+.panel.on{display:block}
+.who{font-size:13px;color:var(--text2);background:var(--surface);border-radius:12px;padding:12px 14px;margin-bottom:12px;border-right:4px solid var(--red)}
+.step{display:flex;gap:12px;background:var(--surface);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.num{flex:0 0 32px;height:32px;border-radius:50%;background:var(--red);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:14px}
+.step h3{font-size:15px;font-weight:800;margin-bottom:2px}
+.step p,.step li{font-size:13px;color:var(--text2)}
+.step ul{padding-right:18px;margin-top:4px}
+.tip{background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;padding:12px 14px;margin:12px 0;font-size:13px;color:#92400e;font-weight:600}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:0 18px;border-radius:12px;background:var(--green);color:#fff;text-decoration:none;font-weight:800;font-size:14px}
+h2{font-size:17px;font-weight:900;margin:22px 0 10px}
+details{background:var(--surface);border-radius:12px;padding:0 14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+summary{min-height:48px;display:flex;align-items:center;font-weight:700;font-size:14px;cursor:pointer}
+details p{font-size:13px;color:var(--text2);padding-bottom:12px}
+.help{text-align:center;margin-top:20px}
+@media (prefers-reduced-motion:no-preference){.panel.on{animation:in .25s ease}@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <h1>دليل استخدام منصة توفة</h1>
+  <p>خطوات بسيطة لكل مستخدم · اختر دورك</p>
+</header>
+
+<main class="wrap">
+  <div class="tabs" role="tablist" aria-label="اختر دورك">
+    <button class="tab" role="tab" id="t-parent" aria-controls="parent" aria-selected="true">ولي الأمر</button>
+    <button class="tab" role="tab" id="t-coach" aria-controls="coach" aria-selected="false">المدرب</button>
+    <button class="tab" role="tab" id="t-admin" aria-controls="admin" aria-selected="false">مدير الأكاديمية</button>
+  </div>
+
+  <section class="panel on" id="parent" role="tabpanel" aria-labelledby="t-parent">
+    <div class="who">لولي الأمر: تسجيل ابنك ومتابعة اشتراكه وحضوره، ومن هاتفك مباشرة.</div>
+
+    <div class="step"><div class="num">1</div><div>
+      <h3>تسجيل لاعب جديد</h3>
+      <p>افتح رابط أكاديميتك الذي أرسلته الإدارة، ثم اختر <b>تسجيل لاعب جديد</b>.</p>
+      <ul>
+        <li>املأ بيانات ولي الأمر والرقم المدني، ثم بيانات اللاعب.</li>
+        <li>ارفع صورة اللاعب، وصورة بطاقة ولي الأمر، ووثيقة اللاعب.</li>
+        <li>اقرأ الشروط ووافق عليها، واختر طريقة الدفع (نقداً أو تحويل بنكي).</li>
+        <li>اضغط <b>إرسال طلب التسجيل</b>.</li>
+      </ul>
+    </div></div>
+    <div class="tip">احتفظ برقم ملف اللاعب الذي يظهر بعد التسجيل (مثل <bdi>SH-12345</bdi>). تحتاجه عند تجديد الاشتراك. ولا يمكن تسجيل رقم هوية لاعب مرتين.</div>
+
+    <div class="step"><div class="num">2</div><div>
+      <h3>تجديد الاشتراك الشهري</h3>
+      <p>من القائمة اختر <b>تجديد الاشتراك</b>، وأدخل رقم الملف، ثم اختر الشهر وطريقة الدفع، واضغط <b>تأكيد التجديد</b>.</p>
+    </div></div>
+
+    <div class="step"><div class="num">3</div><div>
+      <h3>بوابة ولي الأمر</h3>
+      <p>اختر <b>بوابة ولي الأمر</b> وأدخل الرقم المدني لولي الأمر. ترى كل أبنائك، في أي أكاديمية، مع حالة الاشتراك ونسبة الحضور والأحداث القادمة.</p>
+    </div></div>
+
+    <div class="step"><div class="num">4</div><div>
+      <h3>معلومات الأكاديمية</h3>
+      <ul>
+        <li><b>جدول التدريب:</b> الأيام والأوقات والملعب وموقعه على الخريطة.</li>
+        <li><b>الطاقم التدريبي:</b> مدربو الأكاديمية وبياناتهم.</li>
+        <li><b>تقويم الأكاديمية:</b> المباريات والفعاليات القادمة.</li>
+        <li><b>طلب تقرير وتقييم لاعب:</b> اطلب تقريراً عن مستوى ابنك.</li>
+      </ul>
+    </div></div>
+  </section>
+
+  <section class="panel" id="coach" role="tabpanel" aria-labelledby="t-coach">
+    <div class="who">للمدرب: تسجيل الحضور والمباريات والتقييمات خلال دقائق.</div>
+
+    <div class="step"><div class="num">1</div><div>
+      <h3>الدخول</h3>
+      <p>من القائمة اختر <b>بوابة المدرب</b>، وأدخل كلمة مرور المدرب. تحصل عليها من إدارة أكاديميتك.</p>
+    </div></div>
+
+    <div class="step"><div class="num">2</div><div>
+      <h3>تسجيل الحضور</h3>
+      <ul>
+        <li>اختر <b>تسجيل الحضور</b>، ثم سنة ميلاد اللاعبين (يمكن اختيار أكثر من سنة).</li>
+        <li>اختر يوم التدريب من الأيام السبعة الأخيرة.</li>
+        <li>اضغط <b>عرض قائمة اللاعبين</b>. الجميع حاضر مبدئياً، فاضغط <b>غائب</b> لمن لم يحضر.</li>
+        <li>اضغط <b>حفظ الحضور</b>، وتظهر رسالة نجاح.</li>
+      </ul>
+    </div></div>
+    <div class="tip">سجّل الحضور في يوم التدريب نفسه. يظهر مباشرة في بوابة ولي الأمر وفي إحصائيات الإدارة.</div>
+
+    <div class="step"><div class="num">3</div><div>
+      <h3>بقية أدوات المدرب</h3>
+      <ul>
+        <li><b>قائمة المباراة</b> و<b>نتائج المباريات</b>: تسجيل التشكيلة والنتيجة ومشاركتها عبر واتساب.</li>
+        <li><b>تقييم اللاعبين</b> و<b>إحصائيات اللاعبين</b>.</li>
+        <li><b>لاعب الشهر</b> و<b>التقرير الشهري</b>.</li>
+        <li><b>طلبات التقارير</b>: التقارير التي طلبها أولياء الأمور.</li>
+      </ul>
+    </div></div>
+  </section>
+
+  <section class="panel" id="admin" role="tabpanel" aria-labelledby="t-admin">
+    <div class="who">لمدير الأكاديمية: من التسجيل في المنصة إلى الإدارة اليومية.</div>
+
+    <div class="step"><div class="num">1</div><div>
+      <h3>تسجيل الأكاديمية في المنصة</h3>
+      <p>افتح <a href="join.html">صفحة الانضمام</a> واملأ بيانات أكاديميتك: الرسوم، وبيانات التحويل البنكي، وأيام التدريب، واختر كلمة مرور للإدارة. بعد موافقة إدارة المنصة يصلك رابط أكاديميتك عبر واتساب.</p>
+    </div></div>
+
+    <div class="step"><div class="num">2</div><div>
+      <h3>الدخول</h3>
+      <p>افتح رابط أكاديميتك، وأدخل كلمة المرور. ثم من القائمة اختر <b>دخول الإدارة</b> وأدخل كلمة المرور نفسها لتظهر لوحة الإدارة.</p>
+    </div></div>
+
+    <h2>أول ما تفعله بعد الدخول</h2>
+    <div class="step"><div class="num">أ</div><div>
+      <h3>أدوات الإدارة</h3>
+      <p>راجع <b>رسوم التسجيل والاشتراك</b> و<b>بيانات التحويل البنكي</b>، فهي تظهر لأولياء الأمور عند التسجيل. غيّر كلمتي مرور الإدارة والمدرب. وانسخ <b>رابط التسجيل</b> لإرساله لأولياء الأمور.</p>
+    </div></div>
+    <div class="step"><div class="num">ب</div><div>
+      <h3>إدارة جدول التدريب</h3>
+      <p>أضف أيام التدريب والتوقيت والملعب ورابط موقعه. إن كان لأكاديميتك أكثر من فرع فأضف كل فرع على حدة.</p>
+    </div></div>
+    <div class="step"><div class="num">ج</div><div>
+      <h3>المدربون</h3>
+      <p>أضف مدربيك بأسمائهم ومناصبهم وصورهم. تظهر لأولياء الأمور في صفحة الطاقم التدريبي.</p>
+    </div></div>
+
+    <h2>الإدارة اليومية</h2>
+    <div class="step"><div class="num">•</div><div>
+      <ul>
+        <li><b>اللاعبون</b> و<b>الإحصائيات</b>: كل لاعبي أكاديميتك فقط.</li>
+        <li><b>الحضور</b> و<b>متابعة الاشتراكات</b>: من لم يجدد هذا الشهر.</li>
+        <li><b>إشعار جماعي</b> و<b>أعياد الميلاد</b>: رسائل واتساب جاهزة.</li>
+        <li><b>إدارة التقويم</b> و<b>صندوق المقترحات</b> و<b>طلبات التقارير</b>.</li>
+        <li><b>أدوات الإدارة</b>: التقرير الشهري، وتصدير اللاعبين والمدفوعات إلى Excel.</li>
+      </ul>
+    </div></div>
+    <div class="tip">بياناتك لا تظهر لأي أكاديمية أخرى، وبيانات الأكاديميات الأخرى لا تظهر لك.</div>
+  </section>
+
+  <h2>أسئلة شائعة</h2>
+  <details><summary>نسيت كلمة المرور، ماذا أفعل؟</summary>
+    <p>تواصل مع الدعم الفني عبر واتساب من الزر في الأسفل، وأخبرنا باسم أكاديميتك.</p></details>
+  <details><summary>سجلت لاعباً ولا يظهر في القائمة</summary>
+    <p>حدّث الصفحة، وتأكد أنك داخل أكاديمية اللاعب نفسها. إن بقي غائباً فتواصل مع الدعم.</p></details>
+  <details><summary>أولياء الأمور لا يستطيعون الدخول إلى البوابة</summary>
+    <p>تتطلب البوابة الرقم المدني لولي الأمر كما سُجّل عند تسجيل اللاعب. تأكد أنه مكتوب في التسجيل بشكل صحيح.</p></details>
+  <details><summary>كيف أضيف أكاديمية جديدة؟</summary>
+    <p>من <a href="join.html">صفحة الانضمام</a>. بعد المراجعة نرسل لك رابط أكاديميتك.</p></details>
+
+  <div class="help">
+    <a class="btn" href="https://api.whatsapp.com/send?phone=96892126558&text=%D8%A3%D8%AD%D8%AA%D8%A7%D8%AC%20%D9%85%D8%B3%D8%A7%D8%B9%D8%AF%D8%A9%20%D9%81%D9%8A%20%D9%85%D9%86%D8%B5%D8%A9%20%D8%AA%D9%88%D9%81%D9%87" target="_blank" rel="noopener">تواصل مع الدعم الفني على واتساب</a>
+  </div>
+</main>
+
+<script>
+(function(){
+  var ids = ['parent','coach','admin'];
+  function show(id){
+    if(ids.indexOf(id) < 0) id = 'parent';
+    ids.forEach(function(k){
+      document.getElementById(k).classList.toggle('on', k === id);
+      document.getElementById('t-'+k).setAttribute('aria-selected', k === id ? 'true' : 'false');
+    });
+  }
+  ids.forEach(function(k){
+    document.getElementById('t-'+k).addEventListener('click', function(){
+      show(k);
+      try{ history.replaceState(null, '', '#'+k); }catch(e){}
+    });
+  });
+  show(location.hash.replace('#',''));
+  window.addEventListener('hashchange', function(){ show(location.hash.replace('#','')); });
+})();
+</script>
+</body>
+</html>
