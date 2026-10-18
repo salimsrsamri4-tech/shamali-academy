@@ -682,6 +682,15 @@ function _fillAcadDefaults(k, a){
   return a;
 }
 
+// رقم واتساب بالصيغة الدولية (يصحّح الأرقام المسجّلة بثمانية أرقام فقط أو بمسافات وعلامات)
+function _waNum(v){
+  var d = String(v == null ? '' : v).replace(/[٠-٩]/g,function(c){return c.charCodeAt(0)-1632;}).replace(/\D/g,'');
+  if(d.indexOf('00') === 0) d = d.slice(2);
+  if(d.length === 9 && d.charAt(0) === '0') d = d.slice(1);
+  if(d.length === 8) d = '968' + d;
+  return d;
+}
+
 // يحوّل نص الرسوم من الشيت إلى رقم؛ يُرجع الافتراضي إذا كان الحقل فارغاً أو غير رقمي
 function _feeNum(v, def){
   var n = parseFloat(String(v == null ? '' : v).replace(/[^\d.]/g, ''));
@@ -768,7 +777,7 @@ function loginNewAcad(acadKey){
       PRIMARY_COLOR: '#1e3a5f',
       ADMIN_PASS:  adminPass,
       COACH_PASS:  coachPass,
-      WA_NUM:      found['رقم الواتساب']||'',
+      WA_NUM:      _waNum(found['رقم الواتساب']),
       LOGO:        found['شعار الأكاديمية']||'',
       CITY:        found['المحافظة']||'',
       WILAYA:      found['الولاية']||'',
@@ -1042,7 +1051,7 @@ function _pickerApply(key, found, adminPass, coachPass){
       PRIMARY_COLOR: '#1e3a5f',
       ADMIN_PASS:  adminPass,
       COACH_PASS:  coachPass,
-      WA_NUM:      found['رقم الواتساب']||'',
+      WA_NUM:      _waNum(found['رقم الواتساب']),
       LOGO:        found['شعار الأكاديمية']||'',
       CITY:        found['المحافظة']||'',
       LOCATION:    found['الموقع الرئيسي']||'',

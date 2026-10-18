@@ -351,7 +351,8 @@ textarea.inp{resize:vertical;min-height:88px;}
         </div>
         <div class="field">
           <label for="phone">رقم الواتساب <span class="req" aria-hidden="true">*</span></label>
-          <input class="inp" id="phone" type="tel" placeholder="968XXXXXXXX" dir="ltr" aria-required="true" aria-describedby="phone-err" autocomplete="tel">
+          <input class="inp" id="phone" type="tel" inputmode="numeric" placeholder="96812345678" dir="ltr" aria-required="true" aria-describedby="phone-hint phone-err" autocomplete="tel">
+          <div id="phone-hint" style="font-size:11px;color:var(--text3);margin-top:4px;">اكتب الرقم مع رمز الدولة، مثل 96812345678. نصحّح الصيغة تلقائياً.</div>
           <div class="field-err" id="phone-err" aria-live="polite">يرجى إدخال رقم واتساب صحيح</div>
         </div>
       </div>
@@ -585,8 +586,8 @@ function submitForm(){
 
   var name        = document.getElementById('acadName').value.trim();
   var contact     = document.getElementById('contactName').value.trim();
-  var phone       = document.getElementById('phone').value.trim();
-  var phone2      = document.getElementById('phone2').value.trim();
+  var phone       = normPhone(document.getElementById('phone').value);
+  var phone2      = normPhone(document.getElementById('phone2').value);
   var email       = document.getElementById('email').value.trim();
   var foundYear   = document.getElementById('foundYear').value.trim();
   var license     = document.getElementById('license').value.trim();
@@ -621,10 +622,10 @@ function submitForm(){
     document.getElementById('contactName-err').classList.add('show');
     errors.push({msg:'اسم المسؤول مطلوب', id:'contactName'});
   }
-  if(!phone || phone.length < 8){
+  if(!phone || phone.length < 10 || phone.length > 15){
     document.getElementById('phone').classList.add('invalid');
     document.getElementById('phone-err').classList.add('show');
-    errors.push({msg:'رقم الواتساب مطلوب (8 أرقام على الأقل)', id:'phone'});
+    errors.push({msg:'رقم الواتساب غير صحيح. اكتب 8 أرقام أو الرقم مع رمز الدولة، مثل 96812345678', id:'phone'});
   }
 
   if(errors.length){
@@ -763,6 +764,22 @@ function submitForm(){
     saveToSheet('');
   }
 }
+
+// يحوّل أي صيغة مكتوبة إلى الصيغة الدولية بلا مسافات أو علامات: 12345678 / 0096812345678 / +968 1234 5678
+function normPhone(v){
+  var d = String(v == null ? '' : v)
+    .replace(/[٠-٩]/g, function(c){ return c.charCodeAt(0) - 1632; })
+    .replace(/[۰-۹]/g, function(c){ return c.charCodeAt(0) - 1776; })
+    .replace(/\D/g, '');
+  if(d.indexOf('00') === 0) d = d.slice(2);
+  if(d.length === 9 && d.charAt(0) === '0') d = d.slice(1);
+  if(d.length === 8) d = '968' + d;
+  return d;
+}
+['phone','phone2'].forEach(function(id){
+  var el = document.getElementById(id);
+  if(el) el.addEventListener('blur', function(){ if(el.value.trim()) el.value = normPhone(el.value); });
+});
 </script>
 </body>
 </html>
