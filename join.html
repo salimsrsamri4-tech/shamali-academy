@@ -182,6 +182,9 @@ body{
   transition:border-color .2s,box-shadow .2s,background .2s;
   appearance:none;
 }
+.phone-group{display:flex;direction:ltr;align-items:stretch}
+.phone-group .cc{display:flex;align-items:center;padding:0 12px;background:var(--surface3);border:1.5px solid var(--border);border-right:0;border-radius:10px 0 0 10px;font-weight:800;font-size:14px;color:var(--text2);white-space:nowrap}
+.phone-group .inp{border-radius:0 10px 10px 0;direction:ltr;text-align:left;font-size:16px;letter-spacing:1px}
 .inp:focus{
   border-color:var(--gold);
   box-shadow:0 0 0 3px var(--inp-focus);
@@ -351,8 +354,8 @@ textarea.inp{resize:vertical;min-height:88px;}
         </div>
         <div class="field">
           <label for="phone">رقم الواتساب <span class="req" aria-hidden="true">*</span></label>
-          <input class="inp" id="phone" type="tel" inputmode="numeric" placeholder="96812345678" dir="ltr" aria-required="true" aria-describedby="phone-hint phone-err" autocomplete="tel">
-          <div id="phone-hint" style="font-size:11px;color:var(--text3);margin-top:4px;">اكتب الرقم مع رمز الدولة، مثل 96812345678. نصحّح الصيغة تلقائياً.</div>
+          <div class="phone-group"><span class="cc" aria-hidden="true">+968</span><input class="inp" id="phone" type="tel" inputmode="numeric" maxlength="11" placeholder="91234567" dir="ltr" aria-required="true" aria-describedby="phone-hint phone-err" autocomplete="tel-national"></div>
+          <div id="phone-hint" style="font-size:11px;color:var(--text3);margin-top:4px;">اكتب الأرقام الثمانية فقط، ورمز الدولة 968 يُضاف تلقائياً.</div>
           <div class="field-err" id="phone-err" aria-live="polite">يرجى إدخال رقم واتساب صحيح</div>
         </div>
       </div>
@@ -360,7 +363,7 @@ textarea.inp{resize:vertical;min-height:88px;}
       <div class="grid2">
         <div class="field">
           <label for="phone2">هاتف ثانٍ</label>
-          <input class="inp" id="phone2" type="tel" placeholder="968XXXXXXXX" dir="ltr" autocomplete="tel">
+          <div class="phone-group"><span class="cc" aria-hidden="true">+968</span><input class="inp" id="phone2" type="tel" inputmode="numeric" maxlength="11" placeholder="91234567" dir="ltr" autocomplete="tel-national"></div>
         </div>
         <div class="field">
           <label for="email">البريد الإلكتروني</label>
@@ -588,6 +591,7 @@ function submitForm(){
   var contact     = document.getElementById('contactName').value.trim();
   var phone       = normPhone(document.getElementById('phone').value);
   var phone2      = normPhone(document.getElementById('phone2').value);
+  var phone2Bad   = phone2 && !/^968\d{8}$/.test(phone2);
   var email       = document.getElementById('email').value.trim();
   var foundYear   = document.getElementById('foundYear').value.trim();
   var license     = document.getElementById('license').value.trim();
@@ -622,10 +626,14 @@ function submitForm(){
     document.getElementById('contactName-err').classList.add('show');
     errors.push({msg:'اسم المسؤول مطلوب', id:'contactName'});
   }
-  if(!phone || phone.length < 10 || phone.length > 15){
+  if(!/^968\d{8}$/.test(phone)){
     document.getElementById('phone').classList.add('invalid');
     document.getElementById('phone-err').classList.add('show');
-    errors.push({msg:'رقم الواتساب غير صحيح. اكتب 8 أرقام أو الرقم مع رمز الدولة، مثل 96812345678', id:'phone'});
+    errors.push({msg:'رقم الواتساب غير صحيح: اكتب 8 أرقام بعد +968', id:'phone'});
+  }
+  if(phone2Bad){
+    document.getElementById('phone2').classList.add('invalid');
+    errors.push({msg:'الهاتف الثاني غير صحيح: اكتب 8 أرقام بعد +968 أو اتركه فارغاً', id:'phone2'});
   }
 
   if(errors.length){
@@ -776,9 +784,24 @@ function normPhone(v){
   if(d.length === 8) d = '968' + d;
   return d;
 }
+// الحقل يعرض الأرقام المحلية فقط (8 أرقام) ورمز 968 ثابت بجانبه؛ تُنظَّف اللصقات الكاملة مثل +968 9123 4567
+function localPhone(raw){
+  var d = String(raw == null ? '' : raw)
+    .replace(/[٠-٩]/g, function(c){ return c.charCodeAt(0) - 1632; })
+    .replace(/[۰-۹]/g, function(c){ return c.charCodeAt(0) - 1776; })
+    .replace(/\D/g, '');
+  if(d.indexOf('00968') === 0) d = d.slice(5);
+  if(d.indexOf('968') === 0 && d.length >= 11) return d.slice(3, 11);
+  if(d.indexOf('968') === 0) return d.slice(0, 10);   // ما زال يكتب الرمز بنفسه
+  return d.slice(0, 8);
+}
 ['phone','phone2'].forEach(function(id){
   var el = document.getElementById(id);
-  if(el) el.addEventListener('blur', function(){ if(el.value.trim()) el.value = normPhone(el.value); });
+  if(!el) return;
+  el.addEventListener('input', function(){
+    el.value = localPhone(el.value);
+    el.classList.remove('invalid');
+  });
 });
 </script>
 </body>
