@@ -8,6 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>انضم إلى منصة توفة</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap">
 <style>
 :root {
   --bg:        #f1f5f9;
@@ -183,7 +184,11 @@ body{
   appearance:none;
 }
 .phone-group{display:flex;direction:ltr;align-items:stretch}
-.phone-group .cc{display:flex;align-items:center;padding:0 12px;background:var(--surface3);border:1.5px solid var(--border);border-right:0;border-radius:10px 0 0 10px;font-weight:800;font-size:14px;color:var(--text2);white-space:nowrap}
+.phone-group .cc{position:relative;display:flex;align-items:center;gap:6px;padding:0 10px;min-width:92px;background:var(--surface3);border:1.5px solid var(--border);border-right:0;border-radius:10px 0 0 10px;font-weight:800;font-size:14px;color:var(--text2);white-space:nowrap;cursor:pointer}
+.phone-group .cc:focus-within{outline:3px solid rgba(184,29,34,.3);outline-offset:1px}
+.phone-group .cc select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
+.flag{font-family:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif;font-size:20px;line-height:1}
+.cc-arrow{font-size:10px;opacity:.6}
 .phone-group .inp{border-radius:0 10px 10px 0;direction:ltr;text-align:left;font-size:16px;letter-spacing:1px}
 .inp:focus{
   border-color:var(--gold);
@@ -354,8 +359,8 @@ textarea.inp{resize:vertical;min-height:88px;}
         </div>
         <div class="field">
           <label for="phone">رقم الواتساب <span class="req" aria-hidden="true">*</span></label>
-          <div class="phone-group"><span class="cc" aria-hidden="true">+968</span><input class="inp" id="phone" type="tel" inputmode="numeric" maxlength="11" placeholder="91234567" dir="ltr" aria-required="true" aria-describedby="phone-hint phone-err" autocomplete="tel-national"></div>
-          <div id="phone-hint" style="font-size:11px;color:var(--text3);margin-top:4px;">اكتب الأرقام الثمانية فقط، ورمز الدولة 968 يُضاف تلقائياً.</div>
+          <div class="phone-group"><label class="cc" for="phone-cc"><span class="flag" id="phone-flag">🇴🇲</span><span id="phone-code">+968</span><span class="cc-arrow" aria-hidden="true">▾</span><select id="phone-cc" aria-label="دولة رقم الواتساب"></select></label><input class="inp" id="phone" type="tel" inputmode="numeric" maxlength="16" placeholder="91234567" dir="ltr" aria-required="true" aria-describedby="phone-hint phone-err" autocomplete="tel-national"></div>
+          <div id="phone-hint" style="font-size:11px;color:var(--text3);margin-top:4px;">اختر الدولة ثم اكتب رقمك بدون رمز الدولة.</div>
           <div class="field-err" id="phone-err" aria-live="polite">يرجى إدخال رقم واتساب صحيح</div>
         </div>
       </div>
@@ -363,7 +368,7 @@ textarea.inp{resize:vertical;min-height:88px;}
       <div class="grid2">
         <div class="field">
           <label for="phone2">هاتف ثانٍ</label>
-          <div class="phone-group"><span class="cc" aria-hidden="true">+968</span><input class="inp" id="phone2" type="tel" inputmode="numeric" maxlength="11" placeholder="91234567" dir="ltr" autocomplete="tel-national"></div>
+          <div class="phone-group"><label class="cc" for="phone2-cc"><span class="flag" id="phone2-flag">🇴🇲</span><span id="phone2-code">+968</span><span class="cc-arrow" aria-hidden="true">▾</span><select id="phone2-cc" aria-label="دولة الهاتف الثاني"></select></label><input class="inp" id="phone2" type="tel" inputmode="numeric" maxlength="16" placeholder="91234567" dir="ltr" autocomplete="tel-national"></div>
         </div>
         <div class="field">
           <label for="email">البريد الإلكتروني</label>
@@ -527,8 +532,8 @@ textarea.inp{resize:vertical;min-height:88px;}
 
       <div class="field">
         <label for="acadPass">🔑 كلمة المرور <span class="req">*</span></label>
-        <input class="inp" id="acadPassInput" type="password" placeholder="اختر كلمة مرور للدخول إلى المنصة" required>
-        <div class="field-err" id="errPass">يرجى إدخال كلمة مرور</div>
+        <input class="inp" id="acadPassInput" type="password" placeholder="اختر كلمة مرور (6 أحرف على الأقل)" required minlength="6" autocomplete="new-password">
+        <div class="field-err" id="errPass">كلمة المرور مطلوبة (6 أحرف على الأقل)</div>
       </div>
 
       <div class="field">
@@ -589,9 +594,9 @@ function submitForm(){
 
   var name        = document.getElementById('acadName').value.trim();
   var contact     = document.getElementById('contactName').value.trim();
-  var phone       = normPhone(document.getElementById('phone').value);
-  var phone2      = normPhone(document.getElementById('phone2').value);
-  var phone2Bad   = phone2 && !/^968\d{8}$/.test(phone2);
+  var phone       = getPhone('phone');
+  var phone2      = getPhone('phone2');
+  var phone2Bad   = phone2 && !phoneOk('phone2');
   var email       = document.getElementById('email').value.trim();
   var foundYear   = document.getElementById('foundYear').value.trim();
   var license     = document.getElementById('license').value.trim();
@@ -626,14 +631,20 @@ function submitForm(){
     document.getElementById('contactName-err').classList.add('show');
     errors.push({msg:'اسم المسؤول مطلوب', id:'contactName'});
   }
-  if(!/^968\d{8}$/.test(phone)){
+  if(!phoneOk('phone')){
     document.getElementById('phone').classList.add('invalid');
     document.getElementById('phone-err').classList.add('show');
-    errors.push({msg:'رقم الواتساب غير صحيح: اكتب 8 أرقام بعد +968', id:'phone'});
+    errors.push({msg:'رقم الواتساب غير صحيح: ' + phoneRule('phone'), id:'phone'});
+  }
+  var acadPassVal = (document.getElementById('acadPassInput').value || '').trim();
+  if(acadPassVal.length < 6){
+    document.getElementById('acadPassInput').classList.add('invalid');
+    document.getElementById('errPass').classList.add('show');
+    errors.push({msg:'كلمة المرور مطلوبة (6 أحرف على الأقل)', id:'acadPassInput'});
   }
   if(phone2Bad){
     document.getElementById('phone2').classList.add('invalid');
-    errors.push({msg:'الهاتف الثاني غير صحيح: اكتب 8 أرقام بعد +968 أو اتركه فارغاً', id:'phone2'});
+    errors.push({msg:'الهاتف الثاني غير صحيح: ' + phoneRule('phone2') + ' أو اتركه فارغاً', id:'phone2'});
   }
 
   if(errors.length){
@@ -675,8 +686,7 @@ function submitForm(){
   var reqId    = 'JOIN-' + Date.now();
   var today    = new Date().toLocaleDateString('ar-SA');
   var acadKey  = 'acad_' + reqId.slice(-6);
-  var acadPass = (document.getElementById('acadPassInput').value||'').trim() || '1234';
-  if(!acadPass){ document.getElementById('errPass').classList.add('show'); document.getElementById('acadPassInput').classList.add('invalid'); document.getElementById('acadPassInput').focus(); return; }
+  var acadPass = acadPassVal;
 
   var btn = document.getElementById('submitBtn');
   btn.disabled = true;
@@ -773,35 +783,103 @@ function submitForm(){
   }
 }
 
-// يحوّل أي صيغة مكتوبة إلى الصيغة الدولية بلا مسافات أو علامات: 12345678 / 0096812345678 / +968 1234 5678
-function normPhone(v){
-  var d = String(v == null ? '' : v)
+// ===== أرقام الهاتف: دول الخليج ثم الدول العربية، مع علم كل دولة وطول الرقم المحلي =====
+// [الرمز, العلم, الاسم, أقل طول محلي, أكبر طول محلي, مثال]
+var GULF = [
+  ['968','🇴🇲','سلطنة عُمان',8,8,'91234567'], ['971','🇦🇪','الإمارات',9,9,'501234567'],
+  ['966','🇸🇦','السعودية',9,9,'512345678'],   ['974','🇶🇦','قطر',8,8,'33123456'],
+  ['965','🇰🇼','الكويت',8,8,'51234567'],      ['973','🇧🇭','البحرين',8,8,'36001234']
+];
+var ARAB = [
+  ['962','🇯🇴','الأردن',9,9,'791234567'],   ['216','🇹🇳','تونس',8,8,'20123456'],
+  ['213','🇩🇿','الجزائر',9,9,'551234567'],  ['269','🇰🇲','جزر القمر',7,7,'3212345'],
+  ['253','🇩🇯','جيبوتي',8,8,'77123456'],    ['249','🇸🇩','السودان',9,9,'911234567'],
+  ['963','🇸🇾','سوريا',8,9,'944123456'],    ['252','🇸🇴','الصومال',7,9,'61234567'],
+  ['964','🇮🇶','العراق',10,10,'7901234567'],['970','🇵🇸','فلسطين',9,9,'599123456'],
+  ['961','🇱🇧','لبنان',7,8,'71123456'],     ['218','🇱🇾','ليبيا',9,10,'912345678'],
+  ['20','🇪🇬','مصر',10,10,'1012345678'],    ['212','🇲🇦','المغرب',9,9,'612345678'],
+  ['222','🇲🇷','موريتانيا',8,8,'22123456'], ['967','🇾🇪','اليمن',7,9,'712345678']
+];
+var COUNTRIES = GULF.concat(ARAB);
+var BY_CODE = {};
+COUNTRIES.forEach(function(c){ BY_CODE[c[0]] = c; });
+var CODES_LONG_FIRST = COUNTRIES.map(function(c){ return c[0]; }).sort(function(a, b){ return b.length - a.length; });
+
+function digitsOf(v){
+  return String(v == null ? '' : v)
     .replace(/[٠-٩]/g, function(c){ return c.charCodeAt(0) - 1632; })
     .replace(/[۰-۹]/g, function(c){ return c.charCodeAt(0) - 1776; })
     .replace(/\D/g, '');
-  if(d.indexOf('00') === 0) d = d.slice(2);
-  if(d.length === 9 && d.charAt(0) === '0') d = d.slice(1);
-  if(d.length === 8) d = '968' + d;
+}
+
+// رقم دولي كامل (رمز + رقم محلي بطول صحيح)؟ يُرجع الدولة والرقم المحلي
+function detectFull(d){
+  for(var i = 0; i < CODES_LONG_FIRST.length; i++){
+    var cc = CODES_LONG_FIRST[i];
+    if(d.indexOf(cc) !== 0) continue;
+    var c = BY_CODE[cc], rest = d.slice(cc.length);
+    if(rest.charAt(0) === '0' && rest.length - 1 >= c[3] && rest.length - 1 <= c[4]) rest = rest.slice(1);
+    if(rest.length >= c[3] && rest.length <= c[4]) return {cc: cc, local: rest};
+  }
+  return null;
+}
+function startsWithCode(d){
+  return CODES_LONG_FIRST.some(function(cc){ return d.indexOf(cc) === 0; });
+}
+
+function fillCountrySelect(sel){
+  function opts(list){ return list.map(function(c){ return '<option value="' + c[0] + '">' + c[1] + ' ' + c[2] + ' (+' + c[0] + ')</option>'; }).join(''); }
+  sel.innerHTML = '<optgroup label="دول الخليج">' + opts(GULF) + '</optgroup><optgroup label="الدول العربية">' + opts(ARAB) + '</optgroup>';
+  sel.value = '968';
+}
+function refreshCountry(id){
+  var sel = document.getElementById(id + '-cc'), c = BY_CODE[sel.value];
+  document.getElementById(id + '-flag').textContent = c[1];
+  document.getElementById(id + '-code').textContent = '+' + c[0];
+  document.getElementById(id).placeholder = c[5];
+}
+// الرقم المحلي النهائي بعد حذف صفر التمهيد (0501234567 ← 501234567)
+function finalLocal(id){
+  var c = BY_CODE[document.getElementById(id + '-cc').value];
+  var d = digitsOf(document.getElementById(id).value);
+  if(d.charAt(0) === '0' && d.length - 1 >= c[3] && d.length - 1 <= c[4]) d = d.slice(1);
   return d;
 }
-// الحقل يعرض الأرقام المحلية فقط (8 أرقام) ورمز 968 ثابت بجانبه؛ تُنظَّف اللصقات الكاملة مثل +968 9123 4567
-function localPhone(raw){
-  var d = String(raw == null ? '' : raw)
-    .replace(/[٠-٩]/g, function(c){ return c.charCodeAt(0) - 1632; })
-    .replace(/[۰-۹]/g, function(c){ return c.charCodeAt(0) - 1776; })
-    .replace(/\D/g, '');
-  if(d.indexOf('00968') === 0) d = d.slice(5);
-  if(d.indexOf('968') === 0 && d.length >= 11) return d.slice(3, 11);
-  if(d.indexOf('968') === 0) return d.slice(0, 10);   // ما زال يكتب الرمز بنفسه
-  return d.slice(0, 8);
+function getPhone(id){
+  var d = finalLocal(id);
+  return d ? document.getElementById(id + '-cc').value + d : '';
 }
-['phone','phone2'].forEach(function(id){
-  var el = document.getElementById(id);
-  if(!el) return;
+function phoneOk(id){
+  var c = BY_CODE[document.getElementById(id + '-cc').value], n = finalLocal(id).length;
+  return n >= c[3] && n <= c[4];
+}
+function phoneRule(id){
+  var c = BY_CODE[document.getElementById(id + '-cc').value];
+  var n = c[3] === c[4] ? c[3] + ' أرقام' : 'من ' + c[3] + ' إلى ' + c[4] + ' أرقام';
+  return 'رقم ' + c[2] + ' يتكون من ' + n + ' بعد +' + c[0];
+}
+
+['phone', 'phone2'].forEach(function(id){
+  var el = document.getElementById(id), sel = document.getElementById(id + '-cc');
+  if(!el || !sel) return;
+  fillCountrySelect(sel);
+  refreshCountry(id);
+  sel.addEventListener('change', function(){ refreshCountry(id); el.classList.remove('invalid'); });
   el.addEventListener('input', function(){
-    el.value = localPhone(el.value);
+    var raw = el.value, d = digitsOf(raw);
+    var explicit = /^\s*\+/.test(raw) || d.indexOf('00') === 0;
+    if(d.indexOf('00') === 0) d = d.slice(2);
+    var cur = BY_CODE[sel.value];
+    // لصق أو كتابة رقم دولي كامل: نختار دولته تلقائياً ونُبقي الرقم المحلي فقط
+    if(explicit || d.length > cur[4] + 1){
+      var f = detectFull(d);
+      if(f){ sel.value = f.cc; refreshCountry(id); el.value = f.local; el.classList.remove('invalid'); return; }
+      if(startsWithCode(d) && d.length < 15){ el.value = d; return; }   // ما زال يكتب الرمز بنفسه
+    }
+    el.value = d.slice(0, cur[4] + 1);
     el.classList.remove('invalid');
   });
+  el.addEventListener('blur', function(){ if(el.value) el.value = finalLocal(id); });
 });
 </script>
 </body>
