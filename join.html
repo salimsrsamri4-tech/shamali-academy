@@ -537,6 +537,12 @@ textarea.inp{resize:vertical;min-height:88px;}
       </div>
 
       <div class="field">
+        <label for="coachPassInput">👨‍🏫 كلمة مرور المدربين <span class="req">*</span></label>
+        <input class="inp" id="coachPassInput" type="password" placeholder="يستخدمها مدربوكم لتسجيل الحضور" required minlength="6" autocomplete="new-password" aria-describedby="errCoachPass">
+        <div class="field-err" id="errCoachPass">كلمة مرور المدربين مطلوبة (6 أحرف على الأقل) وتختلف عن كلمة مرور الإدارة</div>
+      </div>
+
+      <div class="field">
         <label for="notes">ملاحظات إضافية</label>
         <textarea class="inp" id="notes" placeholder="أي معلومات أو استفسارات..."></textarea>
       </div>
@@ -642,6 +648,12 @@ function submitForm(){
     document.getElementById('errPass').classList.add('show');
     errors.push({msg:'كلمة المرور مطلوبة (6 أحرف على الأقل)', id:'acadPassInput'});
   }
+  var coachPassVal = (document.getElementById('coachPassInput').value || '').trim();
+  if(coachPassVal.length < 6 || coachPassVal === acadPassVal){
+    document.getElementById('coachPassInput').classList.add('invalid');
+    document.getElementById('errCoachPass').classList.add('show');
+    errors.push({msg:'كلمة مرور المدربين مطلوبة (6 أحرف على الأقل) وتختلف عن كلمة مرور الإدارة', id:'coachPassInput'});
+  }
   if(phone2Bad){
     document.getElementById('phone2').classList.add('invalid');
     errors.push({msg:'الهاتف الثاني غير صحيح: ' + phoneRule('phone2') + ' أو اتركه فارغاً', id:'phone2'});
@@ -731,7 +743,8 @@ function submitForm(){
         'ملاحظات':            notes,
         'الحالة':             'جديد',
         'مفتاح_الأكاديمية':   acadKey,
-        'كلمة_المرور':         acadPass
+        'كلمة_المرور':         acadPass,
+        'كلمة_المرور_المدرب':  coachPassVal
       }
     });
     fetch(CENTRAL_GAS, {method:'POST', headers:{'Content-Type':'text/plain'}, redirect:'follow', body:payload})
