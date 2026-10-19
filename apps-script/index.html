@@ -20,7 +20,7 @@
 var text = '';
 var fparam = new URLSearchParams(location.search).get('f');
 var file = (fparam === 'format' || fparam === 'cleanup') ? fparam + '.txt' : 'code.txt';
-fetch(file, {cache: 'no-store'}).then(function(r){ return r.text(); }).then(function(t){
+fetch(file + '?t=' + Date.now(), {cache: 'no-store'}).then(function(r){ return r.text(); }).then(function(t){
   text = t;
   document.getElementById('code').textContent = t;
   document.getElementById('copy').disabled = false;
