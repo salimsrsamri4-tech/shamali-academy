@@ -552,6 +552,7 @@ textarea.inp{resize:vertical;min-height:88px;}
         إرسال الطلب عبر واتساب
       </button>
       <p class="note">سيفتح واتساب تلقائياً — طلبك يصل مباشرة للدعم الفني</p>
+      <p id="saveStatus" role="alert" aria-live="assertive" style="display:none;font-size:13px;font-weight:700;margin-top:12px;line-height:1.7;text-align:center"></p>
     </div>
 
     <!-- رسالة النجاح -->
@@ -747,35 +748,55 @@ function submitForm(){
         'كلمة_المرور_المدرب':  coachPassVal
       }
     });
-    fetch(CENTRAL_GAS, {method:'POST', headers:{'Content-Type':'text/plain'}, redirect:'follow', body:payload})
-      .then(function(r){ return r.json(); })
-      .catch(function(err){
-        if(gasStatus){ gasStatus.style.color='#dc2626'; gasStatus.textContent='❌ خطأ في الحفظ: '+err.message; }
-        // افتح واتساب حتى لو فشل الحفظ
-        setTimeout(function(){
-          window.open('https://api.whatsapp.com/send?phone=96892126558&text='+encodeURIComponent(msg),'_blank');
-        }, 800);
-        document.getElementById('formBody').style.display='none';
-        document.getElementById('successMsg').style.display='block';
-      })
-      .then(function(res){
-        if(!res) return; // جاء من catch
-        if(gasStatus){
-          if(res && (res.status==='ok'||res.result==='success'||res.success)){
-            gasStatus.style.color='#16a34a';
-            gasStatus.textContent='✅ تم الحفظ في السجل بنجاح';
-          } else {
-            gasStatus.style.color='#f59e0b';
-            gasStatus.textContent='⚠️ '+JSON.stringify(res);
-          }
-        }
-        // افتح واتساب بعد اكتمال الحفظ
-        setTimeout(function(){
-          window.open('https://api.whatsapp.com/send?phone=96892126558&text='+encodeURIComponent(msg),'_blank');
-        }, 600);
-        document.getElementById('formBody').style.display='none';
-        document.getElementById('successMsg').style.display='block';
+    var waUrl = 'https://api.whatsapp.com/send?phone=96892126558&text=' + encodeURIComponent(msg);
+    var sheetUrl = CENTRAL_GAS + '?action=get&sheet=' + encodeURIComponent('أكاديميات المنصة') + '&limit=50';
+    function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+    var saveStatus = document.getElementById('saveStatus');
+    function setStatus(color, text){
+      [gasStatus, saveStatus].forEach(function(el){
+        if(el){ el.style.color = color; el.textContent = text; el.style.display = 'block'; }
       });
+    }
+
+    // محاولة حفظ؛ تُعدّ ناجحة أيضاً إذا ردّ السكربت بأن الطلب مكرر (أي أن المحاولة السابقة وصلت)
+    function trySave(){
+      return fetch(CENTRAL_GAS, {method:'POST', headers:{'Content-Type':'text/plain'}, redirect:'follow', body:payload})
+        .then(function(r){ return r.json(); })
+        .then(function(res){
+          if(res && (res.status === 'ok' || res.result === 'success' || res.success)) return true;
+          if(res && /مكرر/.test(String(res.message || ''))) return true;
+          throw new Error((res && res.message) || 'استجابة غير متوقعة');
+        });
+    }
+    // قد يصل الطلب ويُحفظ ثم ينقطع الرد في الطريق؛ نتحقق من الشيت بدل الاكتفاء بخطأ الشبكة
+    function isSaved(){
+      return fetch(sheetUrl + '&_=' + Date.now(), {redirect:'follow'}).then(function(r){ return r.json(); })
+        .then(function(rows){ return Array.isArray(rows) && rows.some(function(x){ return String(x['رقم الطلب']) === reqId; }); })
+        .catch(function(){ return false; });
+    }
+    function attempt(n){
+      return trySave().then(function(){ return true; }, function(err){
+        return wait(2000).then(isSaved).then(function(saved){
+          if(saved) return true;
+          if(n >= 3) throw err;
+          setStatus('#f59e0b', '⏳ إعادة المحاولة (' + (n + 1) + ' من 3)...');
+          return wait(1500).then(function(){ return attempt(n + 1); });
+        });
+      });
+    }
+
+    setStatus('#475569', '⏳ جارٍ الحفظ في السجل...');
+    attempt(1).then(function(){
+      setStatus('#16a34a', '✅ تم الحفظ في السجل بنجاح');
+      setTimeout(function(){ window.open(waUrl, '_blank'); }, 600);
+      document.getElementById('formBody').style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+    }, function(err){
+      // لم يُحفظ الطلب: نُبقي النموذج ظاهراً ببياناته ليعيد المستخدم الإرسال، ولا نعرض رسالة نجاح كاذبة
+      setStatus('#dc2626', '❌ تعذّر حفظ الطلب (' + err.message + '). تحقق من اتصالك بالإنترنت ثم اضغط إرسال مرة أخرى.');
+      btn.disabled = false;
+      btn.textContent = '↻ إعادة الإرسال';
+    });
   }
 
   // رفع الشعار أولاً إذا تم اختياره
