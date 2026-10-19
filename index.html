@@ -1841,6 +1841,11 @@ function renderSched(){
   el.innerHTML = '<div class="ldg"><span class="sp"></span></div>';
   apiGet('جدول التدريب').then(function(rows){
     rows = (Array.isArray(rows) ? rows : []).filter(function(r){ return r['أيام التدريب'] || r['الملعب']; });
+    // الشمالي: المواعيد المعتمدة سابقاً تظهر حتى تُضاف مواعيد جديدة في الشيت
+    if(!rows.length && _isShamali()){
+      rows = [{'أيام التدريب':'الاثنين والأربعاء','التوقيت':'عصراً','الملعب':'ملعب فريق الشمالي',
+               'الفئات العمرية':'جميع الفئات العمرية','موقع الملعب':'https://maps.app.goo.gl/TdTHaW67E4uC1dkY6'}];
+    }
     var html =
       '<div style="background:linear-gradient(135deg,#3b0a0a,#b81d22);padding:28px 16px 24px;text-align:center;color:#fff;">'+
         '<div style="font-size:40px;margin-bottom:8px;">⚽</div>'+
