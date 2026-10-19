@@ -637,8 +637,8 @@ var ACADEMIES = {
     UPLOAD_URL: 'https://script.google.com/macros/s/AKfycbz9Lf14I9CKHSkd0jmMxhV-YhakgywDvGYsS6cFHD5PS0ESVAtFVoQMnk-hlBKHJZgm/exec',
     GAS_URL: 'https://script.google.com/macros/s/AKfycbz9Lf14I9CKHSkd0jmMxhV-YhakgywDvGYsS6cFHD5PS0ESVAtFVoQMnk-hlBKHJZgm/exec',
     SHEETDB_URL: 'https://sheetdb.io/api/v1/19dnaxf04au5l',
-    ADMIN_PASS: ['98555987'],
-    COACH_PASS: ['1234'],
+    ADMIN_PASS: [],
+    COACH_PASS: [],
     WA_NUM: '96892126558',
     BANK_INFO: 'سالم راشد العامري | 92126558'
   },
@@ -653,8 +653,8 @@ var ACADEMIES = {
     UPLOAD_URL: 'https://script.google.com/macros/s/AKfycbz9Lf14I9CKHSkd0jmMxhV-YhakgywDvGYsS6cFHD5PS0ESVAtFVoQMnk-hlBKHJZgm/exec',
     GAS_URL: 'https://script.google.com/macros/s/AKfycbz9Lf14I9CKHSkd0jmMxhV-YhakgywDvGYsS6cFHD5PS0ESVAtFVoQMnk-hlBKHJZgm/exec',
     SHEETDB_URL: '',
-    ADMIN_PASS: ['1234'],
-    COACH_PASS: ['1234'],
+    ADMIN_PASS: [],
+    COACH_PASS: [],
     WA_NUM: '96892126558'
   }
   // أكاديميات جديدة تُضاف هنا (تستخدم الشيت المركزي تلقائياً):
@@ -674,7 +674,7 @@ function _fillAcadDefaults(k, a){
   if(!a.NAME_EN)    a.NAME_EN    = a.NAME;
   if(!a.LOGO)       a.LOGO       = '';
   if(!a.DARK_COLOR) a.DARK_COLOR = a.PRIMARY_COLOR || '#1e3a5f';
-  if(!a.COACH_PASS) a.COACH_PASS = ['1234'];
+  if(!a.COACH_PASS) a.COACH_PASS = [];
   if(a.REG_FEE == null)     a.REG_FEE     = 10;
   if(a.MONTHLY_FEE == null) a.MONTHLY_FEE = 20;
   if(a.SESSIONS == null)    a.SESSIONS    = 8;
@@ -739,37 +739,10 @@ function loginNewAcad(acadKey){
   el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ التحقق...</div>';
 
   _serverLogin(acadKey, pass, 'admin').then(function(res){
-    if(res === null){ legacy(); return; }
+    if(res === null){ showLoginErr('❌ تعذّر الاتصال بالخادم، حاول مرة أخرى'); return; }
     if(!res.ok){ showLoginErr(res.msg); return; }
     applyFound(res.profile || {}, [pass], []);
   });
-
-  function legacy(){
-  var url = PLATFORM.CENTRAL_GAS + '?action=get&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET) + '&limit=200';
-  fetch(url, {redirect:'follow'}).then(function(r){ return r.json(); }).then(function(rows){
-    if(!Array.isArray(rows)){ showLoginErr('ليست مصفوفة'); return; }
-    var found = null;
-    var keyExists = false;
-    rows.forEach(function(r){
-      var key = (r['مفتاح_الأكاديمية']||'').trim() || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
-      var storedPass = (r['كلمة_المرور']||'1234').toString().trim();
-      var status = (r['الحالة']||'').trim();
-      if(key === acadKey) keyExists = true;
-      if(key === acadKey && status === 'مقبول' && pass === storedPass) found = r;
-    });
-    if(!found){
-      if(!keyExists){
-        showLoginErr('❌ الرابط غير صحيح أو الأكاديمية غير مسجّلة');
-      } else {
-        showLoginErr('⏳ طلبك قيد المراجعة — سيتم التواصل معك خلال 24 ساعة بعد الموافقة');
-      }
-      return;
-    }
-    applyFound(found, [(found['كلمة_المرور']||'1234').toString().trim()], [(found['كلمة_المرور_المدرب']||'1234').toString().trim()]);
-  }).catch(function(e){
-    el.innerHTML = '<div style="padding:24px;text-align:center;color:#dc2626;">❌ خطأ في الاتصال<br><small>'+e.message+'</small><br><br><button onclick="loginNewAcad(\''+acadKey+'\')" style="background:#b81d22;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-family:Cairo,sans-serif;cursor:pointer;">إعادة المحاولة</button></div>';
-  });
-  }
 
   function applyFound(found, adminPass, coachPass){
     var acad = _fillAcadDefaults(acadKey, {
@@ -1008,7 +981,7 @@ function pickerLogin(key){
   if(!pass){ if(errEl) errEl.textContent='أدخل كلمة المرور'; return; }
   if(errEl) errEl.textContent = '⏳ جاري التحقق...';
   _serverLogin(key, pass, 'admin').then(function(res){
-    if(res === null){ _pickerLoginLegacy(key, pass, inp, errEl); return; }
+    if(res === null){ if(errEl) errEl.textContent = '❌ تعذّر الاتصال بالخادم، حاول مرة أخرى'; return; }
     if(!res.ok){ if(errEl) errEl.textContent = res.msg || '❌ كلمة المرور غير صحيحة'; inp.value = ''; return; }
     if(!res.profile && ACADEMIES[key]){
       var m = document.getElementById('passModal'); if(m) m.remove();
@@ -1016,33 +989,6 @@ function pickerLogin(key){
     }
     _pickerApply(key, res.profile || {}, [pass], []);
   });
-}
-
-function _pickerLoginLegacy(key, pass, inp, errEl){
-  var url = PLATFORM.CENTRAL_GAS + '?action=get&sheet=' + encodeURIComponent(PLATFORM.JOIN_SHEET) + '&limit=200';
-  fetch(url).then(function(r){ return r.json(); }).then(function(rows){
-    if(!Array.isArray(rows)){ if(errEl) errEl.textContent='❌ خطأ في الاتصال'; return; }
-    var found = null;
-    rows.forEach(function(r){
-      var k = (r['مفتاح_الأكاديمية']||r['مفتاح الأكاديمية']||'').trim() || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
-      var storedPass = (r['كلمة_المرور']||r['كلمة المرور']||'1234').toString().trim();
-      var status = (r['الحالة']||'').trim();
-      if(k === key && status === 'مقبول' && pass === storedPass) found = r;
-    });
-    if(!found){
-      // تشخيص: هل الأكاديمية موجودة بغض النظر عن كلمة المرور؟
-      var acadRow = rows.find(function(r){
-        var k = (r['مفتاح_الأكاديمية']||r['مفتاح الأكاديمية']||'').trim() || ('acad_'+(r['رقم الطلب']||'').replace('JOIN-','').slice(-6));
-        return k === key;
-      });
-      if(!acadRow) { if(errEl) errEl.textContent='❌ الأكاديمية غير موجودة في النظام'; }
-      else if((acadRow['الحالة']||'').trim() !== 'مقبول') { if(errEl) errEl.textContent='⏳ طلب الأكاديمية لم يُقبل بعد'; }
-      else { if(errEl) errEl.textContent='❌ كلمة المرور غير صحيحة'; }
-      inp.value = '';
-      return;
-    }
-    _pickerApply(key, found, [(found['كلمة_المرور']||'1234').toString().trim()], [(found['كلمة_المرور_المدرب']||'1234').toString().trim()]);
-  }).catch(function(){ if(errEl) errEl.textContent='❌ خطأ في الاتصال'; });
 }
 
 function _pickerApply(key, found, adminPass, coachPass){
@@ -1135,7 +1081,7 @@ var PLATFORM = {
   CENTRAL_GAS: 'https://script.google.com/macros/s/AKfycbz9Lf14I9CKHSkd0jmMxhV-YhakgywDvGYsS6cFHD5PS0ESVAtFVoQMnk-hlBKHJZgm/exec',
   LOAN_SHEET: 'استعارات',
   JOIN_SHEET: 'أكاديميات المنصة',
-  SUPER_PASS: '1234'  // كلمة مرور الدعم الفني / مدير المنصة
+  SUPER_PASS: ''  // كلمة المرور تُتحقق في السكربت فقط (Auth.gs)
 };
 var _isSuperAdmin = false;
 
@@ -4163,9 +4109,13 @@ function _renderPageNow(page) {
 function checkAdm() {
   var p = document.getElementById('admPass').value;
   _serverLogin(window.CURRENT_ACADEMY_KEY || 'shamali', p, 'admin').then(function(res){
-    _checkAdmResult(res === null ? CONFIG.ADMIN_PASS.indexOf(p) >= 0 : res.ok);
+    if(res === null){ _loginDown(); return; }
+    _checkAdmResult(res.ok);
+    if(!res.ok && res.msg){ var e = document.getElementById('admErr'); if(e) e.textContent = res.msg; }
   });
 }
+
+function _loginDown(){ alert('تعذّر الاتصال بالخادم، حاول مرة أخرى'); }
 
 function _checkAdmResult(ok) {
   if(ok) {
@@ -4182,7 +4132,9 @@ function _checkAdmResult(ok) {
 function checkCoach() {
   var p = document.getElementById('coachPass').value;
   _serverLogin(window.CURRENT_ACADEMY_KEY || 'shamali', p, 'coach').then(function(res){
-    _checkCoachResult(res === null ? CONFIG.ADMIN_PASS.concat(CONFIG.COACH_PASS).indexOf(p) >= 0 : res.ok);
+    if(res === null){ _loginDown(); return; }
+    _checkCoachResult(res.ok);
+    if(!res.ok && res.msg){ var e = document.getElementById('coachErr'); if(e) e.textContent = res.msg; }
   });
 }
 
@@ -7712,7 +7664,9 @@ function doTournLogin(){
   var pass = (document.getElementById('tournPass').value||'').trim();
   var err = document.getElementById('tournErr');
   _serverLogin(window.CURRENT_ACADEMY_KEY || 'shamali', pass, 'admin').then(function(res){
-    _doTournLoginResult(res === null ? CONFIG.ADMIN_PASS.indexOf(pass) > -1 : res.ok, err);
+    if(res === null){ _loginDown(); return; }
+    _doTournLoginResult(res.ok, err);
+    if(!res.ok && res.msg) err.textContent = res.msg;
   });
 }
 
@@ -12488,7 +12442,9 @@ function renderSuperLogin(){
 function checkSuperAdmin(){
   var p = document.getElementById('superPass').value;
   _serverLogin('', p, 'super').then(function(res){
-    _checkSuperResult(res === null ? p === PLATFORM.SUPER_PASS : res.ok);
+    if(res === null){ _loginDown(); return; }
+    _checkSuperResult(res.ok);
+    if(!res.ok && res.msg){ var e = document.getElementById('superErr'); if(e) e.textContent = res.msg; }
   });
 }
 

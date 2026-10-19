@@ -50,7 +50,7 @@ function doGet(e) {
 
   if (action === 'get') return _actGet(ss, sheetName, p);
   if (action === 'multi') return _actMulti(ss, p);
-  if (action === 'login') return _login(p);
+  if (action === 'login') return _loginLimited(p);
   if (action === 'append') return _guardAppend(ss, sheetName, JSON.parse(p.data || '{}'), p.token);
   if (action === 'update') return _guardUpdate(ss, sheetName, p.column, p.value, JSON.parse(p.data || '{}'), p.token);
   if (action === 'delete') return _guardDelete(ss, sheetName, p.idCol || p.column || 'id', p.idVal !== undefined ? p.idVal : p.value, p.token);
@@ -364,4 +364,22 @@ function _acadFilter(sheetName, rows, acad) {
     });
   }
   return rows;
+}
+
+// حدّ محاولات الدخول الخاطئة: 8 محاولات خلال 5 دقائق لكل (دور + أكاديمية) ثم إيقاف مؤقت.
+// لا يرى السكربت عنوان المتصفح، فالحدّ على الحساب نفسه؛ ينتهي تلقائياً بعد 5 دقائق.
+var LOGIN_MAX_FAILS = 8, LOGIN_WINDOW_SEC = 300;
+function _loginLimited(p) {
+  var cache = CacheService.getScriptCache();
+  var key = 'lf_' + String(p.role || 'admin') + '_' + String(p.acad || '');
+  var fails = parseInt(cache.get(key) || '0', 10);
+  if (fails >= LOGIN_MAX_FAILS)
+    return json({status:'ok', v:1, ok:false, msg:'⏳ محاولات خاطئة كثيرة. حاول بعد 5 دقائق'});
+  var out = _login(p);
+  var raw = out && out.getContent ? out.getContent() : out;
+  var res = {};
+  try { res = JSON.parse(raw); } catch (e) {}
+  if (res.ok) cache.remove(key);
+  else cache.put(key, String(fails + 1), LOGIN_WINDOW_SEC);
+  return out;
 }
