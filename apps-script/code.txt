@@ -17,17 +17,24 @@ function getOrCreateSheet(ss, sheetName) {
   return sh;
 }
 
+// Google Sheets يرفض الكتابة خارج حدود شبكة الورقة، فنوسّعها قبل إضافة أي عمود جديد
+function _ensureCols(sh, needed) {
+  var max = sh.getMaxColumns();
+  if (needed > max) sh.insertColumnsAfter(max, needed - max);
+}
+
 function _ensureAcadCol(sh) {
   var lc = sh.getLastColumn();
   if (lc < 1 || sh.getLastRow() < 1) return;
   var headers = sh.getRange(1, 1, 1, lc).getValues()[0];
-  if (headers.indexOf(ACAD_COL) < 0) sh.getRange(1, lc + 1).setValue(ACAD_COL);
+  if (headers.indexOf(ACAD_COL) < 0) { _ensureCols(sh, lc + 1); sh.getRange(1, lc + 1).setValue(ACAD_COL); }
 }
 
 function handleAppend(ss, sheetName, rowData) {
   var sh = getOrCreateSheet(ss, sheetName);
   if (sh.getLastRow() === 0) {
     var hs = Object.keys(rowData);
+    _ensureCols(sh, hs.length);
     sh.appendRow(hs);
     sh.getRange(1,1,1,hs.length).setFontWeight('bold');
   }
@@ -36,6 +43,7 @@ function handleAppend(ss, sheetName, rowData) {
   var headers = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0];
   var missing = Object.keys(rowData).filter(function(k){ return headers.indexOf(k) === -1; });
   if (missing.length) {
+    _ensureCols(sh, headers.length + missing.length);
     sh.getRange(1, headers.length + 1, 1, missing.length).setValues([missing]).setFontWeight('bold');
     headers = headers.concat(missing);
   }
@@ -101,6 +109,7 @@ function _actUpdate(ss, sheetName, column, value, updateData) {
   if (colIdx === -1) return json({status:'error', message:'Column not found'});
   var missing = Object.keys(updateData).filter(function(k){ return headers.indexOf(k) === -1; });
   if (missing.length) {
+    _ensureCols(sh, headers.length + missing.length);
     sh.getRange(1, headers.length + 1, 1, missing.length).setValues([missing]).setFontWeight('bold');
     headers = headers.concat(missing);
   }
