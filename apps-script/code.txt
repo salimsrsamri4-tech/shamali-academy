@@ -49,6 +49,7 @@ function doGet(e) {
   var sheetName = p.sheet || 'Sheet1';
 
   if (action === 'get') return _actGet(ss, sheetName, p);
+  if (action === 'multi') return _actMulti(ss, p);
   if (action === 'login') return _login(p);
   if (action === 'append') return _guardAppend(ss, sheetName, JSON.parse(p.data || '{}'), p.token);
   if (action === 'update') return _guardUpdate(ss, sheetName, p.column, p.value, JSON.parse(p.data || '{}'), p.token);
@@ -59,10 +60,24 @@ function doGet(e) {
 }
 
 function _actGet(ss, sheetName, p) {
-  var sh = getOrCreateSheet(ss, sheetName);
+  return json(_readRows(ss, sheetName, p));
+}
+
+// عدة أوراق بطلب واحد: ?action=multi&sheets=ورقة1|ورقة2 — أسرع بكثير من طلب لكل ورقة
+function _actMulti(ss, p) {
+  var names = String(p.sheets || '').split('|').filter(String).slice(0, 15);
+  var out = {};
+  names.forEach(function(n) { out[n] = _readRows(ss, n, p); });
+  return json({status:'ok', v:2, data:out});
+}
+
+// قراءة ورقة كصفوف كائنات مع إخفاء الحساس وتصفية الأكاديمية؛ لا تنشئ ورقة غير موجودة
+function _readRows(ss, sheetName, p) {
+  var sh = ss.getSheetByName(sheetName);
+  if (!sh) return [];
   if (ACAD_SHEETS.indexOf(sheetName) > -1) _ensureAcadCol(sh);
   var data = sh.getDataRange().getValues();
-  if (data.length < 2) return json([]);
+  if (data.length < 2) return [];
   var headers = data[0];
   var rows = [];
   for (var i = 1; i < data.length; i++) {
@@ -75,7 +90,7 @@ function _actGet(ss, sheetName, p) {
   var lim = parseInt(p.limit) || rows.length;
   // عند تجاوز الحد تُرجع الأحدث (آخر الصفوف) بدل الأقدم
   if (rows.length > lim) rows = rows.slice(rows.length - lim);
-  return json(rows);
+  return rows;
 }
 
 function _actUpdate(ss, sheetName, column, value, updateData) {
@@ -127,12 +142,14 @@ function _digits(v) {
     .replace(/\D/g, '');
 }
 
+var _SO_MEMO = {};
 function _sheetObjects(name) {
+  if (_SO_MEMO[name]) return _SO_MEMO[name];
   var sh = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(name);
   if (!sh) return [];
   var v = sh.getDataRange().getValues();
   var h = v[0] || [];
-  return v.slice(1).map(function(row){
+  return _SO_MEMO[name] = v.slice(1).map(function(row){
     var o = {};
     h.forEach(function(k, i){ o[k] = row[i]; });
     return o;

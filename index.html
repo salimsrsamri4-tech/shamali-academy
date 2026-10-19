@@ -1217,6 +1217,50 @@ function _apiErrorMsg(err){
   return 'حدث خطأ في الاتصال — حاول مجدداً';
 }
 
+var _inflight = {};
+var _multiOk = null;   // null = لم يُجرَّب بعد، true/false = هل يدعم السكربت طلب multi
+
+// يعالج الصفوف القادمة من السكربت (تصفية الأكاديمية) ثم يخزّنها في الذاكرة المؤقتة
+function _finishRows(sheetName, raw, allAcads, cacheKey) {
+  // تحويل الاستجابة إلى مصفوفة كائنات دائماً
+  var arr = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.data) ? raw.data : []);
+  var data = _arraysToObjects(arr);
+  // فلتر بيانات الأكاديمية الحالية (للأكاديميات الجديدة غير الشمالي)
+  var currentKey = window.CURRENT_ACADEMY_KEY || 'shamali';
+  if(allAcads) {
+    // بدون فلترة: بوابة ولي الأمر الموحدة
+  } else if(currentKey !== 'shamali' && data.length && data[0].hasOwnProperty('أكاديمية')) {
+    data = data.filter(function(r){ return r['أكاديمية'] === currentKey; });
+  } else if(currentKey === 'shamali' && data.length && data[0].hasOwnProperty('أكاديمية')) {
+    data = data.filter(function(r){ return !r['أكاديمية'] || r['أكاديمية'] === 'shamali'; });
+  } else if((sheetName === 'الورقة1' || _ACAD_SHEETS.indexOf(sheetName) > -1) && data.length && data[0].hasOwnProperty('الأكاديمية')) {
+    // عمود الأكاديمية يحمل الاسم؛ الصفوف القديمة بدون اسم تتبع الشمالي
+    var curName = _curAcadName();
+    var shamaliName = ACADEMIES.shamali.NAME;
+    data = data.filter(function(r){
+      var a = String(r['الأكاديمية'] || '').trim();
+      if(currentKey === 'shamali') return !a || a === shamaliName;
+      return a && a === curName;
+    });
+  }
+  if(!allAcads && _PLAYER_SHEETS.indexOf(sheetName) > -1 && data.length) {
+    // أوراق بلا عمود أكاديمية: تُفلتر بأرقام ملفات لاعبي الأكاديمية الحالية
+    return apiGet('الورقة1').then(function(players){
+      var ids = {};
+      players.forEach(function(p){ ids[String(p['رقم الملف']||'').trim()] = 1; });
+      data = data.filter(function(r){
+        var id = String(r['رقم الملف'] || r['ID'] || r['معرف اللاعب'] || '').trim();
+        return id ? !!ids[id] : (window.CURRENT_ACADEMY_KEY || 'shamali') === 'shamali';
+      });
+      _apiCache[cacheKey] = { data: data, ts: Date.now() };
+      return data;
+    }, function(){ return data; });
+  }
+  _apiCache[cacheKey] = { data: data, ts: Date.now() };
+  return data;
+
+}
+
 function apiGet(sheetName, forceRefresh, allAcads) {
   var now = Date.now();
   var cacheKey = allAcads ? '*all*' + sheetName : sheetName;
@@ -1224,54 +1268,59 @@ function apiGet(sheetName, forceRefresh, allAcads) {
   if(!forceRefresh && cached && (now - cached.ts) < _CACHE_TTL) {
     return Promise.resolve(cached.data);
   }
-  var acadKey = window.CURRENT_ACADEMY_KEY || 'shamali';
+  // طلب مماثل قيد التنفيذ: انتظره بدل إرسال طلب ثانٍ
+  if(!forceRefresh && _inflight[cacheKey]) return _inflight[cacheKey];
   var url = CONFIG.GAS_URL
     ? CONFIG.GAS_URL + '?action=get&sheet=' + encodeURIComponent(sheetName) + '&limit=20000' + _tokenParam()
       + ((!allAcads && (sheetName === 'الورقة1' || _ACAD_SHEETS.indexOf(sheetName) > -1 || _PLAYER_SHEETS.indexOf(sheetName) > -1))
           ? '&acad=' + encodeURIComponent(_curAcadName() || ACADEMIES.shamali.NAME) : '')
     : CONFIG.SHEETDB_URL + '?sheet=' + encodeURIComponent(sheetName) + '&limit=2000';
-  return _fetchWithRetry(url).then(function(r){ return r.json(); }).then(function(raw){
-    // تحويل الاستجابة إلى مصفوفة كائنات دائماً
-    var arr = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.data) ? raw.data : []);
-    var data = _arraysToObjects(arr);
-    // فلتر بيانات الأكاديمية الحالية (للأكاديميات الجديدة غير الشمالي)
-    var currentKey = window.CURRENT_ACADEMY_KEY || 'shamali';
-    if(allAcads) {
-      // بدون فلترة: بوابة ولي الأمر الموحدة
-    } else if(currentKey !== 'shamali' && data.length && data[0].hasOwnProperty('أكاديمية')) {
-      data = data.filter(function(r){ return r['أكاديمية'] === currentKey; });
-    } else if(currentKey === 'shamali' && data.length && data[0].hasOwnProperty('أكاديمية')) {
-      data = data.filter(function(r){ return !r['أكاديمية'] || r['أكاديمية'] === 'shamali'; });
-    } else if((sheetName === 'الورقة1' || _ACAD_SHEETS.indexOf(sheetName) > -1) && data.length && data[0].hasOwnProperty('الأكاديمية')) {
-      // عمود الأكاديمية يحمل الاسم؛ الصفوف القديمة بدون اسم تتبع الشمالي
-      var curName = _curAcadName();
-      var shamaliName = ACADEMIES.shamali.NAME;
-      data = data.filter(function(r){
-        var a = String(r['الأكاديمية'] || '').trim();
-        if(currentKey === 'shamali') return !a || a === shamaliName;
-        return a && a === curName;
-      });
-    }
-    if(!allAcads && _PLAYER_SHEETS.indexOf(sheetName) > -1 && data.length) {
-      // أوراق بلا عمود أكاديمية: تُفلتر بأرقام ملفات لاعبي الأكاديمية الحالية
-      return apiGet('الورقة1').then(function(players){
-        var ids = {};
-        players.forEach(function(p){ ids[String(p['رقم الملف']||'').trim()] = 1; });
-        data = data.filter(function(r){
-          var id = String(r['رقم الملف'] || r['ID'] || r['معرف اللاعب'] || '').trim();
-          return id ? !!ids[id] : (window.CURRENT_ACADEMY_KEY || 'shamali') === 'shamali';
-        });
-        _apiCache[cacheKey] = { data: data, ts: Date.now() };
-        return data;
-      }, function(){ return data; });
-    }
-    _apiCache[cacheKey] = { data: data, ts: Date.now() };
-    return data;
+  var pr = _fetchWithRetry(url).then(function(r){ return r.json(); }).then(function(raw){
+    return _finishRows(sheetName, raw, allAcads, cacheKey);
   }).catch(function(err){
     if(cached) return cached.data;
     throw new Error(_apiErrorMsg(err));
   });
+  _inflight[cacheKey] = pr;
+  var done = function(){ if(_inflight[cacheKey] === pr) delete _inflight[cacheKey]; };
+  pr.then(done, done);
+  return pr;
 }
+
+// يجلب عدة أوراق بطلب واحد ويخزّنها مؤقتاً، فتجدها apiGet جاهزة. إن لم يدعم السكربت ذلك يُكمل بالطلبات العادية.
+function apiPrefetch(sheetNames, allAcads) {
+  if(!CONFIG.GAS_URL || _multiOk === false) return Promise.resolve(false);
+  var keyOf = function(n){ return allAcads ? '*all*' + n : n; };
+  var names = sheetNames.filter(function(n){
+    var c = _apiCache[keyOf(n)];
+    return !(c && Date.now() - c.ts < _CACHE_TTL);
+  });
+  if(names.length < 2) return Promise.resolve(false);
+  var url = CONFIG.GAS_URL + '?action=multi&sheets=' + encodeURIComponent(names.join('|')) + '&limit=20000' + _tokenParam()
+    + (!allAcads ? '&acad=' + encodeURIComponent(_curAcadName() || ACADEMIES.shamali.NAME) : '');
+  return _fetchWithRetry(url).then(function(r){ return r.json(); }).then(function(res){
+    if(!res || res.v !== 2 || !res.data){ _multiOk = false; return false; }
+    _multiOk = true;
+    // ورقة اللاعبين أولاً لأن تصفية الأوراق الأخرى تعتمد عليها
+    var order = names.slice().sort(function(a, b){ return (a === 'الورقة1' ? 0 : 1) - (b === 'الورقة1' ? 0 : 1); });
+    return order.reduce(function(chain, n){
+      return chain.then(function(){ return _finishRows(n, res.data[n] || [], allAcads, keyOf(n)); });
+    }, Promise.resolve()).then(function(){ return true; });
+  }).catch(function(){ return false; });
+}
+
+// الأوراق التي تحتاجها كل صفحة ثقيلة، لجلبها دفعة واحدة عند فتح الصفحة
+var _PAGE_PREFETCH = {
+  dashboard: ['الورقة1','صور اللاعبين','تجديدات الاشتراكات','بيانات المدربين','أرقام المدربين','تقويم الأكاديمية','نتائج المباريات','سجل الحضور','سجل الحضور اليومي'],
+  players: ['الورقة1','صور اللاعبين'],
+  coachattend: ['الورقة1','صور اللاعبين'],
+  att: ['الورقة1','سجل الحضور','سجل الحضور اليومي'],
+  substrack: ['الورقة1','صور اللاعبين','تجديدات الاشتراكات'],
+  playerstats: ['الورقة1','صور اللاعبين','سجل الحضور','سجل الحضور اليومي'],
+  birthdays: ['الورقة1','صور اللاعبين'],
+  cch: ['بيانات المدربين','أرقام المدربين'],
+  coaches: ['بيانات المدربين','أرقام المدربين']
+};
 
 // أوراق تُحفظ مع اسم الأكاديمية وتُفلتر به (تطابق ACAD_SHEETS في السكربت)
 var _ACAD_SHEETS = ['بيانات المدربين','أرقام المدربين','تقويم الأكاديمية','المقترحات والملاحظات','تقارير المدربين','طلبات التقارير','المباريات','نتائج المباريات','جدول التدريب'];
@@ -4020,9 +4069,18 @@ function showL(v) {
   document.getElementById('lov').style.display = v ? 'flex' : 'none';
 }
 
+var _pageSeq = 0;
 function renderPage(page) {
   var el = document.getElementById('content');
   el.innerHTML = '<div class="ldg"><span class="sp"></span> جارٍ التحميل...</div>';
+  var pf = _PAGE_PREFETCH[page];
+  if(!pf){ _renderPageNow(page); return; }
+  var seq = ++_pageSeq;
+  apiPrefetch(pf).then(function(){ if(seq === _pageSeq) _renderPageNow(page); });
+}
+
+function _renderPageNow(page) {
+  var el = document.getElementById('content');
   try {
   switch(page) {
     case 'reg': renderReg(); break;
