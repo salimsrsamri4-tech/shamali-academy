@@ -517,7 +517,7 @@ window.addEventListener('load',function(){
       <span style="background:#b81d22;color:#fff;font-size:10px;font-weight:800;min-width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">١</span>
       <div>
         <div style="font-size:11px;font-weight:800;color:#fff;margin-bottom:2px;">بيانات ولي الأمر</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.5;">أدخل اسمك الثلاثي ورقمك المدني ورقم هاتفك (واتساب) ورقم الطوارئ</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.5;">أدخل اسمك الثلاثي ورقمك المدني ورقم هاتفك (واتساب)، ورقم بديل للطوارئ إن توفر (اختياري)</div>
       </div>
     </div>
     <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,.05);border-radius:8px;padding:10px;">
@@ -549,7 +549,7 @@ window.addEventListener('load',function(){
 </div>
 <div class="r2 mb">
 <div><label class="lbl">الهاتف (واتساب) *</label><input type="tel" class="inp" name="parentPhone" required></div>
-<div><label class="lbl">رقم الطوارئ *</label><input type="tel" class="inp" name="emergencyPhone" required></div>
+<div><label class="lbl">رقم بديل للطوارئ <span style="color:#16a34a;font-weight:700;">(اختياري)</span></label><input type="tel" class="inp" name="emergencyPhone"><div style="font-size:10px;color:#64748b;line-height:1.6;margin-top:4px;">رقم بديل إن تعذّر الوصول إليك على الرقم الأول (أم أو أخ أو قريب). لا تكتب رقمك مرة ثانية، واتركه فارغاً إن لم يتوفر.</div></div>
 </div>
 <div class="mb">
 <div><label class="lbl">صلة القرابة *</label>
@@ -1742,7 +1742,7 @@ function renderReg(){
   html += '</div>';
   html += '<div class="r2 mb">';
   html += '<div><label class="lbl">الهاتف (واتساب) *</label><input type="tel" class="inp" name="parentPhone" required></div>';
-  html += '<div><label class="lbl">رقم الطوارئ *</label><input type="tel" class="inp" name="emergencyPhone" required></div>';
+  html += '<div><label class="lbl">رقم بديل للطوارئ <span style="color:#16a34a;font-weight:700;">(اختياري)</span></label><input type="tel" class="inp" name="emergencyPhone"><div style="font-size:10px;color:#64748b;line-height:1.6;margin-top:4px;">رقم بديل إن تعذّر الوصول إليك على الرقم الأول (أم أو أخ أو قريب). لا تكتب رقمك مرة ثانية، واتركه فارغاً إن لم يتوفر.</div></div>';
   html += '</div>';
   html += '<div class="mb"><label class="lbl">صلة القرابة *</label><select class="inp" name="parentRelation" required><option value="">اختر...</option><option>أب</option><option>أم</option><option>أخ</option><option>أخت</option><option>جد</option><option>عم</option><option>وصي قانوني</option></select></div>';
   html += '<div class="mb"><label class="lbl">بطاقة ولي الأمر<span style="color:#16a34a;font-weight:700;"> (اختياري)</span></label><input type="file" class="inp" id="parentIdFile" accept="image/*,.pdf"></div>';
