@@ -509,6 +509,10 @@ window.addEventListener('load',function(){
     <button onclick="document.getElementById('regGuide').style.display='none'" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">✕</button>
   </div>
   <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="background:rgba(22,163,74,.18);border:1px solid rgba(74,222,128,.4);border-radius:8px;padding:10px;">
+      <div style="font-size:12px;font-weight:900;color:#bbf7d0;margin-bottom:3px;">💡 سجّل الآن ولا تؤجّل</div>
+      <div style="font-size:11px;color:#fff;line-height:1.7;">يكفيك رقمك المدني ورقم هوية اللاعب. <b>الصور والمستندات اختيارية</b>، وإن لم تكن معك الآن فأرسلها لإدارة الأكاديمية لاحقاً عبر واتساب.</div>
+    </div>
     <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,.05);border-radius:8px;padding:10px;">
       <span style="background:#b81d22;color:#fff;font-size:10px;font-weight:800;min-width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">١</span>
       <div>
@@ -559,7 +563,7 @@ window.addEventListener('load',function(){
 <option>عم</option>
 <option>وصي قانوني</option>
 </select></div>
-<div class="mb"><label class="lbl">بطاقة ولي الأمر</label><input type="file" class="inp" id="parentIdFile" accept="image/*,.pdf"></div>
+<div class="mb"><label class="lbl">بطاقة ولي الأمر<span style="color:#16a34a;font-weight:700;"> (اختياري)</span></label><input type="file" class="inp" id="parentIdFile" accept="image/*,.pdf"></div>
 <div class="sec-banner"><i class="fas fa-running"></i> بيانات اللاعب</div>
 <div class="mb"><label class="lbl">اسم اللاعب كاملاً *</label><input type="text" class="inp" name="playerName" required></div>
 <div class="mb"><label class="lbl">رقم هوية اللاعب *</label><input type="text" class="inp" name="playerCivilId" placeholder="أدخل رقم الهوية..." required></div>
@@ -570,8 +574,8 @@ window.addEventListener('load',function(){
 <option value="">اختر...</option><option>عُماني</option><option>سعودي</option><option>إماراتي</option><option>كويتي</option><option>بحريني</option><option>قطري</option><option>يمني</option><option>مصري</option><option>أردني</option><option>باكستاني</option><option>هندي</option><option>أخرى</option>
 </select></div>
 </div>
-<div class="mb"><label class="lbl">صورة اللاعب</label><input type="file" class="inp" id="playerPhoto" accept="image/*"></div>
-<div class="mb"><label class="lbl">وثيقة/جواز اللاعب</label><input type="file" class="inp" id="playerDoc" accept="image/*,.pdf"></div>
+<div class="mb"><label class="lbl">صورة اللاعب<span style="color:#16a34a;font-weight:700;"> (اختياري)</span></label><input type="file" class="inp" id="playerPhoto" accept="image/*"></div>
+<div class="mb"><label class="lbl">وثيقة/جواز اللاعب<span style="color:#16a34a;font-weight:700;"> (اختياري)</span></label><input type="file" class="inp" id="playerDoc" accept="image/*,.pdf"></div>
 <div class="phy-box">
 <div class="sec-title"><i class="fas fa-heartbeat"></i> الحالة الصحية</div>
 <div class="hgrid">
@@ -1729,6 +1733,7 @@ function renderReg(){
   var html = '<div id="regSucc" style="display:none;"></div><div id="regWrap">';
   html += '<div class="card">';
   html += '<form id="regForm">';
+  html += '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#166534;line-height:1.7;"><b>💡 سجّل الآن ولا تؤجّل</b><br>يكفيك رقمك المدني ورقم هوية اللاعب. الصور والمستندات اختيارية، وإن لم تكن معك الآن فأرسلها لإدارة الأكاديمية لاحقاً عبر واتساب.</div>';
   
   html += '<div class="sec-banner"><i class="fas fa-user-shield"></i> بيانات ولي الأمر</div>';
   html += '<div class="mb"><label class="lbl">الاسم الثلاثي *</label><input type="text" class="inp" name="parentName" required></div>';
@@ -1740,7 +1745,7 @@ function renderReg(){
   html += '<div><label class="lbl">رقم الطوارئ *</label><input type="tel" class="inp" name="emergencyPhone" required></div>';
   html += '</div>';
   html += '<div class="mb"><label class="lbl">صلة القرابة *</label><select class="inp" name="parentRelation" required><option value="">اختر...</option><option>أب</option><option>أم</option><option>أخ</option><option>أخت</option><option>جد</option><option>عم</option><option>وصي قانوني</option></select></div>';
-  html += '<div class="mb"><label class="lbl">بطاقة ولي الأمر *</label><input type="file" class="inp" id="parentIdFile" accept="image/*,.pdf"></div>';
+  html += '<div class="mb"><label class="lbl">بطاقة ولي الأمر<span style="color:#16a34a;font-weight:700;"> (اختياري)</span></label><input type="file" class="inp" id="parentIdFile" accept="image/*,.pdf"></div>';
 
   html += '<div class="sec-banner"><i class="fas fa-running"></i> بيانات اللاعب</div>';
   html += '<div class="mb"><label class="lbl">اسم اللاعب كاملاً *</label><input type="text" class="inp" name="playerName" required></div>';
@@ -1751,8 +1756,8 @@ function renderReg(){
   html += '<select class="inp" name="playerNationality" required>';
   html += '<option value="">اختر...</option><option>عُماني</option><option>سعودي</option><option>إماراتي</option><option>كويتي</option><option>بحريني</option><option>قطري</option><option>يمني</option><option>مصري</option><option>أردني</option><option>باكستاني</option><option>هندي</option><option>أخرى</option>';
   html += '</select></div></div>';
-  html += '<div class="mb"><label class="lbl">صورة اللاعب</label><input type="file" class="inp" id="playerPhoto" accept="image/*"></div>';
-  html += '<div class="mb"><label class="lbl">وثيقة/جواز اللاعب</label><input type="file" class="inp" id="playerDoc" accept="image/*,.pdf"></div>';
+  html += '<div class="mb"><label class="lbl">صورة اللاعب<span style="color:#16a34a;font-weight:700;"> (اختياري)</span></label><input type="file" class="inp" id="playerPhoto" accept="image/*"></div>';
+  html += '<div class="mb"><label class="lbl">وثيقة/جواز اللاعب<span style="color:#16a34a;font-weight:700;"> (اختياري)</span></label><input type="file" class="inp" id="playerDoc" accept="image/*,.pdf"></div>';
   
   html += '<div class="phy-box">';
   html += '<div class="sec-title"><i class="fas fa-heartbeat"></i> الحالة الصحية</div>';
@@ -6673,6 +6678,11 @@ function submitReg() {
   var playerPhoto = document.getElementById('playerPhoto') ? document.getElementById('playerPhoto').files[0] : null;
   var playerDoc = document.getElementById('playerDoc') ? document.getElementById('playerDoc').files[0] : null;
 
+  window._regMissingDocs = [];
+  if(!parentIdFile) window._regMissingDocs.push('بطاقة ولي الأمر');
+  if(!playerPhoto)  window._regMissingDocs.push('صورة اللاعب');
+  if(!playerDoc)    window._regMissingDocs.push('وثيقة/جواز اللاعب');
+
   // حفظ صورة اللاعب محلياً لاستخدامها في البطاقة فوراً
   if(playerPhoto) {
     var photoReader = new FileReader();
@@ -6747,12 +6757,27 @@ function submitReg() {
     saveRegistration(data).then(function(id){
       showL(false);
       showSuccess(id, data);
-      var msg = encodeURIComponent('🦅 تسجيل جديد\n👤 '+data.playerName+'\n📋 '+id+'\n🗓️ '+data.playerBirthDate+'\n👨‍👦 '+data.parentName+'\n📞 '+data.parentPhone);
+      var missDocs = window._regMissingDocs || [];
+      var msg = encodeURIComponent('🦅 تسجيل جديد\n👤 '+data.playerName+'\n📋 '+id+'\n🗓️ '+data.playerBirthDate+'\n👨‍👦 '+data.parentName+'\n📞 '+data.parentPhone+(missDocs.length ? '\n📎 مستندات ناقصة: '+missDocs.join('، ') : ''));
       setTimeout(function(){ window.open('https://api.whatsapp.com/send?phone='+CONFIG.WA_NUM+'&text='+msg,'_blank'); }, 1000);
     }).catch(function(e){ showL(false); alert('خطأ في الحفظ: '+e.message); });
   }).catch(function(e){ showL(false); alert('خطأ: '+e.message); });
 
   }); // end checkPromise
+}
+
+// صندوق المستندات الناقصة بعد التسجيل: يشرح أنها تُرسل لاحقاً، ويفتح واتساب للأكاديمية برسالة جاهزة
+function _missingDocsBox(id, data){
+  var miss = window._regMissingDocs || [];
+  if(!miss.length) return '';
+  var msg = 'السلام عليكم، سجّلت اللاعب ' + (data.playerName || '') + ' (رقم الملف ' + id + ') في ' + _acN() +
+            ' وأرغب بإرسال المستندات الناقصة: ' + miss.join('، ') + '.';
+  var wa = CONFIG.WA_NUM ? 'https://api.whatsapp.com/send?phone=' + CONFIG.WA_NUM + '&text=' + encodeURIComponent(msg) : '';
+  return '<div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:14px;padding:14px;max-width:340px;margin:0 auto 18px;text-align:right;">'+
+    '<div style="font-size:13px;font-weight:900;color:#92400e;margin-bottom:4px;">📎 تم تسجيل اللاعب، وبقيت مستندات</div>'+
+    '<div style="font-size:12px;color:#92400e;line-height:1.7;">لم تُرفق: <b>' + esc(miss.join('، ')) + '</b>.<br>لا مشكلة، أرسلها لإدارة الأكاديمية متى تيسّر لك.</div>'+
+    (wa ? '<a href="' + wa + '" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;min-height:46px;background:#16a34a;color:#fff;border-radius:10px;text-decoration:none;font-size:13px;font-weight:800;"><i class="fab fa-whatsapp"></i> إرسال المستندات عبر واتساب</a>' : '')+
+    '</div>';
 }
 
 function showSuccess(id, data) {
@@ -6790,6 +6815,7 @@ function showSuccess(id, data) {
     '<div style="font-size:18px;font-weight:900;color:#16a34a;margin-bottom:4px;">تم التسجيل بنجاح!</div>'+
     '<div style="font-size:12px;color:#64748b;margin-bottom:20px;">احتفظ بهذه البطاقة · '+id+'</div>'+
     '<div style="display:flex;justify-content:center;margin-bottom:20px;">'+cardHtml+'</div>'+
+    _missingDocsBox(id, data)+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:340px;margin:0 auto;">'+
     '<button onclick="printCard()" style="background:linear-gradient(135deg,#3b0a0a,#b81d22);color:#fff;border:none;border-radius:12px;padding:13px 10px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;">'+
       '<i class="fas fa-print"></i> طباعة</button>'+
